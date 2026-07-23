@@ -174,31 +174,31 @@ export default function ExecutiveView({
     <div id="executive-view-container" className="space-y-6 text-[#2D3A22]">
       
       {/* EXECUTIVE HEADER */}
-      <div className="bg-[#1B4332] text-[#F4EFE6] p-6 rounded-3xl border border-[#143326] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md">
-        <div className="text-left">
-          <h2 className="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-[#D8F3DC]" />
-            <span>
+      <div className="bg-[#1B4332] text-[#F4EFE6] p-4 sm:p-6 rounded-3xl border border-[#143326] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md w-full max-w-full overflow-hidden">
+        <div className="text-left min-w-0 w-full sm:w-auto">
+          <h2 className="text-lg sm:text-2xl font-black font-display text-white flex flex-wrap items-center gap-2">
+            <ShieldCheck className="w-6 h-6 text-[#D8F3DC] shrink-0" />
+            <span className="break-words">
               {currentRole === 'President' 
                 ? 'Dapito sa Presidente (President\'s Suite)' 
                 : 'Dapito sa Bise Presidente (Vice President\'s Desk)'}
             </span>
           </h2>
-          <p className="text-xs sm:text-sm text-[#B7E4C7] mt-1 font-medium max-w-xl">
+          <p className="text-xs sm:text-sm text-[#B7E4C7] mt-1 font-medium max-w-xl break-words">
             Susiha ang rehistrasyon sa mga mag-uuma, pagdumala sa mga koda / credentials, ug aprobahi ang mga resolusyon sa asosasyon.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto min-w-0">
           {onDownloadBackup && (
             <button
               id="executive-download-backup-btn"
               type="button"
               onClick={onDownloadBackup}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-black bg-[#D8F3DC] hover:bg-[#b7e4c7] text-[#1B4332] border border-[#52B788] rounded-2xl shadow-sm transition-all cursor-pointer uppercase tracking-wider whitespace-nowrap"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-black bg-[#D8F3DC] hover:bg-[#b7e4c7] text-[#1B4332] border border-[#52B788] rounded-2xl shadow-sm transition-all cursor-pointer uppercase tracking-wider min-w-0"
               title="Download formatted JSON backup of all local association data"
             >
               <Download className="w-4 h-4 text-[#1B4332] shrink-0" />
-              <span>Download System Backup</span>
+              <span className="truncate">Download System Backup</span>
             </button>
           )}
 
@@ -207,15 +207,20 @@ export default function ExecutiveView({
               id="executive-report-btn"
               type="button"
               onClick={onOpenReportModal}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-black bg-[#2D6A4F] hover:bg-[#40916C] text-white border border-[#52B788] rounded-2xl shadow-sm transition-all cursor-pointer uppercase tracking-wider whitespace-nowrap"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-black bg-[#2D6A4F] hover:bg-[#40916C] text-white border border-[#52B788] rounded-2xl shadow-sm transition-all cursor-pointer uppercase tracking-wider min-w-0"
             >
               <Printer className="w-4 h-4 text-[#D8F3DC] shrink-0" />
-              <span>Export Executive Report</span>
+              <span className="truncate">Export Executive Report</span>
             </button>
           )}
 
-          <div className="bg-[#2D6A4F] border border-[#40916C] px-3.5 py-2 rounded-2xl text-xs text-white font-bold shadow-inner uppercase tracking-wider whitespace-nowrap">
-            Aktibong Opisyal: {currentRole === 'President' ? 'President (Zenaida)' : 'Vice President'}
+          <div className="w-full sm:w-auto bg-[#081C15] border-2 border-[#52B788] px-3.5 py-2 rounded-2xl text-xs text-white font-bold shadow-md uppercase tracking-wider min-w-0 flex flex-wrap items-center gap-2">
+            <span className="bg-[#D8F3DC] text-[#1B4332] text-[10px] font-mono px-2 py-0.5 rounded-md shrink-0 font-black">
+              AKTIBONG OPISYAL
+            </span>
+            <span className="font-black text-xs sm:text-sm text-white break-words">
+              {currentRole === 'President' ? 'President (Zenaida)' : 'Vice President'}
+            </span>
           </div>
         </div>
       </div>

@@ -1107,38 +1107,45 @@ export default function App() {
       )}
 
       {/* TOP HEADER NAVIGATION AND IDENTIFIER */}
-      <header className="bg-[#1B4332] border-b-2 border-[#122E22] py-4 px-6 shrink-0 shadow-md text-white">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#D8F3DC] p-2.5 rounded-2xl shadow-inner text-[#1B4332]">
-              <Building className="w-6 h-6" />
+      <header className="bg-[#1B4332] border-b-2 border-[#122E22] py-3 sm:py-4 px-3.5 sm:px-6 shrink-0 shadow-md text-white">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 max-w-full">
+            <div className="bg-[#D8F3DC] p-2 sm:p-2.5 rounded-2xl shadow-inner text-[#1B4332] shrink-0">
+              <Building className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-tight text-white uppercase font-display">Alegria Farmers Association</h1>
-                <span className="text-[10px] bg-[#2D6A4F] text-[#D8F3DC] px-2.5 py-0.5 rounded-full border border-[#40916C] font-black font-mono">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h1 className="text-base sm:text-lg font-black tracking-tight text-white uppercase font-display break-words">Alegria Farmers Association</h1>
+                <span className="text-[9px] sm:text-[10px] bg-[#2D6A4F] text-[#D8F3DC] px-2 py-0.5 rounded-full border border-[#40916C] font-black font-mono shrink-0">
                   Barangay Portal
                 </span>
               </div>
-              <p className="text-xs text-[#D8F3DC]/80 mt-0.5 font-medium">Tuburan, Cebu Province • Official Officer Administration Suite</p>
+              <p className="text-[11px] sm:text-xs text-[#D8F3DC]/80 mt-0.5 font-medium truncate">Tuburan, Cebu Province • Official Officer Suite</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto max-w-full">
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2 sm:gap-2.5 w-full lg:w-auto max-w-full">
             {/* Active session bar */}
-            <div className="flex items-center gap-2.5 bg-[#081C15]/60 px-3 py-1.5 rounded-2xl border border-[#2D6A4F] shrink-0">
-              <div className="w-7 h-7 rounded-xl bg-[#D8F3DC] text-[#1B4332] font-mono font-black flex items-center justify-center text-xs shrink-0 uppercase shadow-xs">
-                {currentUser?.name.substring(0, 2)}
-              </div>
-              <div className="text-left min-w-0">
-                <span className="block text-xs font-black text-white truncate max-w-[120px]">{currentUser?.name}</span>
-                <span className="block text-[9px] text-[#D8F3DC] font-mono font-black uppercase tracking-wider truncate">
-                  Role: {currentUser?.role.replace('_', ' ')}
-                </span>
+            <div className="flex items-center justify-between gap-2 bg-[#081C15] px-3 py-1.5 rounded-2xl border-2 border-[#52B788] w-full sm:w-auto min-w-0 shrink-0 shadow-sm">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-xl bg-[#D8F3DC] text-[#1B4332] font-mono font-black flex items-center justify-center text-xs shrink-0 uppercase shadow-xs">
+                  {currentUser?.name.substring(0, 2)}
+                </div>
+                <div className="text-left min-w-0">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] bg-[#2D6A4F] text-[#D8F3DC] font-mono font-black uppercase px-1.5 py-0.2 rounded shrink-0">
+                      Aktibong Opisyal
+                    </span>
+                    <span className="text-xs font-black text-white truncate max-w-[130px] sm:max-w-[160px]">{currentUser?.name}</span>
+                  </div>
+                  <span className="block text-[10px] text-[#D8F3DC] font-bold uppercase tracking-wide truncate">
+                    {currentUser?.role.replace('_', ' ')}
+                  </span>
+                </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-1.5 hover:bg-rose-900/50 hover:text-rose-200 rounded-xl text-slate-300 cursor-pointer transition-colors border border-transparent hover:border-rose-400/30 shrink-0"
+                className="p-1.5 hover:bg-rose-900/50 hover:text-rose-200 rounded-xl text-slate-300 cursor-pointer transition-colors border border-transparent hover:border-rose-400/30 shrink-0 ml-1"
                 title="Sign out of administration suite"
               >
                 <LogOut className="w-4 h-4" />
@@ -1150,11 +1157,11 @@ export default function App() {
               id="header-download-backup-btn"
               type="button"
               onClick={handleDownloadSystemBackup}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D8F3DC] hover:bg-[#b7e4c7] text-[#1B4332] border border-[#2D6A4F] rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm whitespace-nowrap"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D8F3DC] hover:bg-[#b7e4c7] text-[#1B4332] border border-[#2D6A4F] rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm min-w-0"
               title="Download formatted JSON backup of all local association data"
             >
               <Download className="w-4 h-4 text-[#1B4332] shrink-0" />
-              <span>Download System Backup</span>
+              <span className="truncate">Download System Backup</span>
             </button>
 
             {/* Export Officer Reports Button */}
@@ -1162,11 +1169,11 @@ export default function App() {
               id="header-export-reports-btn"
               type="button"
               onClick={() => setShowReportModal(true)}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D8F3DC] hover:bg-[#b7e4c7] text-[#1B4332] border border-[#2D6A4F] rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm whitespace-nowrap"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D8F3DC] hover:bg-[#b7e4c7] text-[#1B4332] border border-[#2D6A4F] rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm min-w-0"
               title="Open Official Officer Reports & Export Center"
             >
               <FileText className="w-4 h-4 text-[#1B4332] shrink-0" />
-              <span>Officer Reports & Export</span>
+              <span className="truncate">Officer Reports & Export</span>
             </button>
 
             {/* Manage Association Products Button */}
@@ -1174,11 +1181,11 @@ export default function App() {
               id="header-manage-products-btn"
               type="button"
               onClick={() => setShowProductModal(true)}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#FFE0B2] hover:bg-[#FFD180] text-[#8C3B00] border border-[#FFB74D] rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm whitespace-nowrap"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#FFE0B2] hover:bg-[#FFD180] text-[#8C3B00] border border-[#FFB74D] rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm min-w-0"
               title="Manage Association Products & Catalog"
             >
               <ShoppingBag className="w-4 h-4 text-[#8C3B00] shrink-0" />
-              <span>Products Catalog</span>
+              <span className="truncate">Products Catalog</span>
             </button>
 
             {/* Offline Switch & Sync Trigger */}
