@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  h1, h2, h3, h4, h5, h6, p, span, div, button, a, td, th {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  /* Prevent button text from line wrapping into multi-line garbage inside small chips or buttons */
+  button span, .btn-text {
+    white-space: normal;
+  }
+}
+
+@media print {
+  /* Hide everything in the document body */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  /* Make only our dedicated print container and its descendants visible */
+  .print-area-root, .print-area-root * {
+    visibility: visible !important;
+  }
+  
+  /* Reset background and position our printable sheet at the top-left */
+  .print-area-root {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Prevent body backgrounds from printing */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+
