@@ -1,5 +1,90 @@
-import { Member, Meeting, Resolution, FinancialTransaction, Announcement, SystemLog, HogRaisingState, Product, AssociationActivity } from './types';
+import { Member, Meeting, Resolution, FinancialTransaction, Announcement, SystemLog, HogRaisingState, Product, AssociationActivity, User } from './types';
 import { buildAuditChain } from './utils/audit';
+
+export const SEED_USERS: User[] = [
+  {
+    id: 'user-pres',
+    username: 'president',
+    password: 'password123',
+    name: 'Zenaida A. Elbiña',
+    role: 'President',
+    isApproved: true,
+    joinedDate: '2024-01-01'
+  },
+  {
+    id: 'user-vp',
+    username: 'vp',
+    password: 'password123',
+    name: 'Anselna B Arnado',
+    role: 'Vice_President',
+    isApproved: true,
+    joinedDate: '2024-01-01'
+  },
+  {
+    id: 'user-sec',
+    username: 'secretary',
+    password: 'password123',
+    name: 'Jennylyn S Lumactao',
+    role: 'Secretary',
+    isApproved: true,
+    joinedDate: '2024-01-01'
+  },
+  {
+    id: 'user-tres',
+    username: 'treasurer',
+    password: 'password123',
+    name: 'Gracelyn P Asendiente',
+    role: 'Treasurer',
+    isApproved: true,
+    joinedDate: '2024-01-01'
+  },
+  {
+    id: 'user-aud',
+    username: 'auditor',
+    password: 'password123',
+    name: 'Lorena B Pinote',
+    role: 'Auditor',
+    isApproved: true,
+    joinedDate: '2024-01-01'
+  },
+  {
+    id: 'user-pio',
+    username: 'pio',
+    password: 'password123',
+    name: 'Ida S Manera',
+    role: 'PIO',
+    isApproved: true,
+    joinedDate: '2024-01-01'
+  },
+  {
+    id: 'user-m1',
+    username: 'roberto',
+    password: 'password123',
+    name: 'Roberto "Nong Berting" Caballes',
+    role: 'Member',
+    isApproved: true,
+    farmLocation: 'Sitio Ylaya',
+    farmSize: 2.5,
+    primaryCrops: ['Corn (Mais)', 'Coconut (Lubi)', 'Tuburan Coffee'],
+    contactNumber: '0917-456-7890',
+    joinedDate: '2022-03-15',
+    status: 'Active'
+  },
+  {
+    id: 'user-m2',
+    username: 'maria',
+    password: 'password123',
+    name: 'Maria "Nang Mary" Alcoser',
+    role: 'Member',
+    isApproved: true,
+    farmLocation: 'Sitio Fatima',
+    farmSize: 1.8,
+    primaryCrops: ['Vegetables (Utanon)', 'Banana (Saging)', 'Hog Raising (Baboyan)'],
+    contactNumber: '0928-123-4567',
+    joinedDate: '2023-01-10',
+    status: 'Active'
+  }
+];
 
 export const INITIAL_MEMBERS: Member[] = [
   {

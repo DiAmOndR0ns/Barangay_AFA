@@ -7,7 +7,7 @@ import {
 import { 
   INITIAL_MEMBERS, INITIAL_MEETINGS, INITIAL_RESOLUTIONS, 
   INITIAL_TRANSACTIONS, INITIAL_ANNOUNCEMENTS, INITIAL_LOGS, INITIAL_HOG_RAISING,
-  INITIAL_PRODUCTS, INITIAL_ACTIVITIES
+  INITIAL_PRODUCTS, INITIAL_ACTIVITIES, SEED_USERS
 } from './initialData';
 import OfflineIndicator from './components/OfflineIndicator';
 import SecretaryView from './components/SecretaryView';
@@ -22,97 +22,13 @@ import MemberDashboard from './components/MemberDashboard';
 import GuestPortal from './components/GuestPortal';
 import OfficerReportModal from './components/OfficerReportModal';
 import ProductManagementModal from './components/ProductManagementModal';
+import { AivenTestModal } from './components/AivenTestModal';
 import { buildAuditChain } from './utils/audit';
 import { 
   Building, ShieldCheck, Megaphone, Users, Coins, 
   Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, PiggyBank, FileText, ShoppingBag,
-  ChevronLeft, ChevronRight, Download
+  ChevronLeft, ChevronRight, Download, Database
 } from 'lucide-react';
-
-const SEED_USERS: User[] = [
-  {
-    id: 'user-pres',
-    username: 'president',
-    password: 'password123',
-    name: 'Zenaida A. Elbiña',
-    role: 'President',
-    isApproved: true,
-    joinedDate: '2024-01-01'
-  },
-  {
-    id: 'user-vp',
-    username: 'vp',
-    password: 'password123',
-    name: 'Anselna B Arnado',
-    role: 'Vice_President',
-    isApproved: true,
-    joinedDate: '2024-01-01'
-  },
-  {
-    id: 'user-sec',
-    username: 'secretary',
-    password: 'password123',
-    name: 'Jennylyn S Lumactao',
-    role: 'Secretary',
-    isApproved: true,
-    joinedDate: '2024-01-01'
-  },
-  {
-    id: 'user-tres',
-    username: 'treasurer',
-    password: 'password123',
-    name: 'Gracelyn P Asendiente',
-    role: 'Treasurer',
-    isApproved: true,
-    joinedDate: '2024-01-01'
-  },
-  {
-    id: 'user-aud',
-    username: 'auditor',
-    password: 'password123',
-    name: 'Lorena B Pinote',
-    role: 'Auditor',
-    isApproved: true,
-    joinedDate: '2024-01-01'
-  },
-  {
-    id: 'user-pio',
-    username: 'pio',
-    password: 'password123',
-    name: 'Ida S Manera',
-    role: 'PIO',
-    isApproved: true,
-    joinedDate: '2024-01-01'
-  },
-  {
-    id: 'user-m1',
-    username: 'roberto',
-    password: 'password123',
-    name: 'Roberto "Nong Berting" Caballes',
-    role: 'Member',
-    isApproved: true,
-    farmLocation: 'Sitio Ylaya',
-    farmSize: 2.5,
-    primaryCrops: ['Corn (Mais)', 'Coconut (Lubi)', 'Tuburan Coffee'],
-    contactNumber: '0917-456-7890',
-    joinedDate: '2022-03-15',
-    status: 'Active'
-  },
-  {
-    id: 'user-m2',
-    username: 'maria',
-    password: 'password123',
-    name: 'Maria "Nang Mary" Alcoser',
-    role: 'Member',
-    isApproved: true,
-    farmLocation: 'Sitio Fatima',
-    farmSize: 1.8,
-    primaryCrops: ['Vegetables (Utanon)', 'Banana (Saging)', 'Hog Raising (Baboyan)'],
-    contactNumber: '0928-123-4567',
-    joinedDate: '2023-01-10',
-    status: 'Active'
-  }
-];
 
 export default function App() {
   // Auth & Accounts State
@@ -143,6 +59,7 @@ export default function App() {
   const [officerTab, setOfficerTab] = useState<'tasks' | 'hog-raising' | 'announcements' | 'member-view'>('tasks');
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
   const [showProductModal, setShowProductModal] = useState<boolean>(false);
+  const [showAivenModal, setShowAivenModal] = useState<boolean>(false);
 
   // Core App Data States (hydrated from localStorage or initials)
   const [members, setMembers] = useState<Member[]>([]);
@@ -205,6 +122,25 @@ export default function App() {
         updateStorage('bafa_logs', activeLogs);
       }
       setLogs(activeLogs);
+
+      // Attempt pulling fresh data from Aiven PostgreSQL if online
+      fetch('/api/sync/pull')
+        .then(res => res.json())
+        .then(res => {
+          if (res.success && res.data) {
+            if (res.data.members?.length) { setMembers(res.data.members); updateStorage('bafa_members', res.data.members); }
+            if (res.data.meetings?.length) { setMeetings(res.data.meetings); updateStorage('bafa_meetings', res.data.meetings); }
+            if (res.data.resolutions?.length) { setResolutions(res.data.resolutions); updateStorage('bafa_resolutions', res.data.resolutions); }
+            if (res.data.financialTransactions?.length) { setTransactions(res.data.financialTransactions); updateStorage('bafa_transactions', res.data.financialTransactions); }
+            if (res.data.announcements?.length) { setAnnouncements(res.data.announcements); updateStorage('bafa_announcements', res.data.announcements); }
+            if (res.data.products?.length) { setProducts(res.data.products); updateStorage('bafa_products', res.data.products); }
+            if (res.data.activities?.length) { setActivities(res.data.activities); updateStorage('bafa_activities', res.data.activities); }
+            if (res.data.hogRaising) { setHogRaising(res.data.hogRaising); updateStorage('bafa_hog_raising', res.data.hogRaising); }
+            if (res.data.users?.length) { setUsers(res.data.users); updateStorage('bafa_users', res.data.users); }
+            console.log('[Aiven DB] Successfully loaded fresh data from Aiven PostgreSQL');
+          }
+        })
+        .catch(err => console.log('[Aiven DB Offline / Unreachable]: using local state', err));
     } catch (e) {
       console.error('Error reading localStorage: ', e);
       // Fallback
@@ -291,20 +227,29 @@ export default function App() {
   };
 
   // Flush Queue / Synchronize
-  const handleSynchronize = () => {
+  const handleSynchronize = async () => {
     if (!isOnline || syncQueue.length === 0 || isSyncing) return;
     setIsSyncing(true);
-    showToastMessage('Establishing secure connection... Syncing data...', 'info');
+    showToastMessage('Syncing with Aiven PostgreSQL Cloud Database...', 'info');
 
-    setTimeout(() => {
-      // Apply queued items to state if they weren't already applied locally
-      // Note: In our offline implementation, we already applied the results locally to state
-      // so that users get immediate feedback.
-      // We will now mark all logs that were 'pending' as 'synced'
+    try {
+      await fetch('/api/sync/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          members,
+          meetings,
+          resolutions,
+          financialTransactions: transactions,
+          announcements,
+          products,
+          activities,
+          hogRaising
+        })
+      });
+
       const updatedLogsRaw = logs.map(l => l.syncStatus === 'pending' ? { ...l, syncStatus: 'synced' as const } : l);
-      
-      // Log the successful sync batch
-      const syncSummary = `Synchronized ${syncQueue.length} pending offline operation(s) safely.`;
+      const syncSummary = `Synchronized ${syncQueue.length} pending offline operation(s) to Aiven Cloud DB.`;
       const finalLogRaw: SystemLog = {
         id: `log-${Date.now()}`,
         timestamp: new Date().toISOString(),
@@ -321,12 +266,15 @@ export default function App() {
       setLogs(finalLogs);
       updateStorage('bafa_logs', finalLogs);
 
-      // Clear queue
       setSyncQueue([]);
       updateStorage('bafa_sync_queue', []);
+      showToastMessage(`Sync complete! ${syncQueue.length} records pushed to Aiven PostgreSQL successfully.`, 'success');
+    } catch (err) {
+      console.error('Sync error:', err);
+      showToastMessage('Failed to reach Aiven PostgreSQL server. Changes stored locally.', 'error');
+    } finally {
       setIsSyncing(false);
-      showToastMessage(`Sync complete! ${syncQueue.length} records pushed online successfully.`, 'success');
-    }, 1600);
+    }
   };
 
   const handleClearQueue = () => {
@@ -1188,6 +1136,18 @@ export default function App() {
               <span className="truncate">Products Catalog</span>
             </button>
 
+            {/* Aiven PostgreSQL Test Button */}
+            <button
+              id="header-aiven-db-test-btn"
+              type="button"
+              onClick={() => setShowAivenModal(true)}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#1B4332] hover:bg-[#2D6A4F] text-[#D8F3DC] border border-[#52B788] rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm min-w-0"
+              title="Test Live Connection to Aiven PostgreSQL Database"
+            >
+              <Database className="w-4 h-4 text-[#D8F3DC] shrink-0" />
+              <span className="truncate">Aiven DB Test</span>
+            </button>
+
             {/* Offline Switch & Sync Trigger */}
             <OfflineIndicator 
               isOnline={isOnline}
@@ -1485,6 +1445,12 @@ export default function App() {
           onClose={() => setShowProductModal(false)}
         />
       )}
+
+      {/* AIVEN POSTGRESQL CONNECTION TEST MODAL */}
+      <AivenTestModal 
+        isOpen={showAivenModal} 
+        onClose={() => setShowAivenModal(false)} 
+      />
 
 
     </div>
