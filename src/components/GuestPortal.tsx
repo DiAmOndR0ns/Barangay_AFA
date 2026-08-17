@@ -440,7 +440,7 @@ export default function GuestPortal({
               <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
                 <Megaphone className="w-6 h-6 sm:w-7 sm:h-7 text-[#BF360C] shrink-0" />
                 <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
-                  Opisyal nga mga Pahibalo ug Balita (Official Bulletins)
+                 Official Bulletins
                 </h3>
               </div>
               <p className="text-xs sm:text-sm md:text-base text-slate-700 font-semibold leading-relaxed break-words">
