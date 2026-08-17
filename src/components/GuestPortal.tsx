@@ -495,7 +495,7 @@ export default function GuestPortal({
               <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
                 <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-700 shrink-0" />
                 <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
-                  Mga Kalihokan ug Eskedyul sa Asosasyon (Community Activities)
+                  Community Activities
                 </h3>
               </div>
               <p className="text-xs sm:text-sm md:text-base text-slate-700 font-semibold leading-relaxed break-words">
@@ -557,14 +557,14 @@ export default function GuestPortal({
             <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
               <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-[#BF360C] shrink-0" />
               <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
-                Kasaysayan sa Asosasyon (Our History)
+              Our History
               </h3>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pt-2 min-w-0">
               <div className="lg:col-span-8 space-y-4 sm:space-y-6 text-xs sm:text-sm md:text-base text-slate-700 leading-relaxed font-semibold min-w-0 break-words">
                 <p>
-                  Ang <strong className="text-[#1B4332]">Barangay Alegria Farmers Association (BAFA)</strong> nagsugod isip usa ka gamay nga grupo sa mga mag-uuma sa Tuburan, Cebu. 
+                  Ang <strong className="text-[#1B4332]">Barangay Alegria Farmers Association (BAFA)</strong> nagsugod isip usa ka gamay nga grupo sa mga mag-uuma sa Barangay Alegria, Tuburan, Cebu. 
                   Sa wala pa matukod ang opisayl nga asosasyon, ang mga mag-uuma nag-atubang ug dakong kalisod sa pagbaligya sa ilang abot tungod sa kalayo sa merkado ug sa ubos kaayo nga presyo nga gitanyag sa mga middlemen.
                 </p>
                 <p>
@@ -655,7 +655,7 @@ export default function GuestPortal({
               <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
                 <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600 shrink-0" />
                 <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
-                  Atong mga Kalamposan (Key Milestones)
+                  Key Milestones
                 </h3>
               </div>
               <p className="text-xs sm:text-sm md:text-base text-slate-700 font-semibold leading-relaxed break-words">
@@ -727,7 +727,7 @@ export default function GuestPortal({
               <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
                 <Coffee className="w-6 h-6 sm:w-7 sm:h-7 text-amber-700 shrink-0" />
                 <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
-                  Mga Produkto sa Alegria (Our Agriculture Produce)
+                  Our Agriculture Produce
                 </h3>
               </div>
               <p className="text-xs sm:text-sm md:text-base text-slate-700 font-semibold leading-relaxed break-words">
