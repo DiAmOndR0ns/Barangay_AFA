@@ -151,11 +151,11 @@ export default function GuestPortal({
                 </h1>
                 <span className="text-[10px] sm:text-xs bg-[#EAF4EC] text-[#1B4332] px-2 sm:px-2.5 py-0.5 rounded-full border border-emerald-800/20 font-black tracking-wide flex items-center gap-1.5 shrink-0 shadow-sm whitespace-nowrap">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Opisyal nga Portal
+                  Official Portal
                 </span>
               </div>
               <p className="text-[10px] sm:text-xs text-slate-600 font-bold mt-0.5 leading-snug break-words">
-                Barangay Alegria, Tuburan, Cebu Province • Opisyal nga Public Portal
+                Barangay Alegria, Tuburan, Cebu Province • Official Public Portal
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function GuestPortal({
               className="w-full sm:w-auto bg-[#BF360C] hover:bg-[#8D2300] text-white font-black text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.01] whitespace-nowrap"
             >
               <LogIn className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-              <span>SULOD SA PORTAL (Log In)</span>
+              <span>Log In</span>
             </button>
           </div>
         </div>
@@ -213,11 +213,11 @@ export default function GuestPortal({
             <div className="w-full flex justify-start sm:justify-center gap-1 sm:gap-2 overflow-x-auto py-1 select-none scrollbar-thin scrollbar-thumb-[#1B4332]/20 px-3 sm:px-6">
               {[
                 { id: 'home', label: 'Overview', icon: Sparkles },
-                { id: 'announcements', label: 'Pahibalo (Announcements)', icon: Megaphone },
-                { id: 'activities', label: 'Mga Kalihokan (Activities)', icon: Calendar },
-                { id: 'products', label: 'Mga Produkto (Products)', icon: Coffee },
-                { id: 'history', label: 'Kasaysayan (History)', icon: BookOpen },
-                { id: 'achievements', label: 'Kalamposan (Achievements)', icon: Trophy }
+                { id: 'announcements', label: 'Announcements', icon: Megaphone },
+                { id: 'activities', label: 'Activities', icon: Calendar },
+                { id: 'products', label: 'Products', icon: Coffee },
+                { id: 'history', label: 'History', icon: BookOpen },
+                { id: 'achievements', label: 'Achievements', icon: Trophy }
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -337,7 +337,7 @@ export default function GuestPortal({
                 <div className="flex items-center justify-between border-b border-[#D5CFC1] pb-2.5">
                   <h4 className="font-black text-[#1B4332] text-sm sm:text-base flex items-center gap-2">
                     <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-[#BF360C]" />
-                    <span>Lab-as nga Pahibalo (Announcements)</span>
+                    <span>Announcements</span>
                   </h4>
                   <button 
                     onClick={() => setActiveTab('announcements')}
@@ -376,7 +376,7 @@ export default function GuestPortal({
                 <div className="flex items-center justify-between border-b border-[#D5CFC1] pb-2.5">
                   <h4 className="font-black text-[#1B4332] text-sm sm:text-base flex items-center gap-2">
                     <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-700" />
-                    <span>Mga Kalihokan sa Asosasyon (Activities)</span>
+                    <span>Activities</span>
                   </h4>
                   <button 
                     onClick={() => setActiveTab('activities')}
