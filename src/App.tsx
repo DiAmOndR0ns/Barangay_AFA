@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   OfficerRole, Member, Meeting, Resolution, 
   FinancialTransaction, Announcement, SyncQueueItem, SystemLog, User, HogRaisingState,
-  IgpExpense, IgpSale, IgpChoreLog, Product, AssociationActivity
+  IgpExpense, IgpSale, IgpChoreLog, Product, AssociationActivity, OrganizationFund
 } from './types';
 import { 
   INITIAL_MEMBERS, INITIAL_MEETINGS, INITIAL_RESOLUTIONS, 
   INITIAL_TRANSACTIONS, INITIAL_ANNOUNCEMENTS, INITIAL_LOGS, INITIAL_HOG_RAISING,
-  INITIAL_PRODUCTS, INITIAL_ACTIVITIES, SEED_USERS
+  INITIAL_PRODUCTS, INITIAL_ACTIVITIES, SEED_USERS, INITIAL_FUNDS
 } from './initialData';
 import OfflineIndicator from './components/OfflineIndicator';
 import SecretaryView from './components/SecretaryView';
@@ -70,6 +70,7 @@ export default function App() {
   const [hogRaising, setHogRaising] = useState<HogRaisingState>(INITIAL_HOG_RAISING);
   const [products, setProducts] = useState<Product[]>([]);
   const [activities, setActivities] = useState<AssociationActivity[]>([]);
+  const [funds, setFunds] = useState<OrganizationFund[]>([]);
   const [logs, setLogs] = useState<SystemLog[]>([]);
 
   // Feedback State (Toasts)
@@ -86,6 +87,7 @@ export default function App() {
       const storedHogRaising = localStorage.getItem('bafa_hog_raising');
       const storedProducts = localStorage.getItem('bafa_products');
       const storedActivities = localStorage.getItem('bafa_activities');
+      const storedFunds = localStorage.getItem('bafa_funds');
       const storedQueue = localStorage.getItem('bafa_sync_queue');
       const storedLogs = localStorage.getItem('bafa_logs');
       const storedUsers = localStorage.getItem('bafa_users');
@@ -99,6 +101,7 @@ export default function App() {
       setHogRaising(storedHogRaising ? JSON.parse(storedHogRaising) : INITIAL_HOG_RAISING);
       setProducts(storedProducts ? JSON.parse(storedProducts) : INITIAL_PRODUCTS);
       setActivities(storedActivities ? JSON.parse(storedActivities) : INITIAL_ACTIVITIES);
+      setFunds(storedFunds ? JSON.parse(storedFunds) : INITIAL_FUNDS);
       setSyncQueue(storedQueue ? JSON.parse(storedQueue) : []);
       
       const parsedUsers = storedUsers ? JSON.parse(storedUsers) : SEED_USERS;
@@ -135,9 +138,12 @@ export default function App() {
             if (res.data.announcements?.length) { setAnnouncements(res.data.announcements); updateStorage('bafa_announcements', res.data.announcements); }
             if (res.data.products?.length) { setProducts(res.data.products); updateStorage('bafa_products', res.data.products); }
             if (res.data.activities?.length) { setActivities(res.data.activities); updateStorage('bafa_activities', res.data.activities); }
+            if (res.data.funds?.length) { setFunds(res.data.funds); updateStorage('bafa_funds', res.data.funds); }
             if (res.data.hogRaising) { setHogRaising(res.data.hogRaising); updateStorage('bafa_hog_raising', res.data.hogRaising); }
             if (res.data.users?.length) { setUsers(res.data.users); updateStorage('bafa_users', res.data.users); }
             console.log('[Aiven DB] Successfully loaded fresh data from Aiven PostgreSQL');
+          } else if (res.offlineMode) {
+            console.log('[Aiven DB] Running in offline / local-first storage mode.');
           }
         })
         .catch(err => console.log('[Aiven DB Offline / Unreachable]: using local state', err));
@@ -150,6 +156,7 @@ export default function App() {
       setTransactions(INITIAL_TRANSACTIONS);
       setAnnouncements(INITIAL_ANNOUNCEMENTS);
       setHogRaising(INITIAL_HOG_RAISING);
+      setFunds(INITIAL_FUNDS);
       setSyncQueue([]);
       setLogs(INITIAL_LOGS);
       setUsers(SEED_USERS);
@@ -244,7 +251,9 @@ export default function App() {
           announcements,
           products,
           activities,
-          hogRaising
+          hogRaising,
+          funds,
+          systemLogs: logs
         })
       });
 
@@ -961,6 +970,8 @@ export default function App() {
           members={members}
           hogRaising={hogRaising}
           products={products}
+          announcements={announcements}
+          activities={activities}
         />
       );
     }
@@ -1300,6 +1311,8 @@ export default function App() {
             {(currentRole === 'Treasurer' || currentRole === 'Auditor') && (
               <TreasurerView 
                 transactions={transactions}
+                funds={funds}
+                hogRaising={hogRaising}
                 onAddTransaction={handleAddTransaction}
                 onAuditTransaction={handleAuditTransaction}
                 currentRole={currentRole}

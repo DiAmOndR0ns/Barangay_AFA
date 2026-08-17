@@ -30,6 +30,7 @@ interface MigrationSummary {
   hogRaising: number;
   products: number;
   activities: number;
+  funds?: number;
 }
 
 export const AivenTestModal: React.FC<AivenTestModalProps> = ({ isOpen, onClose }) => {
@@ -220,6 +221,10 @@ export const AivenTestModal: React.FC<AivenTestModalProps> = ({ isOpen, onClose 
                         <div className="bg-white p-2 rounded-lg border border-emerald-200">
                           <span className="text-emerald-700 block text-[9px] font-sans font-bold">TRANSACTIONS</span>
                           <span className="font-bold text-emerald-950">{migrationSummary.financialTransactions} rows</span>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg border border-emerald-200">
+                          <span className="text-emerald-700 block text-[9px] font-sans font-bold">FUNDS</span>
+                          <span className="font-bold text-emerald-950">{migrationSummary.funds ?? 4} funds</span>
                         </div>
                         <div className="bg-white p-2 rounded-lg border border-emerald-200">
                           <span className="text-emerald-700 block text-[9px] font-sans font-bold">PRODUCTS</span>

@@ -1,16 +1,30 @@
 import React, { useState } from 'react';
-import { Sprout, Trophy, BookOpen, LogIn, ArrowRight, Sparkles, Coffee, Heart, Milestone, TrendingUp, Calendar, Users, Award, ShieldCheck, Check, ChevronLeft, ChevronRight, Lock, ShieldAlert } from 'lucide-react';
-import { HogRaisingState, Member, Product } from '../types';
+import { 
+  Sprout, Trophy, BookOpen, LogIn, ArrowRight, Sparkles, Coffee, 
+  Heart, Milestone, TrendingUp, Calendar, Users, Award, ShieldCheck, 
+  Check, ChevronLeft, ChevronRight, Lock, ShieldAlert, Megaphone,
+  MapPin, Clock, Tag, AlertTriangle
+} from 'lucide-react';
+import { HogRaisingState, Member, Product, Announcement, AssociationActivity } from '../types';
 
 interface GuestPortalProps {
   onEnterLogin: () => void;
   members: Member[];
   hogRaising: HogRaisingState;
   products?: Product[];
+  announcements?: Announcement[];
+  activities?: AssociationActivity[];
 }
 
-export default function GuestPortal({ onEnterLogin, members, hogRaising, products = [] }: GuestPortalProps) {
-  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'achievements' | 'products'>('home');
+export default function GuestPortal({ 
+  onEnterLogin, 
+  members, 
+  hogRaising, 
+  products = [],
+  announcements = [],
+  activities = []
+}: GuestPortalProps) {
+  const [activeTab, setActiveTab] = useState<'home' | 'announcements' | 'activities' | 'products' | 'history' | 'achievements'>('home');
 
   // Dynamically calculate stats to accurately reflect the registered roster
   const registeredMembersCount = members.length;
@@ -198,10 +212,12 @@ export default function GuestPortal({ onEnterLogin, members, hogRaising, product
 
             <div className="w-full flex justify-start sm:justify-center gap-1 sm:gap-2 overflow-x-auto py-1 select-none scrollbar-thin scrollbar-thumb-[#1B4332]/20 px-3 sm:px-6">
               {[
-                { id: 'home', label: 'Overview / Dashboard', icon: Sparkles },
+                { id: 'home', label: 'Overview', icon: Sparkles },
+                { id: 'announcements', label: 'Pahibalo (Announcements)', icon: Megaphone },
+                { id: 'activities', label: 'Mga Kalihokan (Activities)', icon: Calendar },
+                { id: 'products', label: 'Mga Produkto (Products)', icon: Coffee },
                 { id: 'history', label: 'Kasaysayan (History)', icon: BookOpen },
-                { id: 'achievements', label: 'Kalamposan (Achievements)', icon: Trophy },
-                { id: 'products', label: 'Mga Produkto (Our Products)', icon: Coffee }
+                { id: 'achievements', label: 'Kalamposan (Achievements)', icon: Trophy }
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -314,6 +330,86 @@ export default function GuestPortal({ onEnterLogin, members, hogRaising, product
               </div>
             </div>
 
+            {/* LATEST ANNOUNCEMENTS & ACTIVITIES PREVIEW BANNER */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              {/* Latest Announcements Preview */}
+              <div className="bg-white border-2 border-[#D5CFC1] rounded-3xl p-4 sm:p-6 space-y-3.5 shadow-sm">
+                <div className="flex items-center justify-between border-b border-[#D5CFC1] pb-2.5">
+                  <h4 className="font-black text-[#1B4332] text-sm sm:text-base flex items-center gap-2">
+                    <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-[#BF360C]" />
+                    <span>Lab-as nga Pahibalo (Announcements)</span>
+                  </h4>
+                  <button 
+                    onClick={() => setActiveTab('announcements')}
+                    className="text-xs font-black text-[#BF360C] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <span>Tan-awa Tanan</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2.5">
+                  {announcements.slice(0, 3).map((ann) => (
+                    <div key={ann.id} className="p-3 bg-[#FAF8F5] border border-[#E2DCCE] rounded-2xl space-y-1.5 hover:border-[#1B4332] transition-colors">
+                      <div className="flex items-center justify-between gap-2 flex-wrap text-[11px]">
+                        <span className={`px-2 py-0.5 rounded font-black uppercase text-[10px] ${
+                          ann.priority === 'High' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+                          ann.priority === 'Medium' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+                          'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        }`}>
+                          {ann.priority} Priority
+                        </span>
+                        <span className="text-slate-500 font-semibold">{ann.datePosted}</span>
+                      </div>
+                      <h5 className="font-black text-slate-900 text-xs sm:text-sm">{ann.title}</h5>
+                      <p className="text-xs text-slate-600 line-clamp-2">{ann.content}</p>
+                    </div>
+                  ))}
+                  {announcements.length === 0 && (
+                    <p className="text-xs text-slate-500 italic text-center py-4">Walay bag-ong pahibalo karon.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Upcoming Community Activities Preview */}
+              <div className="bg-white border-2 border-[#D5CFC1] rounded-3xl p-4 sm:p-6 space-y-3.5 shadow-sm">
+                <div className="flex items-center justify-between border-b border-[#D5CFC1] pb-2.5">
+                  <h4 className="font-black text-[#1B4332] text-sm sm:text-base flex items-center gap-2">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-700" />
+                    <span>Mga Kalihokan sa Asosasyon (Activities)</span>
+                  </h4>
+                  <button 
+                    onClick={() => setActiveTab('activities')}
+                    className="text-xs font-black text-emerald-800 hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <span>Tan-awa Tanan</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2.5">
+                  {activities.slice(0, 3).map((act) => (
+                    <div key={act.id} className="p-3 bg-[#FAF8F5] border border-[#E2DCCE] rounded-2xl space-y-1.5 hover:border-emerald-700 transition-colors">
+                      <div className="flex items-center justify-between gap-2 flex-wrap text-[11px]">
+                        <span className="px-2 py-0.5 rounded font-black text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          {act.category}
+                        </span>
+                        <span className="text-slate-500 font-semibold">{act.scheduledDate || act.dateScheduled} • {act.scheduledTime || act.timeScheduled}</span>
+                      </div>
+                      <h5 className="font-black text-slate-900 text-xs sm:text-sm">{act.title}</h5>
+                      <div className="text-[11px] text-slate-600 flex items-center gap-2 flex-wrap font-medium">
+                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-500" />{act.location}</span>
+                        <span className="flex items-center gap-1"><Users className="w-3 h-3 text-slate-500" />{act.targetAudience}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {activities.length === 0 && (
+                    <p className="text-xs text-slate-500 italic text-center py-4">Walay naka-eskedyul nga kalihokan karon.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Quick Portal Switch Card */}
             <div className="bg-[#FFF8E1] border-2 border-[#FFE082] rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm min-w-0">
               <div className="space-y-1 min-w-0">
@@ -334,6 +430,124 @@ export default function GuestPortal({ onEnterLogin, members, hogRaising, product
               </button>
             </div>
 
+          </div>
+        )}
+
+        {/* TAB: ANNOUNCEMENTS (PAHIBALO) */}
+        {activeTab === 'announcements' && (
+          <div className="space-y-6 sm:space-y-8 animate-fade-in text-left min-w-0">
+            <div className="bg-white border-2 border-[#D5CFC1] p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm space-y-3 min-w-0">
+              <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
+                <Megaphone className="w-6 h-6 sm:w-7 sm:h-7 text-[#BF360C] shrink-0" />
+                <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
+                  Opisyal nga mga Pahibalo ug Balita (Official Bulletins)
+                </h3>
+              </div>
+              <p className="text-xs sm:text-sm md:text-base text-slate-700 font-semibold leading-relaxed break-words">
+                Kini ang opisyal nga mga pahibalo nga gipagawas sa Public Information Officer (PIO) ug mga Opisyales sa BAFA alang sa tanang miyembro ug komunidad sa Barangay Alegria.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0">
+              {announcements.map((ann) => (
+                <div key={ann.id} className="bg-white border-2 border-[#D5CFC1] hover:border-[#1B4332] hover:shadow-lg transition-all rounded-3xl p-5 sm:p-6 space-y-3 flex flex-col justify-between">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase ${
+                        ann.priority === 'High' ? 'bg-rose-100 text-rose-900 border border-rose-300' :
+                        ann.priority === 'Medium' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                        'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                      }`}>
+                        {ann.priority} Priority
+                      </span>
+                      <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {ann.datePosted}
+                      </span>
+                    </div>
+
+                    <h4 className="text-base sm:text-lg font-black text-[#1B4332] leading-snug">{ann.title}</h4>
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">{ann.content}</p>
+                  </div>
+
+                  <div className="pt-3 border-t border-[#F0EBE1] flex items-center justify-between text-xs text-slate-500 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-emerald-700" />
+                      {ann.category}
+                    </span>
+                    <span>Gipatik ni: {ann.postedBy}</span>
+                  </div>
+                </div>
+              ))}
+              {announcements.length === 0 && (
+                <div className="col-span-full bg-white p-8 rounded-3xl border-2 border-[#D5CFC1] text-center text-slate-500 font-bold text-sm">
+                  Walay opisyal nga pahibalo sa pagkakaron.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: ACTIVITIES (MGA KALIHOKAN) */}
+        {activeTab === 'activities' && (
+          <div className="space-y-6 sm:space-y-8 animate-fade-in text-left min-w-0">
+            <div className="bg-white border-2 border-[#D5CFC1] p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm space-y-3 min-w-0">
+              <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
+                <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-700 shrink-0" />
+                <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
+                  Mga Kalihokan ug Eskedyul sa Asosasyon (Community Activities)
+                </h3>
+              </div>
+              <p className="text-xs sm:text-sm md:text-base text-slate-700 font-semibold leading-relaxed break-words">
+                Subaya ang mga umaabot ug nangaging mga seminar, training, distribution sa liso ug abono, ug mga miting sa mag-uuma sa Alegria.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0">
+              {activities.map((act) => (
+                <div key={act.id} className="bg-white border-2 border-[#D5CFC1] hover:border-emerald-700 hover:shadow-lg transition-all rounded-3xl p-5 sm:p-6 space-y-3 flex flex-col justify-between">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                        {act.category}
+                      </span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black ${
+                        act.status === 'Completed' ? 'bg-slate-100 text-slate-700 border border-slate-300' :
+                        act.status === 'In Progress' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+                        'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      }`}>
+                        {act.status}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-base sm:text-lg font-black text-[#1B4332] leading-snug">{act.title}</h4>
+                      {act.cebTitle && <span className="text-xs text-slate-600 font-bold block mt-0.5">{act.cebTitle}</span>}
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">{act.description}</p>
+                  </div>
+
+                  <div className="pt-3 border-t border-[#F0EBE1] space-y-1.5 text-xs text-slate-600 font-bold">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-1 text-slate-800"><Calendar className="w-3.5 h-3.5 text-emerald-700" />{act.scheduledDate || act.dateScheduled} • {act.scheduledTime || act.timeScheduled}</span>
+                      <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-rose-600" />{act.location}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500">
+                      <span>Tumong: {act.targetAudience}</span>
+                      {act.attendeesCount !== undefined && act.attendeesCount > 0 && (
+                        <span>Tambong: {act.attendeesCount} Mag-uuma</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {activities.length === 0 && (
+                <div className="col-span-full bg-white p-8 rounded-3xl border-2 border-[#D5CFC1] text-center text-slate-500 font-bold text-sm">
+                  Walay natala nga kalihokan sa pagkakaron.
+                </div>
+              )}
+            </div>
           </div>
         )}
 

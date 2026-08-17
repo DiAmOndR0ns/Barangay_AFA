@@ -2,16 +2,21 @@ import pg from 'pg';
 import { 
   SEED_USERS, INITIAL_MEMBERS, INITIAL_MEETINGS, INITIAL_RESOLUTIONS, 
   INITIAL_TRANSACTIONS, INITIAL_ANNOUNCEMENTS, INITIAL_LOGS, INITIAL_HOG_RAISING, 
-  INITIAL_PRODUCTS, INITIAL_ACTIVITIES 
+  INITIAL_PRODUCTS, INITIAL_ACTIVITIES, INITIAL_FUNDS 
 } from '../initialData';
 
 const { Pool } = pg;
 
 let poolInstance: pg.Pool | null = null;
 
+export function isDatabaseConfigured(): boolean {
+  const dbUrl = process.env.DATABASE_URL;
+  return Boolean(dbUrl && dbUrl.trim() !== '' && !dbUrl.includes('your_aiven_connection_string'));
+}
+
 export function getPool(): pg.Pool {
   const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) {
+  if (!isDatabaseConfigured() || !dbUrl) {
     throw new Error('DATABASE_URL environment variable is not configured');
   }
 
@@ -195,6 +200,20 @@ export async function initDatabaseSchema(pool: pg.Pool) {
         status VARCHAR(50),
         documented_notes TEXT,
         attendees_count INTEGER DEFAULT 0
+      );
+    `);
+
+    // 11. Organization Funds
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS organization_funds (
+        id VARCHAR(100) PRIMARY KEY,
+        name TEXT NOT NULL,
+        code VARCHAR(50) NOT NULL,
+        allocated_amount NUMERIC NOT NULL,
+        current_balance NUMERIC NOT NULL,
+        description TEXT,
+        custodian TEXT,
+        last_updated VARCHAR(50)
       );
     `);
 
@@ -464,6 +483,25 @@ export async function migrateSeedData(pool: pg.Pool) {
     }
     summary.activities = activitiesCount;
 
+    // 11. Migrate INITIAL_FUNDS
+    let fundsCount = 0;
+    for (const f of INITIAL_FUNDS) {
+      await client.query(`
+        INSERT INTO organization_funds (id, name, code, allocated_amount, current_balance, description, custodian, last_updated)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (id) DO UPDATE SET
+          name = EXCLUDED.name,
+          code = EXCLUDED.code,
+          allocated_amount = EXCLUDED.allocated_amount,
+          current_balance = EXCLUDED.current_balance,
+          description = EXCLUDED.description,
+          custodian = EXCLUDED.custodian,
+          last_updated = EXCLUDED.last_updated;
+      `, [f.id, f.name, f.code, f.allocatedAmount, f.currentBalance, f.description, f.custodian, f.lastUpdated]);
+      fundsCount++;
+    }
+    summary.funds = fundsCount;
+
     await client.query('COMMIT');
     return summary;
   } catch (err) {
@@ -489,6 +527,7 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
     const hogRes = await client.query("SELECT * FROM hog_raising WHERE id = 'main_state'");
     const productsRes = await client.query('SELECT * FROM products ORDER BY name ASC');
     const activitiesRes = await client.query('SELECT * FROM activities ORDER BY scheduled_date DESC');
+    const fundsRes = await client.query('SELECT * FROM organization_funds ORDER BY code ASC');
 
     const hogData = hogRes.rows[0] ? {
       capitalGrant: Number(hogRes.rows[0].capital_grant),
@@ -615,6 +654,16 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
         status: r.status,
         documentedNotes: r.documented_notes,
         attendeesCount: Number(r.attendees_count)
+      })),
+      funds: fundsRes.rows.map(r => ({
+        id: r.id,
+        name: r.name,
+        code: r.code,
+        allocatedAmount: Number(r.allocated_amount),
+        currentBalance: Number(r.current_balance),
+        description: r.description,
+        custodian: r.custodian,
+        lastUpdated: r.last_updated
       }))
     };
   } finally {
@@ -680,6 +729,41 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             audited_date = EXCLUDED.audited_date,
             audit_notes = EXCLUDED.audit_notes;
         `, [t.id, t.type, t.category, t.amount, t.date, t.description, t.recordedBy, t.auditedStatus, t.auditedBy || null, t.auditedDate || null, t.auditNotes || null]);
+      }
+    }
+
+    if (state.systemLogs && Array.isArray(state.systemLogs)) {
+      for (const l of state.systemLogs) {
+        await client.query(`
+          INSERT INTO system_logs (id, timestamp, user_name, role, action, details, sync_status, hash, previous_hash)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          ON CONFLICT (id) DO UPDATE SET
+            timestamp = EXCLUDED.timestamp,
+            user_name = EXCLUDED.user_name,
+            role = EXCLUDED.role,
+            action = EXCLUDED.action,
+            details = EXCLUDED.details,
+            sync_status = EXCLUDED.sync_status,
+            hash = EXCLUDED.hash,
+            previous_hash = EXCLUDED.previous_hash;
+        `, [l.id, l.timestamp, l.user || l.userName, l.role, l.action, l.details, 'synced', l.hash || '', l.previousHash || '']);
+      }
+    }
+
+    if (state.funds && Array.isArray(state.funds)) {
+      for (const f of state.funds) {
+        await client.query(`
+          INSERT INTO organization_funds (id, name, code, allocated_amount, current_balance, description, custodian, last_updated)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT (id) DO UPDATE SET
+            name = EXCLUDED.name,
+            code = EXCLUDED.code,
+            allocated_amount = EXCLUDED.allocated_amount,
+            current_balance = EXCLUDED.current_balance,
+            description = EXCLUDED.description,
+            custodian = EXCLUDED.custodian,
+            last_updated = EXCLUDED.last_updated;
+        `, [f.id, f.name, f.code, f.allocatedAmount, f.currentBalance, f.description, f.custodian, f.lastUpdated]);
       }
     }
 

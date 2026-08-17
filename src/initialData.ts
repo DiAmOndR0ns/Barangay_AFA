@@ -1,4 +1,4 @@
-import { Member, Meeting, Resolution, FinancialTransaction, Announcement, SystemLog, HogRaisingState, Product, AssociationActivity, User } from './types';
+import { Member, Meeting, Resolution, FinancialTransaction, Announcement, SystemLog, HogRaisingState, Product, AssociationActivity, User, OrganizationFund } from './types';
 import { buildAuditChain } from './utils/audit';
 
 export const SEED_USERS: User[] = [
@@ -250,6 +250,49 @@ export const INITIAL_TRANSACTIONS: FinancialTransaction[] = [
     auditedBy: 'Auditor (Lorena B Pinote)',
     auditedDate: '2026-07-09',
     auditNotes: 'Missing secondary receipt for the labor service (PHP 1,500). Please provide acknowledgment receipt signed by the mechanic.',
+  }
+];
+
+export const INITIAL_FUNDS: OrganizationFund[] = [
+  {
+    id: 'fund-gen',
+    name: 'General Treasury Fund',
+    code: 'GTF',
+    allocatedAmount: 150000,
+    currentBalance: 157450,
+    description: 'Main operational treasury account funded by membership dues, donations, and general association income.',
+    custodian: 'Treasurer (Gracelyn P Asendiente)',
+    lastUpdated: '2026-07-10'
+  },
+  {
+    id: 'fund-hog',
+    name: 'Hog Raising Livelihood IGP Capital Fund',
+    code: 'HOG-IGP',
+    allocatedAmount: 1000000,
+    currentBalance: 1000000,
+    description: 'DOLE & DA LGU capital grant dedicated strictly to piglet purchases, feeds, veterinary care, and hog sales rotation.',
+    custodian: 'Treasurer (Gracelyn P Asendiente)',
+    lastUpdated: '2026-07-01'
+  },
+  {
+    id: 'fund-emerg',
+    name: 'Emergency & Farmer Calamity Relief Fund',
+    code: 'EDAF',
+    allocatedAmount: 50000,
+    currentBalance: 50000,
+    description: 'Reserve fund for typhoons, crop disease outbreaks, and emergency medical micro-assistance for BAFA farm families.',
+    custodian: 'Auditor (Lorena B Pinote) & Treasurer',
+    lastUpdated: '2026-06-15'
+  },
+  {
+    id: 'fund-cbu',
+    name: 'Member Capital Build-Up (CBU) Fund',
+    code: 'CBU',
+    allocatedAmount: 75000,
+    currentBalance: 78200,
+    description: 'Accumulated savings and equity pooled from active members for future cooperative land and solar dryer expansion.',
+    custodian: 'Treasurer (Gracelyn P Asendiente)',
+    lastUpdated: '2026-07-05'
   }
 ];
 

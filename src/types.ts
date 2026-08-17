@@ -181,6 +181,17 @@ export interface IgpChoreLog {
   notes?: string;
 }
 
+export interface OrganizationFund {
+  id: string;
+  name: string;
+  code: string;
+  allocatedAmount: number;
+  currentBalance: number;
+  description: string;
+  custodian: string;
+  lastUpdated: string;
+}
+
 export interface HogRaisingState {
   capitalGrant: number; // Initially PHP 1,000,000
   produces?: string[]; // Dynamic list of produce projects, e.g. ["Hog Raising", "Poultry Raising"]
