@@ -216,7 +216,7 @@ export default function ExecutiveView({
 
           <div className="w-full sm:w-auto bg-[#081C15] border-2 border-[#52B788] px-3.5 py-2 rounded-2xl text-xs text-white font-bold shadow-md uppercase tracking-wider min-w-0 flex flex-wrap items-center gap-2">
             <span className="bg-[#D8F3DC] text-[#1B4332] text-[10px] font-mono px-2 py-0.5 rounded-md shrink-0 font-black">
-              AKTIBONG OPISYAL
+              ACTIVE OFFICER
             </span>
             <span className="font-black text-xs sm:text-sm text-white break-words">
               {currentRole === 'President' ? 'President (Zenaida)' : 'Vice President'}
@@ -230,26 +230,26 @@ export default function ExecutiveView({
         {/* Total Members */}
         <div className="bg-white border border-[#E9E4D9] p-5 rounded-2xl shadow-sm text-left">
           <div className="flex justify-between items-center text-[#5D6B54] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Miyembro (Members)</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Total Members</span>
             <Users className="w-5 h-5 text-[#1B4332]" />
           </div>
           <div className="text-3xl font-black font-display text-[#1B4332]">{totalMembers}</div>
           <div className="text-[10px] sm:text-xs text-[#5D6B54] mt-1">
-            <span className="text-[#2E7D32] font-bold">{activeMembers} Aktibo</span> • {totalMembers - activeMembers} Inactive
+            <span className="text-[#2E7D32] font-bold">{activeMembers} Active</span> • {totalMembers - activeMembers} Inactive
           </div>
         </div>
 
         {/* Association Funds */}
         <div className="bg-white border border-[#E9E4D9] p-5 rounded-2xl shadow-sm text-left">
           <div className="flex justify-between items-center text-[#5D6B54] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Pundo sa Co-op (Funds)</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Co-op Funds Balance</span>
             <Coins className="w-5 h-5 text-[#E65100]" />
           </div>
           <div className="text-2xl sm:text-3xl font-black font-display text-[#1B4332] tracking-tight">
             PHP {currentBalance.toLocaleString('en-US', { maximumFractionDigits: 0 })}
           </div>
           <div className="text-[10px] sm:text-xs text-[#5D6B54] mt-1">
-            Gikan sa Amot ug Membership Dues
+            From Member Dues & Grants
           </div>
         </div>
 
@@ -259,15 +259,15 @@ export default function ExecutiveView({
           className="bg-white border border-[#E9E4D9] p-5 rounded-2xl shadow-sm text-left cursor-pointer hover:border-[#1B4332] hover:bg-[#FAF9F5] transition-all group select-none"
         >
           <div className="flex justify-between items-center text-[#5D6B54] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider group-hover:text-[#1B4332]">Asembliya (Meetings)</span>
+            <span className="text-xs font-bold uppercase tracking-wider group-hover:text-[#1B4332]">General Assembly</span>
             <BookOpen className="w-5 h-5 text-[#0D47A1] group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-3xl font-black font-display text-[#1B4332] flex items-baseline gap-2">
             <span>{meetings.length}</span>
-            <span className="text-[10px] font-bold text-[#0D47A1] hover:underline">Tan-awa/Print</span>
+            <span className="text-[10px] font-bold text-[#0D47A1] hover:underline">View / Print</span>
           </div>
           <div className="text-[10px] sm:text-xs text-[#5D6B54] mt-1">
-            Talan-awon sa mga Minutes
+            Legislative & General Minutes
           </div>
         </div>
 
@@ -379,17 +379,17 @@ export default function ExecutiveView({
           <div className="border-b border-[#F0EBE1] pb-3 text-left">
             <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
               <KeyRound className="w-5.5 h-5.5 text-[#E65100]" />
-              <span>Opisina sa mga Koda (Credentials & Resets)</span>
+              <span>Credentials & Password Resets Desk</span>
             </h3>
             <p className="text-xs text-[#5D6B54] mt-1 font-medium">
-              I-reset ang nakalimtan nga password o usaba ang mga koda sa opisyal nga daling dagan.
+              Reset forgotten passwords and manage secure officer credentials across the association.
             </p>
           </div>
 
           {/* List of accounts & their password reset status */}
           <div className="space-y-3">
             <h4 className="text-xs font-extrabold text-[#4F5E46] uppercase tracking-wider">
-              Mga Aktibong Account sa System ({users.length})
+              Active System Accounts ({users.length})
             </h4>
 
             <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
@@ -669,10 +669,10 @@ export default function ExecutiveView({
           <div className="border-b border-[#E9E4D9] pb-3">
             <h3 className="text-base font-extrabold font-display text-[#BF360C] flex items-center gap-2">
               <ShieldCheck className="w-5.5 h-5.5 text-[#BF360C]" />
-              <span>Opisina sa Eleksyon ug Turnover (Election & Turnover Desk)</span>
+              <span>Election & Presidential Turnover Desk</span>
             </h3>
             <p className="text-xs text-[#5D6B54] mt-1 font-medium">
-              Kon adunay bag-ong eleksyon ug pulihan ang Presidente, gamita kini nga pamaagi aron pormal nga i-turnover ang system credentials, mga pundo, ug rekord sa asosasyon ngadto sa bag-ong opisyal.
+              Upon conclusion of democratic elections, utilize this certified turnover protocol to formally transfer system authority, financial books, and organizational archives to the newly elected President.
             </p>
           </div>
 

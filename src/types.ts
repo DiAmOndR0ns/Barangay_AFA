@@ -8,6 +8,9 @@ export interface User {
   role: OfficerRole | 'Member';
   isApproved: boolean;
   avatarUrl?: string; // base64 string for uploaded profile picture
+  memberIdNumber?: string;
+  rsbsaNumber?: string;
+  isRsbsaRegistered?: boolean;
   farmLocation?: string; // for Member role
   farmSize?: number; // in hectares, for Member role
   primaryCrops?: string[]; // for Member role
@@ -20,6 +23,9 @@ export interface User {
 export interface Member {
   id: string;
   name: string;
+  memberIdNumber?: string; // e.g. BAFA-2026-001
+  rsbsaNumber?: string; // Registry System for Basic Sectors in Agriculture (e.g. 07-22-51-001-000123)
+  isRsbsaRegistered?: boolean;
   farmLocation: string; // e.g. Sitio Alegria Centro, Sitio Fatima, Sitio Tuburan, Sitio Ylaya
   farmSize: number; // in hectares
   primaryCrops: string[]; // e.g. Corn, Coconut, Banana, Cacao, Vegetables
@@ -27,6 +33,8 @@ export interface Member {
   status: 'Active' | 'Inactive';
   joinedDate: string;
   avatarUrl?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  birthDate?: string;
 }
 
 export interface Meeting {
@@ -63,6 +71,7 @@ export interface FinancialTransaction {
   date: string;
   description: string;
   recordedBy: string; // Treasurer
+  fundSource?: string; // Where the budget was taken from, e.g. "GF-SLP (General Fund / DSWD-SLP)", "DOLE-IGP (DOLE Livelihood Grant)", "ATI-TRG (ATI Training Fund)", "DISP-5% (Dispersal Risk Pool)", "CBU (Member Equity)"
   auditedStatus: 'Unaudited' | 'Audited' | 'Flagged';
   auditedBy?: string; // Auditor
   auditedDate?: string;
@@ -150,6 +159,7 @@ export interface IgpExpense {
   amount: number;
   date: string;
   recordedBy: string;
+  fundSource?: string; // Where budget was taken from, e.g. "DOLE-DILP Capital Grant (₱1M)", "5% Livestock Insurance Pool", "BAFA General Fund"
 }
 
 export interface IgpSale {

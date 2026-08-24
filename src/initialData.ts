@@ -90,62 +90,92 @@ export const INITIAL_MEMBERS: Member[] = [
   {
     id: 'm-1',
     name: 'Roberto "Nong Berting" Caballes',
+    memberIdNumber: 'BAFA-2022-001',
+    rsbsaNumber: '07-22-51-001-000104',
+    isRsbsaRegistered: true,
     farmLocation: 'Sitio Ylaya',
     farmSize: 2.5,
     primaryCrops: ['Corn (Mais)', 'Coconut (Lubi)', 'Tuburan Coffee'],
     contactNumber: '0917-456-7890',
     status: 'Active',
     joinedDate: '2022-03-15',
+    gender: 'Male',
+    birthDate: '1968-04-12'
   },
   {
     id: 'm-2',
     name: 'Maria "Nang Mary" Alcoser',
+    memberIdNumber: 'BAFA-2023-014',
+    rsbsaNumber: '07-22-51-001-000218',
+    isRsbsaRegistered: true,
     farmLocation: 'Sitio Fatima',
     farmSize: 1.8,
     primaryCrops: ['Vegetables (Utanon)', 'Banana (Saging)', 'Hog Raising (Baboyan)'],
     contactNumber: '0928-123-4567',
     status: 'Active',
     joinedDate: '2023-01-10',
+    gender: 'Female',
+    birthDate: '1974-09-25'
   },
   {
     id: 'm-3',
     name: 'Anselna "Nang Seling" Arnado',
+    memberIdNumber: 'BAFA-2021-003',
+    rsbsaNumber: '07-22-51-001-000045',
+    isRsbsaRegistered: true,
     farmLocation: 'Sitio Proper (Centro)',
     farmSize: 3.2,
     primaryCrops: ['Cacao', 'Coconut (Lubi)', 'Hog Raising (Baboyan)'],
     contactNumber: '0909-876-5432',
     status: 'Active',
     joinedDate: '2021-06-20',
+    gender: 'Female',
+    birthDate: '1970-11-18'
   },
   {
     id: 'm-4',
     name: 'Gaudioso "Nong Gaudy" Mendoza',
+    memberIdNumber: 'BAFA-2022-009',
+    rsbsaNumber: '07-22-51-001-000301',
+    isRsbsaRegistered: true,
     farmLocation: 'Sitio Mahayahay',
     farmSize: 4.0,
     primaryCrops: ['Corn (Mais)', 'Cassava (Kamoteng Kahoy)'],
     contactNumber: '0935-234-5678',
     status: 'Active',
     joinedDate: '2022-11-05',
+    gender: 'Male',
+    birthDate: '1965-02-08'
   },
   {
     id: 'm-5',
     name: 'Florencia "Nang Flor" Ruelan',
+    memberIdNumber: 'BAFA-2024-032',
+    rsbsaNumber: '07-22-51-001-000412',
+    isRsbsaRegistered: false,
     farmLocation: 'Sitio Huyong-Huyong',
     farmSize: 1.2,
     primaryCrops: ['Vegetables (Utanon)', 'Tuburan Coffee', 'Poultry Raising (Manokan)'],
     contactNumber: '0915-345-6789',
     status: 'Inactive',
     joinedDate: '2024-02-18',
+    gender: 'Female',
+    birthDate: '1982-08-30'
   },
   {
     id: 'm-6',
     name: 'Zenaida "Nang Nene" Elbiña',
+    memberIdNumber: 'BAFA-2020-001',
+    rsbsaNumber: '07-22-51-001-000008',
+    isRsbsaRegistered: true,
     farmLocation: 'Sitio Guimbal',
     farmSize: 5.5,
     primaryCrops: ['Coconut (Lubi)', 'Cacao'],
     contactNumber: '0945-876-1234',
     status: 'Active',
     joinedDate: '2020-08-12',
+    gender: 'Female',
+    birthDate: '1963-05-14'
   }
 ];
 
@@ -210,6 +240,7 @@ export const INITIAL_TRANSACTIONS: FinancialTransaction[] = [
     date: '2026-06-14',
     description: 'Annual membership dues collected from 32 active members during the General Assembly.',
     recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+    fundSource: 'General Fund / CBU (Member Equity)',
     auditedStatus: 'Audited',
     auditedBy: 'Auditor (Lorena B Pinote)',
     auditedDate: '2026-06-18',
@@ -223,6 +254,7 @@ export const INITIAL_TRANSACTIONS: FinancialTransaction[] = [
     date: '2026-06-14',
     description: 'Snacks (pan de sal and juice) and attendance log notebooks bought for the June General Assembly.',
     recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+    fundSource: 'GF-SLP (General Fund / DSWD-SLP Operational Buffer)',
     auditedStatus: 'Audited',
     auditedBy: 'Auditor (Lorena B Pinote)',
     auditedDate: '2026-06-18',
@@ -236,6 +268,7 @@ export const INITIAL_TRANSACTIONS: FinancialTransaction[] = [
     date: '2026-07-02',
     description: 'Cash donation from Tuburan Agriculture Office for local farmer cooperative empowerment.',
     recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+    fundSource: 'LGU Tuburan Agriculture Assistance Fund',
     auditedStatus: 'Unaudited',
   },
   {
@@ -246,6 +279,7 @@ export const INITIAL_TRANSACTIONS: FinancialTransaction[] = [
     date: '2026-07-08',
     description: 'Spare parts purchase and mechanic labor for repairing the association\'s shared grass cutter.',
     recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+    fundSource: 'GF-SLP (General Operational Fund)',
     auditedStatus: 'Flagged',
     auditedBy: 'Auditor (Lorena B Pinote)',
     auditedDate: '2026-07-09',
@@ -256,33 +290,53 @@ export const INITIAL_TRANSACTIONS: FinancialTransaction[] = [
 export const INITIAL_FUNDS: OrganizationFund[] = [
   {
     id: 'fund-gen',
-    name: 'General Treasury Fund',
-    code: 'GTF',
+    name: 'General Fund / SLP (Sustainable Livelihood Program)',
+    code: 'GF-SLP',
     allocatedAmount: 150000,
     currentBalance: 157450,
-    description: 'Main operational treasury account funded by membership dues, donations, and general association income.',
+    description: 'Main operational treasury and DSWD-SLP micro-enterprise revolving fund for seed capital and community projects.',
     custodian: 'Treasurer (Gracelyn P Asendiente)',
     lastUpdated: '2026-07-10'
   },
   {
-    id: 'fund-hog',
-    name: 'Hog Raising Livelihood IGP Capital Fund',
-    code: 'HOG-IGP',
+    id: 'fund-dole',
+    name: 'DOLE Integrated Livelihood Program (DILP) Fund',
+    code: 'DOLE-IGP',
     allocatedAmount: 1000000,
     currentBalance: 1000000,
-    description: 'DOLE & DA LGU capital grant dedicated strictly to piglet purchases, feeds, veterinary care, and hog sales rotation.',
-    custodian: 'Treasurer (Gracelyn P Asendiente)',
+    description: 'DOLE capital grant dedicated strictly to communal Hog Raising, piglet purchases, feeds, and livestock assets.',
+    custodian: 'Assist. Treasurer & Treasurer (Gracelyn P Asendiente)',
     lastUpdated: '2026-07-01'
   },
   {
-    id: 'fund-emerg',
-    name: 'Emergency & Farmer Calamity Relief Fund',
-    code: 'EDAF',
-    allocatedAmount: 50000,
-    currentBalance: 50000,
-    description: 'Reserve fund for typhoons, crop disease outbreaks, and emergency medical micro-assistance for BAFA farm families.',
-    custodian: 'Auditor (Lorena B Pinote) & Treasurer',
-    lastUpdated: '2026-06-15'
+    id: 'fund-ati',
+    name: 'ATI Training & Capacity Building Record',
+    code: 'ATI-TRG',
+    allocatedAmount: 85000,
+    currentBalance: 85000,
+    description: 'Agricultural Training Institute (ATI) grant for farmer skills training, organic farming seminars, and benchmarking.',
+    custodian: 'President (Zenaida A. Elbiña) & Treasurer',
+    lastUpdated: '2026-07-04'
+  },
+  {
+    id: 'fund-dispersal',
+    name: 'Dispersal & 5% Livestock Insurance Risk Pool',
+    code: 'DISP-5%',
+    allocatedAmount: 45000,
+    currentBalance: 48500,
+    description: '5% statutory contingency reserve set aside from gross revenues for livestock mortality insurance and emergency replacements.',
+    custodian: 'Auditor & Treasurer (Gracelyn P Asendiente)',
+    lastUpdated: '2026-07-08'
+  },
+  {
+    id: 'fund-fcct',
+    name: 'FCCT Cooperative Deposit (December Member Cut)',
+    code: 'FCCT-SAVINGS',
+    allocatedAmount: 120000,
+    currentBalance: 126400,
+    description: 'First Consolidated Cooperative (FCCT) bank deposits holding the 30% patronage interest cut to be released in December.',
+    custodian: 'Treasurer (Gracelyn P Asendiente)',
+    lastUpdated: '2026-07-12'
   },
   {
     id: 'fund-cbu',
@@ -372,7 +426,8 @@ export const INITIAL_HOG_RAISING: HogRaisingState = {
       description: 'Purchased 20 piglets for 2025 batch',
       amount: 60000,
       date: '2025-10-10',
-      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+      fundSource: 'DOLE Integrated Livelihood Program (DILP) Capital Grant'
     },
     {
       id: 'pig-exp-prev-2',
@@ -380,7 +435,8 @@ export const INITIAL_HOG_RAISING: HogRaisingState = {
       description: 'Feeds for 2025 batch',
       amount: 15000,
       date: '2025-11-15',
-      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+      fundSource: 'DOLE-DILP Revolving Feed Allocation'
     },
     {
       id: 'pig-exp-q1-1',
@@ -388,7 +444,8 @@ export const INITIAL_HOG_RAISING: HogRaisingState = {
       description: 'Purchased starter feeds for early 2026 cycle',
       amount: 12000,
       date: '2026-02-10',
-      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+      fundSource: 'DOLE Integrated Livelihood Program (DILP) Capital Grant'
     },
     {
       id: 'pig-exp-1',
@@ -396,7 +453,8 @@ export const INITIAL_HOG_RAISING: HogRaisingState = {
       description: 'Purchased 25 hybrid piglets (F1 high-quality breed) for fattening project',
       amount: 75000,
       date: '2026-06-15',
-      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+      fundSource: 'DOLE Integrated Livelihood Program (DILP) Capital Grant'
     },
     {
       id: 'pig-exp-2',
@@ -404,7 +462,8 @@ export const INITIAL_HOG_RAISING: HogRaisingState = {
       description: 'Bought 15 bags of Hog Starter Crumbles & booster feeds',
       amount: 24000,
       date: '2026-06-20',
-      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+      fundSource: 'DOLE Integrated Livelihood Program (DILP) Capital Grant'
     },
     {
       id: 'pig-exp-3',
@@ -412,7 +471,8 @@ export const INITIAL_HOG_RAISING: HogRaisingState = {
       description: 'Acquired anti-cholera vaccine vials, dewormer powders, and swine growth booster vitamins',
       amount: 8500,
       date: '2026-06-22',
-      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+      fundSource: 'Dispersal & 5% Livestock Insurance Risk Pool'
     },
     {
       id: 'pig-exp-4',
@@ -420,7 +480,8 @@ export const INITIAL_HOG_RAISING: HogRaisingState = {
       description: 'Bought 10 bags of Hog Grower Pellets for the second month feeding cycle',
       amount: 18500,
       date: '2026-07-05',
-      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: 'Treasurer (Gracelyn P Asendiente)',
+      fundSource: 'DOLE Integrated Livelihood Program (DILP) Capital Grant'
     }
   ],
   sales: [

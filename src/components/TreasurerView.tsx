@@ -50,6 +50,7 @@ export default function TreasurerView({
   // Add Transaction Form
   const [txType, setTxType] = useState<'income' | 'expense'>('income');
   const [txCategory, setTxCategory] = useState('Membership Dues');
+  const [txFundSource, setTxFundSource] = useState('GF-SLP (General Fund / DSWD-SLP Operational Buffer)');
   const [txAmount, setTxAmount] = useState('');
   const [txDate, setTxDate] = useState(new Date().toISOString().split('T')[0]);
   const [txDesc, setTxDesc] = useState('');
@@ -220,6 +221,7 @@ export default function TreasurerView({
       amount: parseFloat(txAmount),
       date: txDate,
       description: txDesc,
+      fundSource: txFundSource,
       recordedBy: 'Treasurer (Gracelyn P Asendiente)'
     });
     setTxAmount('');
@@ -699,6 +701,10 @@ export default function TreasurerView({
                         {tx.category}
                       </span>
                       <span className="text-xs text-slate-500 font-mono">{tx.date}</span>
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-lg border border-emerald-500/20 flex items-center gap-1">
+                        <Wallet className="w-2.5 h-2.5" />
+                        <span>Source: {tx.fundSource || 'General Operational Fund'}</span>
+                      </span>
                     </div>
                     <p className="text-sm font-semibold text-white mt-1.5">{tx.description}</p>
                     <p className="text-[10px] text-slate-500 mt-1">Logged by: {tx.recordedBy}</p>
@@ -868,6 +874,32 @@ export default function TreasurerView({
                   {CATEGORIES[txType].map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
+                </select>
+              </div>
+
+              {/* Budget Source (Asa Gikuha / Where Budget Was Taken From) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1 flex items-center justify-between">
+                  <span>Asa Gikuha ang Pundo / Budget Source</span>
+                  <span className="text-[10px] text-emerald-400 font-normal">Audit Traceability</span>
+                </label>
+                <select
+                  value={txFundSource}
+                  onChange={(e) => setTxFundSource(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                >
+                  {funds.map(f => (
+                    <option key={f.id} value={`${f.code} (${f.name})`}>
+                      {f.code} - {f.name} (Bal: ₱{f.currentBalance.toLocaleString()})
+                    </option>
+                  ))}
+                  <option value="GF-SLP (General Fund / DSWD-SLP Operational Buffer)">GF-SLP (General Fund / DSWD-SLP Operational Buffer)</option>
+                  <option value="DOLE Integrated Livelihood Program (DILP) Capital Grant">DOLE Integrated Livelihood Program (DILP) Capital Grant</option>
+                  <option value="ATI-TRG (ATI Training & Capacity Building Fund)">ATI-TRG (ATI Training & Capacity Building Fund)</option>
+                  <option value="DISP-5% (Dispersal & Livestock Insurance Risk Pool)">DISP-5% (Dispersal & Livestock Insurance Risk Pool)</option>
+                  <option value="FCCT-SAVINGS (FCCT Cooperative Bank Deposit)">FCCT-SAVINGS (FCCT Cooperative Bank Deposit)</option>
+                  <option value="CBU (Member Capital Build-Up & Equity Fund)">CBU (Member Capital Build-Up & Equity Fund)</option>
+                  <option value="LGU Tuburan Agriculture Assistance Fund">LGU Tuburan Agriculture Assistance Fund</option>
                 </select>
               </div>
 

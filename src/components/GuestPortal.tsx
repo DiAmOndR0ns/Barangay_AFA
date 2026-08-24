@@ -320,11 +320,11 @@ export default function GuestPortal({
                   </li>
                   <li className="flex items-start gap-2 break-words">
                     <Check className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                    <span>100% Transparency sa Pinansyal ug Pundo</span>
+                    <span>100% Financial Transparency & Live Audit Trail</span>
                   </li>
                   <li className="flex items-start gap-2 break-words">
                     <Check className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                    <span>Aktibong Suporta sa matag Miyembro sa Asosasyon</span>
+                    <span>Active Support & Subsidies for All Members</span>
                   </li>
                 </ul>
               </div>
@@ -415,17 +415,17 @@ export default function GuestPortal({
               <div className="space-y-1 min-w-0">
                 <h4 className="text-base sm:text-lg font-black text-[#5D4037] flex items-center gap-2 flex-wrap break-words">
                   <Milestone className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFB300] shrink-0" />
-                  <span>Miyembro ka ba o Opisyal sa BAFA?</span>
+                  <span>Are you a Registered BAFA Member or Officer?</span>
                 </h4>
                 <p className="text-xs sm:text-sm text-[#7D5C4F] font-semibold break-words">
-                  Pindota ang butones sa tuo aron makasulod sa imong personal nga dashboard, makatala sa imong trabaho (chore log), o makasusi sa balita.
+                  Sign in to access your personal dashboard, log caretaker chores, view dividends, and print certified credentials.
                 </p>
               </div>
               <button
                 onClick={onEnterLogin}
                 className="w-full md:w-auto bg-[#BF360C] hover:bg-[#8D2300] text-white font-black text-xs sm:text-sm px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl cursor-pointer shadow-md shrink-0 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] whitespace-nowrap"
               >
-                <span>Sulod sa Imong Account (Access Portal)</span>
+                <span>Access Member / Officer Portal</span>
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
               </button>
             </div>

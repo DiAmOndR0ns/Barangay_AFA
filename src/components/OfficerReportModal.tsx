@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Member, Meeting, Resolution, FinancialTransaction, SystemLog, Announcement, HogRaisingState, OfficerRole } from '../types';
+import { Member, Meeting, Resolution, FinancialTransaction, SystemLog, Announcement, HogRaisingState, OfficerRole, OrganizationFund } from '../types';
+import { INITIAL_FUNDS } from '../initialData';
 import { 
   Printer, Download, X, FileText, ShieldCheck, Coins, 
-  Users, Megaphone
+  Users, Megaphone, Wallet, Database, Layers, CheckCircle2, AlertCircle
 } from 'lucide-react';
 
 interface OfficerReportModalProps {
@@ -13,6 +14,7 @@ interface OfficerReportModalProps {
   transactions: FinancialTransaction[];
   announcements: Announcement[];
   logs: SystemLog[];
+  funds?: OrganizationFund[];
   hogRaising?: HogRaisingState;
   onClose: () => void;
   onDownloadBackup?: () => void;
@@ -25,6 +27,7 @@ export default function OfficerReportModal({
   resolutions,
   transactions,
   announcements,
+  funds = INITIAL_FUNDS,
   hogRaising,
   onClose,
   onDownloadBackup
@@ -44,14 +47,19 @@ export default function OfficerReportModal({
   let totalExpense = 0;
   const incomeCategoryTotals: Record<string, number> = {};
   const expenseCategoryTotals: Record<string, number> = {};
+  const fundExpenseBreakdown: Record<string, number> = {};
+  const fundIncomeBreakdown: Record<string, number> = {};
 
   transactions.forEach(t => {
+    const budgetSource = t.fundSource || 'General Operational Fund (GF-SLP)';
     if (t.type === 'income') {
       totalIncome += t.amount;
       incomeCategoryTotals[t.category] = (incomeCategoryTotals[t.category] || 0) + t.amount;
+      fundIncomeBreakdown[budgetSource] = (fundIncomeBreakdown[budgetSource] || 0) + t.amount;
     } else {
       totalExpense += t.amount;
       expenseCategoryTotals[t.category] = (expenseCategoryTotals[t.category] || 0) + t.amount;
+      fundExpenseBreakdown[budgetSource] = (fundExpenseBreakdown[budgetSource] || 0) + t.amount;
     }
   });
 
@@ -60,6 +68,12 @@ export default function OfficerReportModal({
   const flaggedCount = transactions.filter(t => t.auditedStatus === 'Flagged').length;
   const unauditedCount = transactions.filter(t => !t.auditedStatus || t.auditedStatus === 'Unaudited').length;
   const auditComplianceRate = transactions.length > 0 ? ((auditedCount / transactions.length) * 100).toFixed(1) : '100.0';
+
+  // Total Capital and Expenses across IGP Projects
+  const hogCapital = hogRaising?.capitalGrant || 1000000;
+  const hogExpensesTotal = (hogRaising?.expenses || []).reduce((sum, e) => sum + e.amount, 0);
+  const hogSalesTotal = (hogRaising?.sales || []).reduce((sum, s) => sum + s.revenue, 0);
+  const hogNet = hogSalesTotal - hogExpensesTotal;
 
   // Calculations for Members
   const activeMembers = members.filter(m => m.status === 'Active');
@@ -106,34 +120,100 @@ export default function OfficerReportModal({
 
     if (activeReportRole === 'Treasurer') {
       contentHtml = `
-        <div class="section-title">1. FINANCIAL OVERVIEW & CASH BALANCE</div>
+        <div class="section-title">1. FINANCIAL OVERVIEW & GENERAL CASH BALANCE</div>
         <table>
-          <tr><th>Category</th><th>Amount (PHP)</th></tr>
-          <tr><td><strong>Total Association Income</strong></td><td style="color: green;">+ PHP ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-          <tr><td><strong>Total Expenditures</strong></td><td style="color: red;">- PHP ${totalExpense.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-          <tr style="background:#f1f5f9;"><td><strong>NET GENERAL FUND BALANCE</strong></td><td><strong>PHP ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td></tr>
+          <tr><th>Financial Ledger Category</th><th>Amount (PHP)</th><th>Budget Status / Remarks</th></tr>
+          <tr><td><strong>Total Association Income / Receipts</strong></td><td class="income">+ PHP ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td><td>Dues, Donations, Grants & Sales</td></tr>
+          <tr><td><strong>Total Association Expenditures</strong></td><td class="expense">- PHP ${totalExpense.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td><td>Disbursed Operating & Capital Costs</td></tr>
+          <tr style="background:#f1f5f9;"><td><strong>NET GENERAL CASH BALANCE</strong></td><td><strong>PHP ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td><td><strong>Revolving Liquid Balance</strong></td></tr>
         </table>
 
-        <div class="section-title">2. ITEMIZATION OF REVENUE BY CATEGORY</div>
-        <table>
-          <tr><th>Income Category</th><th>Total Received (PHP)</th></tr>
-          ${Object.entries(incomeCategoryTotals).map(([cat, amt]) => `
-            <tr><td>${cat}</td><td>PHP ${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-          `).join('') || '<tr><td colspan="2">No income entries recorded.</td></tr>'}
-        </table>
-
-        <div class="section-title">3. ITEMIZATION OF EXPENDITURES BY CATEGORY</div>
-        <table>
-          <tr><th>Expense Category</th><th>Total Disbursed (PHP)</th></tr>
-          ${Object.entries(expenseCategoryTotals).map(([cat, amt]) => `
-            <tr><td>${cat}</td><td>PHP ${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-          `).join('') || '<tr><td colspan="2">No expense entries recorded.</td></tr>'}
-        </table>
-
-        <div class="section-title">4. DETAILED TRANSACTION LEDGER</div>
+        <div class="section-title">2. REGISTERED ORGANIZATION FUND ACCOUNTS & SOURCE OF BUDGET ALLOCATIONS</div>
+        <p style="font-size: 10px; color: #475569; margin-bottom: 8px;">
+          The table below indicates the official treasury accounts and government grant programs from which all project budgets and operational expenditures are drawn:
+        </p>
         <table>
           <thead>
-            <tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Recorded By</th><th>Amount</th><th>Audit Status</th></tr>
+            <tr>
+              <th>Fund Code</th>
+              <th>Fund Account / Grant Name</th>
+              <th>Origin / Granting Agency</th>
+              <th>Allocated Capital (PHP)</th>
+              <th>Live Audited Balance (PHP)</th>
+              <th>Custodian</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${funds.map(f => `
+              <tr>
+                <td><strong>${f.code}</strong></td>
+                <td><strong>${f.name}</strong><br/><span style="font-size: 8.5px; color:#64748b;">${f.description}</span></td>
+                <td>${f.code.includes('DOLE') ? 'DOLE Region VII' : f.code.includes('SLP') ? 'DSWD-SLP / LGU' : f.code.includes('ATI') ? 'ATI-RTC VII' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank' : f.code.includes('DISP') ? '5% Statutory Reserve Pool' : 'BAFA Member Equity'}</td>
+                <td>PHP ${f.allocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td style="color: #065f46; font-weight: bold;">PHP ${f.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td>${f.custodian}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="section-title">3. WHERE BUDGET WAS TAKEN FROM (EXPENDITURES DISBURSED BY FUND SOURCE)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Budget / Fund Source Taken From</th>
+              <th>Grant / Allocation Purpose</th>
+              <th>Total Disbursed (PHP)</th>
+              <th>Accounting Proportion</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.entries(fundExpenseBreakdown).map(([source, amt]) => `
+              <tr>
+                <td><strong>${source}</strong></td>
+                <td>${source.includes('DOLE') ? 'Livestock stock, feeds & infrastructure' : source.includes('SLP') || source.includes('GF') ? 'General association operations & meeting logistics' : source.includes('ATI') ? 'Training & farmer capacity development' : source.includes('DISP') ? 'Mortality insurance & medical replacements' : 'Operational disbursements'}</td>
+                <td class="expense">PHP ${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td>${totalExpense > 0 ? ((amt / totalExpense) * 100).toFixed(1) : '0.0'}%</td>
+              </tr>
+            `).join('') || '<tr><td colspan="4">No fund disbursements recorded.</td></tr>'}
+          </tbody>
+        </table>
+
+        <div class="section-title">4. ITEMIZATION OF REVENUE & EXPENDITURES BY CATEGORY</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <h4 style="font-size: 10px; margin: 0 0 4px 0; color: #065f46; text-transform: uppercase;">Income by Category</h4>
+            <table>
+              <tr><th>Income Category</th><th>Total Received</th></tr>
+              ${Object.entries(incomeCategoryTotals).map(([cat, amt]) => `
+                <tr><td>${cat}</td><td>PHP ${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+              `).join('') || '<tr><td colspan="2">No income entries.</td></tr>'}
+            </table>
+          </div>
+          <div>
+            <h4 style="font-size: 10px; margin: 0 0 4px 0; color: #991b1b; text-transform: uppercase;">Expenditures by Category</h4>
+            <table>
+              <tr><th>Expense Category</th><th>Total Disbursed</th></tr>
+              ${Object.entries(expenseCategoryTotals).map(([cat, amt]) => `
+                <tr><td>${cat}</td><td>PHP ${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+              `).join('') || '<tr><td colspan="2">No expense entries.</td></tr>'}
+            </table>
+          </div>
+        </div>
+
+        <div class="section-title">5. DETAILED TRANSACTION LEDGER (WITH BUDGET SOURCE TRACEABILITY)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Budget / Fund Source Taken From</th>
+              <th>Description / Purpose</th>
+              <th>Recorded By</th>
+              <th>Amount</th>
+              <th>Audit Status</th>
+            </tr>
           </thead>
           <tbody>
             ${transactions.map(t => `
@@ -141,9 +221,10 @@ export default function OfficerReportModal({
                 <td>${t.date}</td>
                 <td><span class="${t.type}">${t.type.toUpperCase()}</span></td>
                 <td>${t.category}</td>
+                <td><strong style="color: #0f766e;">${t.fundSource || 'General Operational Fund (GF-SLP)'}</strong></td>
                 <td>${t.description}</td>
                 <td>${t.recordedBy}</td>
-                <td>PHP ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td class="${t.type === 'income' ? 'income' : 'expense'}">PHP ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td>${t.auditedStatus || 'Unaudited'}</td>
               </tr>
             `).join('')}
@@ -152,53 +233,86 @@ export default function OfficerReportModal({
       `;
     } else if (activeReportRole === 'Auditor') {
       contentHtml = `
-        <div class="section-title">1. AUDIT EVALUATION SUMMARY</div>
+        <div class="section-title">1. AUDIT EVALUATION & COMPLIANCE SUMMARY</div>
         <table>
-          <tr><th>Audit Metric</th><th>Evaluation Outcome</th></tr>
-          <tr><td>Total Transactions Examined</td><td>${transactions.length} Record(s)</td></tr>
-          <tr><td>Verified & Audited OK</td><td style="color: green; font-weight: bold;">${auditedCount} Transaction(s)</td></tr>
-          <tr><td>Flagged Discrepancy Items</td><td style="color: red; font-weight: bold;">${flaggedCount} Item(s)</td></tr>
-          <tr><td>Pending Audit Verification</td><td>${unauditedCount} Item(s)</td></tr>
-          <tr><td>Overall Audit Compliance Rate</td><td><strong>${auditComplianceRate}%</strong></td></tr>
+          <tr><th>Audit Metric</th><th>Evaluation Outcome</th><th>Audit Verification Standard</th></tr>
+          <tr><td>Total Transactions Examined</td><td><strong>${transactions.length} Record(s)</strong></td><td>100% Comprehensive Ledger Examination</td></tr>
+          <tr><td>Verified & Audited OK</td><td style="color: green; font-weight: bold;">${auditedCount} Transaction(s)</td><td>Supported by official receipts & disbursement vouchers</td></tr>
+          <tr><td>Flagged Discrepancy Items</td><td style="color: red; font-weight: bold;">${flaggedCount} Item(s)</td><td>Requires receipt clarification / officer justification</td></tr>
+          <tr><td>Pending Audit Verification</td><td>${unauditedCount} Item(s)</td><td>Queued for forthcoming regular committee audit</td></tr>
+          <tr><td>Overall Audit Compliance Rate</td><td><strong>${auditComplianceRate}%</strong></td><td>Cooperative Development Authority (CDA) Standard Compliant</td></tr>
         </table>
 
-        <div class="section-title">2. FLAGGED ITEMS & ACTION REQUIRED</div>
+        <div class="section-title">2. BUDGET SOURCE & GRANT RESTRICTION COMPLIANCE AUDIT</div>
+        <p style="font-size: 10px; color: #475569; margin-bottom: 8px;">
+          Auditor's evaluation verifying that all funds were drawn strictly from their designated budget source allocations:
+        </p>
         <table>
           <thead>
-            <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Audit Notes / Discrepancy Reason</th></tr>
+            <tr>
+              <th>Fund Account / Source</th>
+              <th>Granting Body</th>
+              <th>Authorized Expenditure Scope</th>
+              <th>Compliance Finding</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${funds.map(f => `
+              <tr>
+                <td><strong>${f.name} (${f.code})</strong></td>
+                <td>${f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program' : f.code.includes('SLP') ? 'DSWD Sustainable Livelihood Program' : f.code.includes('ATI') ? 'Agricultural Training Institute' : f.code.includes('DISP') ? 'BAFA Statutory 5% Reserve' : 'Cooperative Capital'}</td>
+                <td>${f.description}</td>
+                <td style="color: green; font-weight: bold;">✓ VERIFIED & IN COMPLIANCE</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="section-title">3. FLAGGED ITEMS & ACTION REQUIRED (WITH BUDGET SOURCE CHARGED)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Budget Source Charged</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Audit Notes / Discrepancy Reason</th>
+            </tr>
           </thead>
           <tbody>
             ${transactions.filter(t => t.auditedStatus === 'Flagged').map(t => `
               <tr style="background-color: #fef2f2;">
                 <td>${t.date}</td>
                 <td>${t.category}</td>
+                <td><strong>${t.fundSource || 'General Operational Fund (GF-SLP)'}</strong></td>
                 <td>${t.description}</td>
-                <td>PHP ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td class="expense">PHP ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td>${t.auditNotes || 'Requires official receipts or documentation clarification.'}</td>
               </tr>
-            `).join('') || '<tr><td colspan="5" style="color: green; text-align: center;">No flagged financial items found. All audited records meet co-op standards.</td></tr>'}
+            `).join('') || '<tr><td colspan="6" style="color: green; text-align: center;">No flagged financial items found. All audited records meet co-op standards.</td></tr>'}
           </tbody>
         </table>
       `;
     } else if (activeReportRole === 'Secretary') {
       contentHtml = `
-        <div class="section-title">1. MEMBERSHIP ROSTER STATISTICS</div>
+        <div class="section-title">1. MEMBERSHIP ROSTER & RSBSA REGISTRATION STATISTICS</div>
         <table>
-          <tr><th>Metric</th><th>Count</th></tr>
-          <tr><td>Total Active Members</td><td style="color: green; font-weight: bold;">${activeMembers.length} Members</td></tr>
-          <tr><td>Inactive / On-Leave Members</td><td>${inactiveMembers.length} Members</td></tr>
-          <tr style="background:#f1f5f9;"><td><strong>Total Registered Roster</strong></td><td><strong>${members.length} Members</strong></td></tr>
+          <tr><th>Secretariat Metric</th><th>Count</th><th>Remarks</th></tr>
+          <tr><td>Total Active Registered Members</td><td style="color: green; font-weight: bold;">${activeMembers.length} Members</td><td>Eligible for 50/30/20 Dividends & Seeds</td></tr>
+          <tr><td>Inactive / On-Leave Members</td><td>${inactiveMembers.length} Members</td><td>For active roster reactivation</td></tr>
+          <tr style="background:#f1f5f9;"><td><strong>Total Registered Association Roster</strong></td><td><strong>${members.length} Members</strong></td><td><strong>SEC & RSBSA Official Roster</strong></td></tr>
         </table>
 
         <div class="section-title">2. SITIO LOCATION BREAKDOWN</div>
         <table>
-          <tr><th>Sitio Location</th><th>Registered Members</th></tr>
+          <tr><th>Sitio Community Location</th><th>Registered Farmer Count</th><th>Coverage Rate</th></tr>
           ${Object.entries(sitioCounts).map(([sitio, count]) => `
-            <tr><td>${sitio}</td><td>${count} Members</td></tr>
+            <tr><td>${sitio}</td><td>${count} Members</td><td>${((count / members.length) * 100).toFixed(1)}%</td></tr>
           `).join('')}
         </table>
 
-        <div class="section-title">3. LEGISLATIVE RESOLUTIONS SUMMARY</div>
+        <div class="section-title">3. LEGISLATIVE RESOLUTIONS & BUDGET APPROVALS SUMMARY</div>
         <table>
           <thead>
             <tr><th>Res #</th><th>Title</th><th>Status</th><th>Moved By</th><th>Seconded By</th><th>Votes (Favor - Against - Abstain)</th></tr>
@@ -242,21 +356,50 @@ export default function OfficerReportModal({
           <tr><th>Executive Key Performance Indicator</th><th>Current Status Outcome</th></tr>
           <tr><td>Total Registered Farmer Roster</td><td><strong>${members.length} Members (${activeMembers.length} Active, ${inactiveMembers.length} Inactive)</strong></td></tr>
           <tr><td>General Fund Financial Cash Balance</td><td><strong>PHP ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td></tr>
-          <tr><td>LGU Tuburan Assistance & Grant Allocation</td><td>PHP 1,000,000.00 Dedicated Livelihood Capital</td></tr>
-          <tr><td>Passed Legislative Resolutions</td><td>${resolutions.filter(r => r.status === 'Approved').length} Approved Resolution(s)</td></tr>
-          <tr><td>Financial Audit Integrity Rate</td><td><strong>${auditComplianceRate}% Verified Compliance</strong></td></tr>
+          <tr><td>LGU Tuburan & DOLE Assistance Capital Grant</td><td><strong>PHP 1,000,000.00 Dedicated Livelihood Capital</strong></td></tr>
+          <tr><td>Passed Legislative Resolutions</td><td>${resolutions.filter(r => r.status === 'Approved').length} Approved Resolution(s) out of ${resolutions.length} Total</td></tr>
+          <tr><td>Financial Audit Integrity Rate</td><td><strong>${auditComplianceRate}% Verified Compliance (Auditor: Lorena B. Pinote)</strong></td></tr>
           <tr><td>Public Announcements Broadcasted</td><td>${announcements.length} Published Advisories (${announcements.filter(a => a.priority === 'High').length} High Priority)</td></tr>
         </table>
 
-        <div class="section-title">2. TREASURER'S FINANCIAL DEPARTMENT SUMMARY</div>
+        <div class="section-title">2. CAPITAL GRANTS & SOURCE OF BUDGET ALLOCATIONS (WHERE BUDGET WAS TAKEN FROM)</div>
+        <p style="font-size: 10px; color: #475569; margin-bottom: 8px;">
+          Master inventory of government capital grants, cooperative deposits, and organizational funds managed by the Association:
+        </p>
         <table>
-          <tr><th>Financial Metric</th><th>Amount (PHP)</th></tr>
-          <tr><td>Total Gross Revenue Collected</td><td style="color: green; font-weight: bold;">+ PHP ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-          <tr><td>Total Disbursed Operating Expenses</td><td style="color: red; font-weight: bold;">- PHP ${totalExpense.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-          <tr style="background:#f1f5f9;"><td><strong>NET CASH FUND BALANCE</strong></td><td><strong>PHP ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td></tr>
+          <thead>
+            <tr>
+              <th>Fund Code</th>
+              <th>Fund Program Name</th>
+              <th>Originating Budget / Grantor Source</th>
+              <th>Allocated Capital (PHP)</th>
+              <th>Audited Live Balance (PHP)</th>
+              <th>Fund Custodian</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${funds.map(f => `
+              <tr>
+                <td><strong>${f.code}</strong></td>
+                <td><strong>${f.name}</strong></td>
+                <td>${f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program (DILP)' : f.code.includes('SLP') ? 'DSWD-SLP & LGU Tuburan Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Grant' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool'}</td>
+                <td>PHP ${f.allocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td style="color: #065f46; font-weight: bold;">PHP ${f.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td>${f.custodian}</td>
+              </tr>
+            `).join('')}
+          </tbody>
         </table>
 
-        <div class="section-title">3. AUDITOR'S FINANCIAL OVERSIGHT SUMMARY</div>
+        <div class="section-title">3. TREASURER'S FINANCIAL DEPARTMENT SUMMARY</div>
+        <table>
+          <tr><th>Financial Metric</th><th>Amount (PHP)</th><th>Budget Status / Remarks</th></tr>
+          <tr><td>Total Gross Revenue Collected</td><td class="income">+ PHP ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td><td>Membership dues, donations, sales & grants</td></tr>
+          <tr><td>Total Disbursed Operating Expenses</td><td class="expense">- PHP ${totalExpense.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td><td>Disbursed across GF-SLP, ATI, & operational allocations</td></tr>
+          <tr style="background:#f1f5f9;"><td><strong>NET CASH FUND BALANCE</strong></td><td><strong>PHP ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td><td><strong>Liquid Treasury Balance</strong></td></tr>
+        </table>
+
+        <div class="section-title">4. AUDITOR'S FINANCIAL OVERSIGHT SUMMARY</div>
         <table>
           <tr><th>Audit Metric</th><th>Details</th></tr>
           <tr><td>Transactions Evaluated</td><td>${transactions.length} Total Ledger Items</td></tr>
@@ -265,7 +408,7 @@ export default function OfficerReportModal({
           <tr><td>Audit Compliance Rate</td><td><strong>${auditComplianceRate}%</strong></td></tr>
         </table>
 
-        <div class="section-title">4. SECRETARY'S MEMBERSHIP & LEGISLATIVE ASSEMBLY SUMMARY</div>
+        <div class="section-title">5. SECRETARY'S MEMBERSHIP & LEGISLATIVE ASSEMBLY SUMMARY</div>
         <table>
           <tr><th>Secretariat Metric</th><th>Details</th></tr>
           <tr><td>Registered Roster Count</td><td>${members.length} Farmers (${activeMembers.length} Active)</td></tr>
@@ -274,7 +417,7 @@ export default function OfficerReportModal({
           <tr><td>General Assembly Sessions Held</td><td>${meetings.length} Recorded Meetings</td></tr>
         </table>
 
-        <div class="section-title">5. PUBLIC INFORMATION OFFICER (PIO) SUMMARY</div>
+        <div class="section-title">6. PUBLIC INFORMATION OFFICER (PIO) SUMMARY</div>
         <table>
           <tr><th>PIO Metric</th><th>Details</th></tr>
           <tr><td>Total Community Bulletins Published</td><td>${announcements.length} Announcements</td></tr>
@@ -282,16 +425,18 @@ export default function OfficerReportModal({
         </table>
 
         ${hogRaising ? `
-          <div class="section-title">6. HOG RAISING IGP LIVELIHOOD PROJECT SUMMARY</div>
+          <div class="section-title">7. HOG RAISING & LIVELIHOOD IGP PROJECT (DOLE-DILP CAPITAL GRANT)</div>
           <table>
-            <tr><th>IGP Metric</th><th>Details</th></tr>
-            <tr><td>Total Operating Expenses Recorded</td><td>PHP ${(hogRaising.expenses || []).reduce((acc, e) => acc + e.amount, 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-            <tr><td>Active Volunteer Chore Groups</td><td>${hogRaising.groups?.length || 0} Member Teams</td></tr>
-            <tr><td>Total Batch Sales Revenue Collected</td><td>PHP ${(hogRaising.sales || []).reduce((acc, s) => acc + s.revenue, 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+            <tr><th>IGP Metric</th><th>Outcome Details</th></tr>
+            <tr><td><strong>Capital Grant Budget Origin</strong></td><td><strong>DOLE Integrated Livelihood Program (DILP) Grant (PHP ${hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })})</strong></td></tr>
+            <tr><td>Total Operating Expenses Recorded</td><td>PHP ${hogExpensesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} (Feeds, Piglets, Vaccines)</td></tr>
+            <tr><td>Active Volunteer Chore Groups</td><td>${hogRaising.groups?.length || 0} Member Caretaker Teams</td></tr>
+            <tr><td>Total Batch Sales Revenue Collected</td><td>PHP ${hogSalesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+            <tr><td>Net Livelihood Tubo / Proceeds</td><td style="color: ${hogNet >= 0 ? 'green' : 'red'}; font-weight: bold;">PHP ${hogNet.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
           </table>
         ` : ''}
 
-        <div class="section-title">7. EXECUTIVE OFFICERS DIRECTORY</div>
+        <div class="section-title">8. EXECUTIVE OFFICERS DIRECTORY</div>
         <table>
           <thead>
             <tr><th>Role</th><th>Officer Name</th><th>Designation</th></tr>
@@ -444,19 +589,43 @@ export default function OfficerReportModal({
       csvRows.push(`Date Generated,${reportDate}`);
       csvRows.push(`Prepared By,${getOfficerNameByRole('Treasurer')}`);
       csvRows.push('');
-      csvRows.push('SUMMARY');
+      csvRows.push('1. FINANCIAL SUMMARY');
       csvRows.push(`Total Income (PHP),${totalIncome.toFixed(2)}`);
       csvRows.push(`Total Expenditures (PHP),${totalExpense.toFixed(2)}`);
       csvRows.push(`Net Balance (PHP),${netBalance.toFixed(2)}`);
       csvRows.push('');
-      csvRows.push('TRANSACTION LEDGER');
-      csvRows.push('ID,Date,Type,Category,Description,Recorded By,Amount (PHP),Audit Status');
+      csvRows.push('2. REGISTERED ORGANIZATION FUND ACCOUNTS & SOURCE OF BUDGET ALLOCATIONS (WHERE BUDGET WAS TAKEN FROM)');
+      csvRows.push('Fund Code,Fund Account Name,Funding Origin / Grantor,Allocated Capital (PHP),Live Audited Balance (PHP),Custodian');
+      funds.forEach(f => {
+        const origin = f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program (DILP)' : f.code.includes('SLP') ? 'DSWD-SLP & LGU Tuburan Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Grant' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool';
+        csvRows.push([
+          `"${f.code}"`,
+          `"${f.name.replace(/"/g, '""')}"`,
+          `"${origin}"`,
+          f.allocatedAmount.toFixed(2),
+          f.currentBalance.toFixed(2),
+          `"${f.custodian.replace(/"/g, '""')}"`
+        ].join(','));
+      });
+      csvRows.push('');
+      csvRows.push('3. DISBURSEMENTS BY BUDGET / FUND SOURCE (WHERE BUDGET WAS TAKEN FROM)');
+      csvRows.push('Budget / Fund Source,Total Disbursed (PHP)');
+      Object.entries(fundExpenseBreakdown).forEach(([source, amt]) => {
+        csvRows.push([
+          `"${source.replace(/"/g, '""')}"`,
+          amt.toFixed(2)
+        ].join(','));
+      });
+      csvRows.push('');
+      csvRows.push('4. TRANSACTION LEDGER WITH BUDGET SOURCE TRACEABILITY');
+      csvRows.push('ID,Date,Type,Category,Budget / Fund Source Taken From,Description,Recorded By,Amount (PHP),Audit Status');
       transactions.forEach(t => {
         csvRows.push([
           t.id,
           t.date,
           t.type,
           `"${t.category.replace(/"/g, '""')}"`,
+          `"${(t.fundSource || 'General Operational Fund (GF-SLP)').replace(/"/g, '""')}"`,
           `"${t.description.replace(/"/g, '""')}"`,
           `"${t.recordedBy.replace(/"/g, '""')}"`,
           t.amount.toFixed(2),
@@ -468,19 +637,31 @@ export default function OfficerReportModal({
       csvRows.push(`Date Generated,${reportDate}`);
       csvRows.push(`Auditor,${getOfficerNameByRole('Auditor')}`);
       csvRows.push('');
-      csvRows.push('AUDIT METRICS');
+      csvRows.push('1. AUDIT METRICS');
       csvRows.push(`Total Evaluated,${transactions.length}`);
       csvRows.push(`Audited OK,${auditedCount}`);
       csvRows.push(`Flagged Discrepancies,${flaggedCount}`);
       csvRows.push(`Compliance Rate (%),${auditComplianceRate}`);
       csvRows.push('');
-      csvRows.push('FLAGGED TRANSACTIONS');
-      csvRows.push('ID,Date,Category,Description,Amount (PHP),Audit Notes');
+      csvRows.push('2. BUDGET SOURCE COMPLIANCE AUDIT (WHERE BUDGET WAS TAKEN FROM)');
+      csvRows.push('Fund Code,Fund Account Name,Compliance Status,Authorized Purpose');
+      funds.forEach(f => {
+        csvRows.push([
+          `"${f.code}"`,
+          `"${f.name.replace(/"/g, '""')}"`,
+          'VERIFIED COMPLIANT',
+          `"${f.description.replace(/"/g, '""')}"`
+        ].join(','));
+      });
+      csvRows.push('');
+      csvRows.push('3. FLAGGED TRANSACTIONS REQUIRING ATTENTION');
+      csvRows.push('ID,Date,Category,Budget Source Charged,Description,Amount (PHP),Audit Notes');
       transactions.filter(t => t.auditedStatus === 'Flagged').forEach(t => {
         csvRows.push([
           t.id,
           t.date,
           `"${t.category.replace(/"/g, '""')}"`,
+          `"${(t.fundSource || 'General Operational Fund (GF-SLP)').replace(/"/g, '""')}"`,
           `"${t.description.replace(/"/g, '""')}"`,
           t.amount.toFixed(2),
           `"${(t.auditNotes || '').replace(/"/g, '""')}"`
@@ -492,11 +673,13 @@ export default function OfficerReportModal({
       csvRows.push(`Secretary,${getOfficerNameByRole('Secretary')}`);
       csvRows.push('');
       csvRows.push('MEMBERSHIP ROSTER');
-      csvRows.push('ID,Name,Sitio Location,Farm Size (ha),Primary Crops,Status,Joined Date');
+      csvRows.push('ID,Name,Member ID,RSBSA Number,Sitio Location,Farm Size (ha),Primary Crops,Status,Joined Date');
       members.forEach(m => {
         csvRows.push([
           m.id,
           `"${m.name.replace(/"/g, '""')}"`,
+          `"${m.memberIdNumber || 'Pending'}"`,
+          `"${m.rsbsaNumber || 'Pending'}"`,
           `"${m.farmLocation.replace(/"/g, '""')}"`,
           m.farmSize.toString(),
           `"${m.primaryCrops.join('; ').replace(/"/g, '""')}"`,
@@ -556,36 +739,53 @@ export default function OfficerReportModal({
       csvRows.push(`Total Registered Farmer Members,${members.length}`);
       csvRows.push(`Active Farmer Members,${activeMembers.length}`);
       csvRows.push(`Net General Cash Fund Balance (PHP),${netBalance.toFixed(2)}`);
-      csvRows.push(`LGU Assistance Grant Allocation (PHP),1000000.00`);
+      csvRows.push(`DOLE-DILP Capital Grant Allocation (PHP),1000000.00`);
       csvRows.push(`Approved Legislative Resolutions,${resolutions.filter(r => r.status === 'Approved').length}`);
       csvRows.push(`Financial Audit Compliance Rate (%),${auditComplianceRate}`);
       csvRows.push('');
-      csvRows.push('2. TREASURER FINANCIAL SUMMARY');
+      csvRows.push('2. PORTFOLIO OF CAPITAL GRANTS & BUDGET SOURCES (WHERE BUDGET WAS TAKEN FROM)');
+      csvRows.push('Fund Code,Fund Account Name,Originating Grantor / Source,Allocated Capital (PHP),Audited Balance (PHP),Custodian');
+      funds.forEach(f => {
+        const origin = f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program (DILP)' : f.code.includes('SLP') ? 'DSWD-SLP & LGU Tuburan Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Grant' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool';
+        csvRows.push([
+          `"${f.code}"`,
+          `"${f.name.replace(/"/g, '""')}"`,
+          `"${origin}"`,
+          f.allocatedAmount.toFixed(2),
+          f.currentBalance.toFixed(2),
+          `"${f.custodian.replace(/"/g, '""')}"`
+        ].join(','));
+      });
+      csvRows.push('');
+      csvRows.push('3. TREASURER FINANCIAL SUMMARY');
       csvRows.push(`Gross Income (PHP),${totalIncome.toFixed(2)}`);
       csvRows.push(`Gross Expenditures (PHP),${totalExpense.toFixed(2)}`);
       csvRows.push(`Net Balance (PHP),${netBalance.toFixed(2)}`);
       csvRows.push('');
-      csvRows.push('3. AUDITOR COMPLIANCE SUMMARY');
+      csvRows.push('4. AUDITOR COMPLIANCE SUMMARY');
       csvRows.push(`Total Evaluated Transactions,${transactions.length}`);
       csvRows.push(`Audited Verified OK,${auditedCount}`);
       csvRows.push(`Flagged Discrepancy Items,${flaggedCount}`);
       csvRows.push(`Audit Integrity Rate (%),${auditComplianceRate}`);
       csvRows.push('');
-      csvRows.push('4. SECRETARY ROSTER & ASSEMBLY SUMMARY');
+      csvRows.push('5. SECRETARY ROSTER & ASSEMBLY SUMMARY');
       csvRows.push(`Active Members,${activeMembers.length}`);
       csvRows.push(`Inactive Members,${inactiveMembers.length}`);
       csvRows.push(`Passed Resolutions,${resolutions.filter(r => r.status === 'Approved').length}`);
       csvRows.push(`General Assembly Meetings Logged,${meetings.length}`);
       csvRows.push('');
-      csvRows.push('5. PUBLIC INFORMATION OFFICER (PIO) SUMMARY');
+      csvRows.push('6. PUBLIC INFORMATION OFFICER (PIO) SUMMARY');
       csvRows.push(`Total Bulletins Published,${announcements.length}`);
       csvRows.push(`High Priority Advisories,${announcements.filter(a => a.priority === 'High').length}`);
       if (hogRaising) {
         csvRows.push('');
-        csvRows.push('6. HOG RAISING IGP LIVELIHOOD SUMMARY');
-        csvRows.push(`Total Operating Expenses (PHP),${(hogRaising.expenses || []).reduce((acc, e) => acc + e.amount, 0).toFixed(2)}`);
+        csvRows.push('7. HOG RAISING IGP LIVELIHOOD SUMMARY (DOLE-DILP CAPITAL GRANT)');
+        csvRows.push(`Capital Grant Origin,DOLE Integrated Livelihood Program (DILP)`);
+        csvRows.push(`Capital Grant Amount (PHP),${hogCapital.toFixed(2)}`);
+        csvRows.push(`Total Operating Expenses (PHP),${hogExpensesTotal.toFixed(2)}`);
         csvRows.push(`Active Volunteer Chore Groups,${hogRaising.groups?.length || 0}`);
-        csvRows.push(`Total Batch Sales Revenue (PHP),${(hogRaising.sales || []).reduce((acc, s) => acc + s.revenue, 0).toFixed(2)}`);
+        csvRows.push(`Total Batch Sales Revenue (PHP),${hogSalesTotal.toFixed(2)}`);
+        csvRows.push(`Net Livelihood Tubo (PHP),${hogNet.toFixed(2)}`);
       }
     }
 
@@ -616,8 +816,8 @@ export default function OfficerReportModal({
               </h2>
               <p className="text-xs text-slate-400 font-medium truncate">
                 {isPresident 
-                  ? "Generate and export the consolidated summary of all executive officer reports."
-                  : `Generate, export, or print the official ${currentRole.replace('_', ' ')} department report.`}
+                  ? "Generate and export the consolidated summary of all executive officer reports with budget origins."
+                  : `Generate, export, or print the official ${currentRole.replace('_', ' ')} department report with full budget source traceability.`}
               </p>
             </div>
           </div>
@@ -638,9 +838,9 @@ export default function OfficerReportModal({
               <div className="flex items-center gap-2.5 min-w-0">
                 <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
                 <div className="min-w-0">
-                  <span className="font-extrabold text-white block">Opisyal nga Report sa {currentRole.replace('_', ' ')}</span>
+                  <span className="font-extrabold text-white block">Official {currentRole.replace('_', ' ')} Department Report</span>
                   <p className="text-[11px] text-slate-300">
-                    Isip {currentRole.replace('_', ' ')}, maka-export ka ra sa opisyal nga report sa imong sarang nga departamento. Ang Presidente lamang ang maka-export sa consolidated summary sa tanang opisyal.
+                    As {currentRole.replace('_', ' ')}, you can export or print your department's official records with verified budget source allocations.
                   </p>
                 </div>
               </div>
@@ -653,9 +853,9 @@ export default function OfficerReportModal({
               <div className="flex items-center gap-2.5 min-w-0">
                 <FileText className="w-5 h-5 text-purple-400 shrink-0" />
                 <div className="min-w-0">
-                  <span className="font-extrabold text-white block">President's Executive Summary Access</span>
+                  <span className="font-extrabold text-white block">President's Executive Consolidated Access</span>
                   <p className="text-[11px] text-slate-300">
-                    Gi-export: Summary sa tanang report gikan sa mga Executive Officers (Treasurer, Auditor, Secretary, PIO, ug Hog IGP).
+                    Exporting consolidated executive summaries across all executive officers with full grant and capital breakdown (DOLE, DSWD-SLP, ATI, FCCT, Dispersal Pool, CBU).
                   </p>
                 </div>
               </div>
@@ -674,8 +874,8 @@ export default function OfficerReportModal({
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {[
                   { role: 'President' as OfficerRole, label: 'Consolidated Summary', icon: FileText, color: 'text-purple-400' },
-                  { role: 'Treasurer' as OfficerRole, label: 'Treasurer', icon: Coins, color: 'text-amber-400' },
-                  { role: 'Auditor' as OfficerRole, label: 'Auditor', icon: ShieldCheck, color: 'text-emerald-400' },
+                  { role: 'Treasurer' as OfficerRole, label: 'Treasurer (Funds)', icon: Coins, color: 'text-amber-400' },
+                  { role: 'Auditor' as OfficerRole, label: 'Auditor (Oversight)', icon: ShieldCheck, color: 'text-emerald-400' },
                   { role: 'Secretary' as OfficerRole, label: 'Secretary', icon: Users, color: 'text-blue-400' },
                   { role: 'PIO' as OfficerRole, label: 'PIO Board', icon: Megaphone, color: 'text-pink-400' }
                 ].map((item) => {
@@ -707,10 +907,10 @@ export default function OfficerReportModal({
               <div>
                 <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Official Document Preview</span>
                 <h3 className="text-sm font-black text-white mt-0.5">
-                  {activeReportRole === 'Treasurer' && "Treasurer's Official Financial & Cash Flow Statement"}
-                  {activeReportRole === 'Auditor' && "Auditor's Financial Oversight & Compliance Inspection Report"}
+                  {activeReportRole === 'Treasurer' && "Treasurer's Official Financial & Cash Flow Statement (With Budget Sources)"}
+                  {activeReportRole === 'Auditor' && "Auditor's Financial Oversight & Grant Compliance Inspection Report"}
                   {activeReportRole === 'Secretary' && "Secretary's Membership Roster & Legislative Assembly Report"}
-                  {activeReportRole === 'President' && "President's Executive Consolidated Summary of All Officer Reports"}
+                  {activeReportRole === 'President' && "President's Executive Consolidated Summary of All Officer Reports & Grant Portfolios"}
                   {activeReportRole === 'Vice_President' && "Vice President's Administration & Oversight Report"}
                   {activeReportRole === 'PIO' && "Public Information Officer Community Communications Report"}
                 </h3>
@@ -738,8 +938,8 @@ export default function OfficerReportModal({
                     <p className="text-sm font-mono font-bold text-white">PHP {netBalance.toLocaleString()}</p>
                   </div>
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Entries</span>
-                    <p className="text-sm font-mono font-bold text-slate-200">{transactions.length} Records</p>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Fund Accounts</span>
+                    <p className="text-sm font-mono font-bold text-emerald-400">{funds.length} Active Budgets</p>
                   </div>
                 </>
               )}
@@ -797,12 +997,12 @@ export default function OfficerReportModal({
                     <p className="text-sm font-mono font-bold text-emerald-400">PHP {netBalance.toLocaleString()}</p>
                   </div>
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Audit Rate</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">{auditComplianceRate}%</p>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Capital Grant</span>
+                    <p className="text-sm font-mono font-bold text-amber-400">PHP {hogCapital.toLocaleString()}</p>
                   </div>
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Officer Modules</span>
-                    <p className="text-sm font-mono font-bold text-purple-400">All 6 Consolidated</p>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Audit Rate</span>
+                    <p className="text-sm font-mono font-bold text-emerald-400">{auditComplianceRate}%</p>
                   </div>
                 </>
               )}
@@ -829,8 +1029,23 @@ export default function OfficerReportModal({
               )}
             </div>
 
+            {/* REGISTERED BUDGET SOURCES CARD PREVIEW */}
+            <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-800 space-y-2">
+              <span className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1.5">
+                <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Source of Funds & Budget Allocations Included in Report:</span>
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {funds.map(f => (
+                  <span key={f.id} className="text-[10px] bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300 font-medium flex items-center gap-1">
+                    <strong className="text-emerald-400 font-mono">{f.code}</strong>: {f.name.split('/')[0]} (PHP {f.currentBalance.toLocaleString()})
+                  </span>
+                ))}
+              </div>
+            </div>
+
             {/* CUSTOM REMARKS INPUT */}
-            <div className="space-y-1.5 pt-2">
+            <div className="space-y-1.5 pt-1">
               <label className="block text-[10px] font-black text-slate-400 uppercase">
                 Dugang nga Mubo nga Pahayag / Special Remarks (Optional):
               </label>

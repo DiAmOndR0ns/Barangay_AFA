@@ -4,11 +4,13 @@ import {
   Users, BookOpen, FileText, Plus, Search, 
   MapPin, CheckCircle, FilePlus, Calendar, 
   Trash2, UserPlus, Info, Tag, Printer, UserCheck,
-  CheckCircle2, AlertCircle, XCircle
+  CheckCircle2, AlertCircle, XCircle, Award, Sparkles, ShieldCheck
 } from 'lucide-react';
 import PrintMinutesModal from './PrintMinutesModal';
 import PrintAttendanceModal from './PrintAttendanceModal';
 import RollCallModal from './RollCallModal';
+import SecretaryTemplatesModal from './SecretaryTemplatesModal';
+import MemberIdBadgeModal from './MemberIdBadgeModal';
 
 interface SecretaryViewProps {
   members: Member[];
@@ -46,6 +48,10 @@ export default function SecretaryView({
   const [selectedMeetingForPrint, setSelectedMeetingForPrint] = useState<Meeting | null>(null);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   
+  // Secretary Templates and Member Badge Modals
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [selectedMemberForBadge, setSelectedMemberForBadge] = useState<Member | null>(null);
+  
   // Roll Call States
   const [meetingAttendanceRecord, setMeetingAttendanceRecord] = useState<Record<string, 'Present' | 'Absent' | 'Excused'>>({});
   const [rollCallMeeting, setRollCallMeeting] = useState<Meeting | null>(null);
@@ -57,6 +63,11 @@ export default function SecretaryView({
   const [memberContact, setMemberContact] = useState('');
   const [memberSitio, setMemberSitio] = useState('Sitio Proper (Centro)');
   const [memberSize, setMemberSize] = useState('1.0');
+  const [memberIdNum, setMemberIdNum] = useState(`BAFA-2026-0${members.length + 1}`);
+  const [memberRsbsa, setMemberRsbsa] = useState('');
+  const [isRsbsaRegistered, setIsRsbsaRegistered] = useState(true);
+  const [memberGender, setMemberGender] = useState<'Male' | 'Female' | 'Other'>('Male');
+  const [memberBirthDate, setMemberBirthDate] = useState('');
   const [selectedCrops, setSelectedCrops] = useState<string[]>([]);
   
   // Meeting Form State
@@ -114,10 +125,15 @@ export default function SecretaryView({
     if (!memberName.trim()) return;
     onAddMember({
       name: memberName,
+      memberIdNumber: memberIdNum || `BAFA-2026-0${members.length + 1}`,
+      rsbsaNumber: memberRsbsa || undefined,
+      isRsbsaRegistered: isRsbsaRegistered,
       contactNumber: memberContact || 'None',
       farmLocation: memberSitio,
       farmSize: parseFloat(memberSize) || 1.0,
       primaryCrops: selectedCrops.length > 0 ? selectedCrops : ['Vegetables (Utanon)'],
+      gender: memberGender,
+      birthDate: memberBirthDate || undefined,
       status: 'Active'
     });
     // Reset Form
@@ -125,6 +141,11 @@ export default function SecretaryView({
     setMemberContact('');
     setMemberSitio('Sitio Proper (Centro)');
     setMemberSize('1.0');
+    setMemberIdNum(`BAFA-2026-0${members.length + 2}`);
+    setMemberRsbsa('');
+    setIsRsbsaRegistered(true);
+    setMemberGender('Male');
+    setMemberBirthDate('');
     setSelectedCrops([]);
     setShowMemberModal(false);
   };
@@ -207,7 +228,17 @@ export default function SecretaryView({
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+          <button
+            id="secretary-templates-btn"
+            type="button"
+            onClick={() => setShowTemplatesModal(true)}
+            className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-[#1B4332] hover:bg-[#143326] text-white border border-emerald-500/40 rounded-xl shadow-sm transition-all w-full sm:w-auto cursor-pointer"
+          >
+            <FileText className="w-4 h-4 text-emerald-300 shrink-0" />
+            <span>Document Templates (LOI/Res/Letters)</span>
+          </button>
+
           {onOpenReportModal && (
             <button
               id="secretary-report-btn"
@@ -311,7 +342,8 @@ export default function SecretaryView({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-900 border-b border-slate-700 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                    <th className="px-5 py-3">Farmer Name</th>
+                    <th className="px-5 py-3">Farmer Name & ID</th>
+                    <th className="px-5 py-3">RSBSA Status</th>
                     <th className="px-5 py-3">Sitio / Location</th>
                     <th className="px-5 py-3">Farm Area</th>
                     <th className="px-5 py-3">Crops & Livestock</th>
@@ -325,8 +357,26 @@ export default function SecretaryView({
                     filteredMembers.map((member) => (
                       <tr key={member.id} className="hover:bg-slate-750/30 transition-colors">
                         <td className="px-5 py-4 font-semibold text-white">
-                          {member.name}
-                          <span className="block text-[10px] text-slate-500 font-normal mt-0.5">Joined: {member.joinedDate || 'Recent'}</span>
+                          <div className="flex items-center gap-2">
+                            <span>{member.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
+                            <span className="text-emerald-400 font-bold">{member.memberIdNumber || 'BAFA-2026-000'}</span>
+                            <span>•</span>
+                            <span>Joined: {member.joinedDate || 'Recent'}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          {member.isRsbsaRegistered ? (
+                            <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full" title={member.rsbsaNumber}>
+                              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                              <span>{member.rsbsaNumber ? member.rsbsaNumber.substring(0, 14) + '...' : 'RSBSA Reg.'}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 bg-slate-700/60 text-slate-400 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                              <span>Unregistered</span>
+                            </span>
+                          )}
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-1">
@@ -363,20 +413,30 @@ export default function SecretaryView({
                           </button>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <button
-                            id={`delete-member-${member.id}`}
-                            onClick={() => onDeleteMember(member.id)}
-                            className="text-slate-500 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10 transition-all inline-flex items-center justify-center"
-                            title="Remove member"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              id={`badge-member-${member.id}`}
+                              onClick={() => setSelectedMemberForBadge(member)}
+                              className="text-emerald-400 hover:text-emerald-300 p-1.5 rounded-lg hover:bg-emerald-500/10 transition-all inline-flex items-center justify-center cursor-pointer"
+                              title="Print Member ID Badge"
+                            >
+                              <Award className="w-4 h-4" />
+                            </button>
+                            <button
+                              id={`delete-member-${member.id}`}
+                              onClick={() => onDeleteMember(member.id)}
+                              className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all inline-flex items-center justify-center cursor-pointer"
+                              title="Remove member"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
+                      <td colSpan={8} className="px-5 py-8 text-center text-slate-500">
                         No farmers found matching search criteria.
                       </td>
                     </tr>
@@ -578,16 +638,57 @@ export default function SecretaryView({
               </button>
             </div>
             <form onSubmit={handleMemberSubmit} className="p-5 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Farmer Full Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Juan De la Cruz"
-                  value={memberName}
-                  onChange={(e) => setMemberName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Farmer Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Juan De la Cruz"
+                    value={memberName}
+                    onChange={(e) => setMemberName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Member ID Code</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. BAFA-2026-043"
+                    value={memberIdNum}
+                    onChange={(e) => setMemberIdNum(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* RSBSA Registration Field */}
+              <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-750 space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Basic Sectors in Agriculture (RSBSA)</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-emerald-400">
+                    <input 
+                      type="checkbox"
+                      checked={isRsbsaRegistered}
+                      onChange={(e) => setIsRsbsaRegistered(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0"
+                    />
+                    <span>RSBSA Registered</span>
+                  </label>
+                </div>
+                {isRsbsaRegistered && (
+                  <input
+                    type="text"
+                    placeholder="RSBSA Control No. (e.g. 07-22-51-001-000542)"
+                    value={memberRsbsa}
+                    onChange={(e) => setMemberRsbsa(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:border-emerald-500"
+                  />
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -611,6 +712,30 @@ export default function SecretaryView({
                     placeholder="e.g. 0917-000-0000"
                     value={memberContact}
                     onChange={(e) => setMemberContact(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Gender</label>
+                  <select
+                    value={memberGender}
+                    onChange={(e) => setMemberGender(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Birth Date</label>
+                  <input
+                    type="date"
+                    value={memberBirthDate}
+                    onChange={(e) => setMemberBirthDate(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -991,6 +1116,23 @@ export default function SecretaryView({
             });
           }
         }}
+      />
+
+      {/* SECRETARY OFFICIAL TEMPLATES MODAL (LOI, RESOLUTION, REQUEST LETTER) */}
+      <SecretaryTemplatesModal
+        isOpen={showTemplatesModal}
+        onClose={() => setShowTemplatesModal(false)}
+        members={members}
+        resolutions={resolutions}
+        onAddResolution={onAddResolution}
+      />
+
+      {/* MEMBER REGISTRATION & ID BADGE MODAL */}
+      <MemberIdBadgeModal
+        isOpen={!!selectedMemberForBadge}
+        onClose={() => setSelectedMemberForBadge(null)}
+        member={selectedMemberForBadge}
+        allMembers={members}
       />
     </div>
   );

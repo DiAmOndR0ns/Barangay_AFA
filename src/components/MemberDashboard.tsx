@@ -189,18 +189,18 @@ export default function MemberDashboard({
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-[#D8F3DC] text-[#1B4332] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              Miyembro sa Asosasyon (Regular Member)
+              BAFA Regular Member
             </span>
             <span className="bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
               <ShieldCheck className="w-3 h-3" />
-              Aktibo (Active)
+              Active Member
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-white mt-2 font-display">
-            Maayong Adlaw, {currentUser.name}!
+            Welcome, {currentUser.name}!
           </h2>
           <p className="text-xs sm:text-sm text-[#B7E4C7] mt-1 max-w-xl font-medium">
-            Kini ang imong dashboard. Mahimo nimo usabon ang imong hulagway, i-report ang imong gipananom, ug i-print ang imong sertipiko aron makakuha og diskwento sa semento o liso sa munisipyo.
+            This is your official member portal. You can update your profile photo, register farm parcels, view attendance dividends, and print your certified BAFA membership ID.
           </p>
         </div>
 
@@ -209,7 +209,7 @@ export default function MemberDashboard({
           className="flex items-center gap-1.5 px-4.5 py-2.5 bg-[#FAF8F5] hover:bg-[#F2ECE0] text-[#1B4332] text-xs font-bold rounded-xl transition-all border border-[#D5CFC1] cursor-pointer self-start md:self-center shadow-sm shrink-0"
         >
           <LogOut className="w-4 h-4" />
-          <span>Mogawas sa Portal (Sign Out)</span>
+          <span>Sign Out</span>
         </button>
       </div>
 
@@ -219,7 +219,7 @@ export default function MemberDashboard({
         <div className="flex sm:hidden items-center justify-between w-full px-2.5 py-1 text-[11px] font-black text-[#1B4332] bg-[#EAF4EC] rounded-lg border border-emerald-800/20 shadow-xs">
           <span className="flex items-center gap-1">
             <ChevronLeft className="w-3.5 h-3.5 text-[#BF360C] animate-pulse" />
-            I-scroll ang menu sa ubos para sa tanang kapilian →
+            Scroll menu to browse all sections →
           </span>
           <ChevronRight className="w-3.5 h-3.5 text-[#BF360C] animate-pulse" />
         </div>
@@ -241,7 +241,7 @@ export default function MemberDashboard({
               }`}
             >
               <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-              <span>Akong Profile ug ID (My Profile & ID)</span>
+              <span>My Profile & ID Card</span>
             </button>
 
             <button
@@ -254,7 +254,7 @@ export default function MemberDashboard({
               }`}
             >
               <PiggyBank className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-              <span>Baboyan (Hog Raising Project)</span>
+              <span>Hog Raising Project (IGP)</span>
             </button>
 
             <button
@@ -267,7 +267,7 @@ export default function MemberDashboard({
               }`}
             >
               <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-              <span>Produkto sa Asosasyon (Products)</span>
+              <span>Products & Marketplace</span>
             </button>
 
             <button
@@ -280,7 +280,7 @@ export default function MemberDashboard({
               }`}
             >
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-              <span>Mga Kalihokan (Activities)</span>
+              <span>Activities & Events</span>
             </button>
 
             <button
@@ -293,7 +293,7 @@ export default function MemberDashboard({
               }`}
             >
               <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-              <span>Dashboard sa mga Anunsyo (Announcements)</span>
+              <span>Announcements & Bulletins</span>
               {announcements.filter(ann => !readAnnouncements.includes(ann.id)).length > 0 && (
                 <span className="bg-rose-600 text-white font-black text-xs px-2 py-0.5 rounded-full flex items-center justify-center animate-pulse min-w-5 h-5">
                   {announcements.filter(ann => !readAnnouncements.includes(ann.id)).length}

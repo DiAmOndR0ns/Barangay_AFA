@@ -1093,7 +1093,7 @@ export default function App() {
                 <div className="text-left min-w-0">
                   <div className="flex items-center gap-1">
                     <span className="text-[9px] bg-[#2D6A4F] text-[#D8F3DC] font-mono font-black uppercase px-1.5 py-0.2 rounded shrink-0">
-                      Aktibong Opisyal
+                      Active Officer
                     </span>
                     <span className="text-xs font-black text-white truncate max-w-[130px] sm:max-w-[160px]">{currentUser?.name}</span>
                   </div>
@@ -1247,7 +1247,7 @@ export default function App() {
                   }`}
                 >
                   <Users className="w-4 h-4 text-amber-700" />
-                  <span>Akong Member View (My Member Dashboard & ID)</span>
+                  <span>My Member Portal & ID (Officer as Member)</span>
                   <span className="bg-amber-200 text-amber-900 border border-amber-300 text-[9px] px-2 py-0.5 rounded-full font-black ml-1">
                     Officer as Member
                   </span>
@@ -1342,6 +1342,7 @@ export default function App() {
               <HogRaisingIgpTracker 
                 state={hogRaising}
                 members={members}
+                meetings={meetings}
                 onAddExpense={handleAddPigExpense}
                 onAddSale={handleAddHogSale}
                 onAddChoreLog={handleAddPigChore}
@@ -1373,9 +1374,9 @@ export default function App() {
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-black text-[#1B4332]">Akong Member Dashboard & ID (Officer as Member)</h2>
+                    <h2 className="text-base font-black text-[#1B4332]">My Member Dashboard & ID (Officer as Member)</h2>
                     <p className="text-xs text-slate-600 font-bold">
-                      Gipakita ang inyong opisyal nga profile, Digital Member ID, ug pribilehiyo isip miyembro sa BAFA ({currentUser?.role.replace('_', ' ')}).
+                      View and manage your personal BAFA member credentials, digital ID badge, and benefits ({currentUser?.role.replace('_', ' ')}).
                     </p>
                   </div>
                 </div>
@@ -1385,7 +1386,7 @@ export default function App() {
                   className="px-4 py-2 bg-[#1B4332] hover:bg-[#122e22] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Building className="w-4 h-4" />
-                  <span>Bumalik sa Officer Suite</span>
+                  <span>Back to Officer Suite</span>
                 </button>
               </div>
 
@@ -1441,6 +1442,7 @@ export default function App() {
           transactions={transactions}
           announcements={announcements}
           logs={logs}
+          funds={funds}
           hogRaising={hogRaising}
           onClose={() => setShowReportModal(false)}
           onDownloadBackup={handleDownloadSystemBackup}

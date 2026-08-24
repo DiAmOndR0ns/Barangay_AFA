@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { 
-  HogRaisingState, IgpExpense, IgpSale, IgpChoreLog, IgpGroup, Member, User 
+  HogRaisingState, IgpExpense, IgpSale, IgpChoreLog, IgpGroup, Member, User, Meeting 
 } from '../types';
 import { 
   PiggyBank, Plus, ArrowUpRight, ArrowDownRight, Calendar, Users, 
   Activity, Trash2, Printer, CheckCircle, Info, DollarSign, 
-  Tag, ShieldCheck, Heart, Sparkles, Filter, FileText, Check, Award
+  Tag, ShieldCheck, Heart, Sparkles, Filter, FileText, Check, Award, Calculator
 } from 'lucide-react';
+import AttendanceDividendCalculatorModal from './AttendanceDividendCalculatorModal';
 
 interface HogRaisingIgpTrackerProps {
   state: HogRaisingState;
   members: Member[];
+  meetings?: Meeting[];
   onAddExpense: (expense: Omit<IgpExpense, 'id' | 'recordedBy'>) => void;
   onAddSale: (sale: Omit<IgpSale, 'id' | 'recordedBy'>) => void;
   onAddChoreLog: (chore: Omit<IgpChoreLog, 'id'>) => void;
@@ -26,6 +28,7 @@ interface HogRaisingIgpTrackerProps {
 export default function HogRaisingIgpTracker({
   state,
   members,
+  meetings = [],
   onAddExpense,
   onAddSale,
   onAddChoreLog,
@@ -38,6 +41,7 @@ export default function HogRaisingIgpTracker({
   onCloseDecemberBook
 }: HogRaisingIgpTrackerProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'chores' | 'dividends' | 'ledger' | 'reports'>('overview');
+  const [showDividendCalcModal, setShowDividendCalcModal] = useState(false);
   
   // Dynamic produces
   const produces = state.produces || ['Hog Raising', 'Poultry Raising', 'Tilapia Breeding'];
@@ -185,6 +189,10 @@ export default function HogRaisingIgpTracker({
 
           <div class="status-badge">
             <span>${isClosed ? '🔒 December Financial Books: CLOSED & CERTIFIED' : '🔓 December Financial Books: OPEN & ACTIVE'}</span>
+          </div>
+
+          <div style="background: #e6f4ea; border: 1px solid #a3cfbb; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11px; color: #0f5132;">
+            <strong>BUDGET & CAPITAL SOURCE (WHERE BUDGET WAS TAKEN FROM):</strong> Funded under the <strong>DOLE Integrated Livelihood Program (DILP) Capital Grant (₱1,000,000.00)</strong> & Municipal Agriculture Assistance. All operating expenditures (feeds, piglets, vaccines) are disbursed directly from this approved livelihood allocation.
           </div>
 
           <p style="font-size: 12px; margin-bottom: 20px;">
@@ -477,6 +485,10 @@ export default function HogRaisingIgpTracker({
               <h4>Accumulated Interest (Total Net Profit)</h4>
               <p>PHP ${netProfit > 0 ? netProfit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}</p>
             </div>
+          </div>
+
+          <div style="background: #e6f4ea; border: 1px solid #a3cfbb; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11px; color: #0f5132;">
+            <strong>CAPITAL & BUDGET ORIGIN (WHERE BUDGET WAS TAKEN FROM):</strong> Revolving Livelihood Capital funded by <strong>DOLE Integrated Livelihood Program (DILP) Grant (₱1,000,000.00)</strong> & Municipal Agriculture Assistance. Net dividends are distributed from livestock market harvest proceeds.
           </div>
 
           <p style="font-size: 12px; margin-bottom: 15px;">
@@ -1157,34 +1169,85 @@ export default function HogRaisingIgpTracker({
         {/* TAB 4: INTEREST DIVIDENDS & MEMBER DISTRIBUTION */}
         {activeTab === 'dividends' && (
           <div className="space-y-6">
-            <div className={`p-6 rounded-3xl border ${theme.cardBg} space-y-5`}>
+            <div className={`p-6 rounded-3xl border ${theme.cardBg} space-y-6`}>
               
               {/* Header inside */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-150 dark:border-slate-850 pb-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-150 dark:border-slate-850 pb-4">
                 <div>
-                  <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Bahin sa Interes gikan sa Halin sa Baboy</h3>
-                  <p className="text-xs text-slate-400 mt-1">Kini nga interest gibahin-bahin sa tibuok rehistradong miyembro sa Barangay Alegria Farmers Association.</p>
+                  <h3 className="font-extrabold text-base text-slate-800 dark:text-white flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Net Income Distribution & December Dividends (50/30/20 Formula)</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    50% Handlers • 30% FCCT Cooperative Deposit (December Cut) • 20% Association Reserve • 5% Dispersal Risk Pool
+                  </p>
                 </div>
 
-                <button
-                  id="print-dividend-btn"
-                  onClick={handlePrintDividends}
-                  className={`flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-black border transition-colors cursor-pointer ${
-                    isOfficerMode
-                      ? 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border-slate-700'
-                      : 'bg-white hover:bg-slate-100 text-slate-800 border-[#D5CFC1]'
-                  }`}
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>I-print ang Dividend Report</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    id="calc-attendance-dividend-btn"
+                    onClick={() => setShowDividendCalcModal(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all cursor-pointer"
+                  >
+                    <Calculator className="w-4 h-4" />
+                    <span>Attendance Dividend Engine</span>
+                  </button>
+
+                  <button
+                    id="print-dividend-btn"
+                    onClick={handlePrintDividends}
+                    className={`flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-black border transition-colors cursor-pointer ${
+                      isOfficerMode
+                        ? 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border-slate-700'
+                        : 'bg-white hover:bg-slate-100 text-slate-800 border-[#D5CFC1]'
+                    }`}
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>I-print ang Report</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4-WAY FORMULA HIGHLIGHT CARDS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-2xl space-y-1">
+                  <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase block">50% Handlers / Raisers</span>
+                  <div className="text-base font-black text-emerald-900 dark:text-emerald-200 font-mono">
+                    ₱{((netProfit > 0 ? netProfit : 0) * 0.50).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Direktang bahin sa mga mi-atiman, naglawog ug nag-limpyo sa piggery.</p>
+                </div>
+
+                <div className="p-3.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800 rounded-2xl space-y-1">
+                  <span className="text-[10px] font-black text-blue-700 dark:text-blue-400 uppercase block">30% FCCT Deposit (December)</span>
+                  <div className="text-base font-black text-blue-900 dark:text-blue-200 font-mono">
+                    ₱{((netProfit > 0 ? netProfit : 0) * 0.30).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Ide-deposit sa FCCT Bank, i-apod-apod sa Disyembre base sa attendance.</p>
+                </div>
+
+                <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-2xl space-y-1">
+                  <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase block">20% Association General</span>
+                  <div className="text-base font-black text-amber-900 dark:text-amber-200 font-mono">
+                    ₱{(((netProfit > 0 ? netProfit : 0) * 0.20) + (netProfit > 0 ? 10000 : 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Pundo sa asosasyon + ₱10,000 allowance para sa operational expenses.</p>
+                </div>
+
+                <div className="p-3.5 bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800 rounded-2xl space-y-1">
+                  <span className="text-[10px] font-black text-purple-700 dark:text-purple-400 uppercase block">5% Dispersal & Risk Pool</span>
+                  <div className="text-base font-black text-purple-900 dark:text-purple-200 font-mono">
+                    ₱{((netProfit > 0 ? netProfit : 0) * 0.05).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Insurance reserve para sa mortality ug emergency replacement sa baboy.</p>
+                </div>
               </div>
 
               {/* Information disclaimer */}
               <div className="p-4 bg-emerald-500/[0.02] rounded-2xl border border-emerald-500/10 text-xs text-slate-500 dark:text-slate-400 leading-relaxed space-y-1">
-                <p className="font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">PAGPASABOT MAHITUNGOD SA DIVIDENDS:</p>
+                <p className="font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">PAGPASABOT MAHITUNGOD SA DIVIDENDS & ATTENDANCE RULE:</p>
                 <p>
-                  Ang pundo nga nag-alaga sa mga baboy naggikan sa pinansyal nga tabang (LGU Grant). Ang tanan nga nadawat nga halin gikan sa pagbaligya sa baboy ibawas ang gasto sa pagpadako aron makuha ang deperensya (Accumulated Net Profit o Interes). Kini nga pundo i-apod-apod sa <strong>{activeCount} active members</strong> tungod sa ilang pagpartisipar sa pagbantay ug pagpakaon sa piggery.
+                  Ang 30% nga pundo (Cooperative Deposit) i-release inig abot sa <strong>Disyembre</strong> ug gibahin-bahin base sa <strong>Attendance sa mga Regular Assembly & Tigum</strong>. Ang mga miyembro nga adunay absent dili makakuha sa ilang bahin para sa maong bulan, ug ang ilang bahin i-reallocate isip dugang incentive sa mga aktibong miyembro.
                 </p>
               </div>
 
@@ -1197,13 +1260,13 @@ export default function HogRaisingIgpTracker({
                       <th className="p-4">Lokasyon (Sitio)</th>
                       <th className="p-4">Grupo sa Caretakers (Batch)</th>
                       <th className="p-4">Membership Status</th>
-                      <th className="p-4 rounded-r-xl text-right">Imong Bahin (Dividend Share)</th>
+                      <th className="p-4 rounded-r-xl text-right">Estimated 30% Pool Share</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-850 font-semibold text-slate-600 dark:text-slate-200">
                     {activeMembers.map((m) => {
-                      // Find which batch this member is in
                       const memberBatch = state.groups.find(g => g.members.includes(m.name))?.name || 'Weekend Rotation';
+                      const estimated30PercentShare = activeCount > 0 ? ((netProfit > 0 ? netProfit : 0) * 0.30) / activeCount : 0;
                       return (
                         <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-colors">
                           <td className="p-4 font-extrabold text-slate-800 dark:text-white">{m.name}</td>
@@ -1215,7 +1278,7 @@ export default function HogRaisingIgpTracker({
                             </span>
                           </td>
                           <td className="p-4 text-right text-emerald-600 dark:text-emerald-400 font-extrabold font-mono text-sm">
-                            PHP {individualDividend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            PHP {estimated30PercentShare.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
                       );
@@ -1226,7 +1289,7 @@ export default function HogRaisingIgpTracker({
 
               {/* Total calculations under */}
               <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-850 text-xs">
-                <span className="text-slate-400 font-bold">Total Interest Divided (Tibuok Tubo):</span>
+                <span className="text-slate-400 font-bold">Total Net Profit / Tubo (Disyembre):</span>
                 <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                   PHP {netProfit > 0 ? netProfit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
                 </span>
@@ -1676,6 +1739,15 @@ export default function HogRaisingIgpTracker({
           </div>
         </div>
       )}
+
+      {/* ATTENDANCE-WEIGHTED DIVIDEND ENGINE & DECEMBER PAYROLL MODAL */}
+      <AttendanceDividendCalculatorModal
+        isOpen={showDividendCalcModal}
+        onClose={() => setShowDividendCalcModal(false)}
+        members={members}
+        meetings={meetings}
+        hogRaisingState={state}
+      />
 
     </div>
   );

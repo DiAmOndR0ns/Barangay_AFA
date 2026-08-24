@@ -433,7 +433,7 @@ export default function AnnouncementDashboard({
           <div className={`p-5 rounded-3xl border ${theme.cardBg} space-y-4 shadow-sm`}>
             <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2.5">
               <User className="w-4.5 h-4.5 text-slate-400" />
-              <span>Opisina sa Impormasyon (Information Desk)</span>
+              <span>Public Information & Media Desk</span>
             </h3>
 
             <div className="space-y-3.5 text-xs">
