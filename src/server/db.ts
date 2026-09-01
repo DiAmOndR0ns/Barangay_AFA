@@ -8,27 +8,33 @@ import {
 const { Pool } = pg;
 
 let poolInstance: pg.Pool | null = null;
+let lastUsedConnectionString: string | null = null;
 
 export function isDatabaseConfigured(): boolean {
-  const dbUrl = process.env.DATABASE_URL;
-  return Boolean(dbUrl && dbUrl.trim() !== '' && !dbUrl.includes('your_aiven_connection_string'));
+  const dbUrl = process.env.DATABASE_URL?.trim().replace(/^["']|["']$/g, '');
+  return Boolean(dbUrl && dbUrl !== '' && !dbUrl.includes('your_aiven_connection_string') && !dbUrl.includes('YOUR_PASSWORD'));
 }
 
 export function getPool(): pg.Pool {
-  const dbUrl = process.env.DATABASE_URL;
-  if (!isDatabaseConfigured() || !dbUrl) {
+  const rawDbUrl = process.env.DATABASE_URL;
+  if (!rawDbUrl || !isDatabaseConfigured()) {
     throw new Error('DATABASE_URL environment variable is not configured');
   }
 
-  if (!poolInstance) {
+  const cleanedUrl = rawDbUrl.trim().replace(/^["']|["']$/g, '').replace(/[\?&]sslmode=[^&]*/, '');
+
+  if (!poolInstance || lastUsedConnectionString !== cleanedUrl) {
+    if (poolInstance) {
+      poolInstance.end().catch(() => {});
+    }
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-    const cleanedUrl = dbUrl.replace(/[\?&]sslmode=[^&]*/, '');
     poolInstance = new Pool({
       connectionString: cleanedUrl,
       ssl: { rejectUnauthorized: false },
       connectionTimeoutMillis: 10000,
       max: 10,
     });
+    lastUsedConnectionString = cleanedUrl;
   }
 
   return poolInstance;

@@ -45,13 +45,19 @@ export const AivenTestModal: React.FC<AivenTestModalProps> = ({ isOpen, onClose 
     setResult(null);
     try {
       const response = await fetch('/api/db-test');
-      const data = await response.json();
+      const text = await response.text();
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(text.substring(0, 300) || `Server returned status ${response.status}`);
+      }
       setResult(data);
     } catch (err: any) {
       setResult({
         connected: false,
         status: 'connection_error',
-        message: 'Could not reach server endpoint (/api/db-test). Ensure the application server is running.',
+        message: 'Could not reach server endpoint (/api/db-test). The server may still be initializing or returned an unexpected response.',
         errorDetails: err.message || err.toString(),
       });
     } finally {
@@ -64,7 +70,13 @@ export const AivenTestModal: React.FC<AivenTestModalProps> = ({ isOpen, onClose 
     setMigrationMessage(null);
     try {
       const response = await fetch('/api/migrate-seed', { method: 'POST' });
-      const data = await response.json();
+      const text = await response.text();
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(text.substring(0, 300) || `Server returned status ${response.status}`);
+      }
       if (data.success) {
         setMigrationSummary(data.summary);
         setMigrationMessage('✅ Seed data successfully migrated to Aiven PostgreSQL!');
@@ -279,10 +291,21 @@ export const AivenTestModal: React.FC<AivenTestModalProps> = ({ isOpen, onClose 
                   </div>
 
                   {result.errorDetails && (
-                    <div className="bg-rose-900 text-rose-100 p-3 rounded-xl font-mono text-[11px] overflow-x-auto max-h-32">
+                    <div className="bg-rose-950 text-rose-200 p-3 rounded-xl font-mono text-[11px] overflow-x-auto max-h-32 border border-rose-800">
                       {result.errorDetails}
                     </div>
                   )}
+
+                  {/* Troubleshooting Guide */}
+                  <div className="bg-white/90 p-3.5 rounded-xl border border-rose-200 text-xs text-rose-950 space-y-2">
+                    <span className="font-bold text-rose-900 block uppercase text-[10px] tracking-wider">Top 4 Common Fixes:</span>
+                    <ul className="space-y-1.5 list-disc list-inside text-[11px] leading-relaxed">
+                      <li><strong>Aiven IP Filter:</strong> In your Aiven Console &gt; Service &gt; <em>IP Filter</em>, make sure access is allowed or set to <code className="bg-rose-100 px-1 py-0.5 rounded font-mono font-bold">0.0.0.0/0</code> so Cloud Run can connect.</li>
+                      <li><strong>Special Characters in Password:</strong> If your password contains symbols like <code className="bg-rose-100 px-1 py-0.5 rounded font-mono">@ # % & ?</code>, URL-encode them (e.g. replace <code className="bg-rose-100 px-1 py-0.5 rounded font-mono">@</code> with <code className="bg-rose-100 px-1 py-0.5 rounded font-mono">%40</code>).</li>
+                      <li><strong>Aiven Service State:</strong> Ensure your PostgreSQL service is in <strong>RUNNING</strong> state (not Powered Off or Rebuilding).</li>
+                      <li><strong>Service URI Format:</strong> Use the complete Service URI from Aiven: <code className="bg-rose-100 px-1 py-0.5 rounded font-mono text-[10px] break-all">postgres://avnadmin:PASSWORD@HOST:PORT/defaultdb?sslmode=require</code></li>
+                    </ul>
+                  </div>
                 </div>
               )}
 

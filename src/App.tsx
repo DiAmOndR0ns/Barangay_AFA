@@ -128,9 +128,16 @@ export default function App() {
 
       // Attempt pulling fresh data from Aiven PostgreSQL if online
       fetch('/api/sync/pull')
-        .then(res => res.json())
+        .then(async res => {
+          const text = await res.text();
+          try {
+            return JSON.parse(text);
+          } catch {
+            return { offlineMode: true, success: false };
+          }
+        })
         .then(res => {
-          if (res.success && res.data) {
+          if (res?.success && res.data) {
             if (res.data.members?.length) { setMembers(res.data.members); updateStorage('bafa_members', res.data.members); }
             if (res.data.meetings?.length) { setMeetings(res.data.meetings); updateStorage('bafa_meetings', res.data.meetings); }
             if (res.data.resolutions?.length) { setResolutions(res.data.resolutions); updateStorage('bafa_resolutions', res.data.resolutions); }
@@ -142,7 +149,7 @@ export default function App() {
             if (res.data.hogRaising) { setHogRaising(res.data.hogRaising); updateStorage('bafa_hog_raising', res.data.hogRaising); }
             if (res.data.users?.length) { setUsers(res.data.users); updateStorage('bafa_users', res.data.users); }
             console.log('[Aiven DB] Successfully loaded fresh data from Aiven PostgreSQL');
-          } else if (res.offlineMode) {
+          } else if (res?.offlineMode) {
             console.log('[Aiven DB] Running in offline / local-first storage mode.');
           }
         })
