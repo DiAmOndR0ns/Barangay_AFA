@@ -292,7 +292,7 @@ export default function ExecutiveView({
           <div className="border-b border-[#F0EBE1] pb-3 text-left">
             <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
               <Users className="w-5.5 h-5.5 text-[#1B4332]" />
-              <span>Pagsusi sa mga Bag-ong Rehistro (New Registration Desk)</span>
+              <span>New Registration Desk</span>
             </h3>
             <p className="text-xs text-[#5D6B54] mt-1 font-medium">
               Susiha ug aprobahi ang mga nagpalista nga miyembro o opisyal sa Barangay Alegria.
@@ -303,7 +303,7 @@ export default function ExecutiveView({
           <div className="space-y-3">
             <h4 className="text-xs font-extrabold text-[#4F5E46] uppercase tracking-wider flex items-center gap-1">
               <Clock className="w-4 h-4 text-[#E65100]" />
-              <span>Mga Nagpaabot nga Rehistrasyon ({users.filter(u => !u.isApproved).length})</span>
+              <span>Pending Registration ({users.filter(u => !u.isApproved).length})</span>
             </h4>
 
             {users.filter(u => !u.isApproved).length > 0 ? (
@@ -499,7 +499,7 @@ export default function ExecutiveView({
           <div className="border-b border-[#F0EBE1] pb-3 text-left">
             <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
               <FileCheck className="w-5.5 h-5.5 text-[#1B4332]" />
-              <span>Mga Resolusyon nga Pirmahan (Resolutions for Signing)</span>
+              <span>Resolutions for Signing</span>
             </h3>
             <p className="text-xs text-[#5D6B54] mt-1 font-medium">
               Susiha ang gikasabutan nga mga draft sa asembliya sa dili pa kini opisyal nga ipatuman sa barangay.
@@ -555,7 +555,7 @@ export default function ExecutiveView({
           <div className="border-b border-[#F0EBE1] pb-3 text-left">
             <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
               <Activity className="w-5.5 h-5.5 text-[#1B4332]" />
-              <span>Lista sa mga Buhat sa Sistema (System Audit Trail)</span>
+              <span>System Audit Trail</span>
             </h3>
             <p className="text-xs text-[#5D6B54] mt-1 font-medium">
               Usa ka yano ug daling basahon nga rekord sa tanang aksyon sa sistema (Who did what, and when).
