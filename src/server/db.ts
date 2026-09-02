@@ -12,7 +12,38 @@ let lastUsedConnectionString: string | null = null;
 
 export function isDatabaseConfigured(): boolean {
   const dbUrl = process.env.DATABASE_URL?.trim().replace(/^["']|["']$/g, '');
-  return Boolean(dbUrl && dbUrl !== '' && !dbUrl.includes('your_aiven_connection_string') && !dbUrl.includes('YOUR_PASSWORD'));
+  return Boolean(
+    dbUrl && 
+    dbUrl !== '' && 
+    !dbUrl.includes('your_aiven_connection_string') && 
+    !dbUrl.includes('YOUR_PASSWORD') &&
+    (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'))
+  );
+}
+
+export function cleanDatabaseUrl(rawUrl: string): { connectionString: string; isSsl: boolean; hostInfo: string } {
+  let urlStr = rawUrl.trim().replace(/^["']|["']$/g, '');
+  let hostInfo = 'PostgreSQL';
+
+  try {
+    const parsed = new URL(urlStr);
+    hostInfo = `${parsed.hostname}${parsed.port ? ':' + parsed.port : ''}${parsed.pathname}`;
+    // Strip sslmode and ssl query params so pg-connection-string does not conflict with explicit SSL options
+    parsed.searchParams.delete('sslmode');
+    parsed.searchParams.delete('ssl');
+    return {
+      connectionString: parsed.toString(),
+      isSsl: true,
+      hostInfo,
+    };
+  } catch {
+    // Fallback regex cleaner
+    const cleaned = urlStr
+      .replace(/[\?&]sslmode=[^&]*/g, '')
+      .replace(/[\?&]ssl=[^&]*/g, '')
+      .replace(/\?$/, '');
+    return { connectionString: cleaned, isSsl: true, hostInfo };
+  }
 }
 
 export function getPool(): pg.Pool {
@@ -21,20 +52,28 @@ export function getPool(): pg.Pool {
     throw new Error('DATABASE_URL environment variable is not configured');
   }
 
-  const cleanedUrl = rawDbUrl.trim().replace(/^["']|["']$/g, '').replace(/[\?&]sslmode=[^&]*/, '');
+  const { connectionString } = cleanDatabaseUrl(rawDbUrl);
 
-  if (!poolInstance || lastUsedConnectionString !== cleanedUrl) {
+  if (!poolInstance || lastUsedConnectionString !== connectionString) {
     if (poolInstance) {
       poolInstance.end().catch(() => {});
     }
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     poolInstance = new Pool({
-      connectionString: cleanedUrl,
-      ssl: { rejectUnauthorized: false },
-      connectionTimeoutMillis: 10000,
+      connectionString,
+      ssl: { 
+        rejectUnauthorized: false 
+      },
+      connectionTimeoutMillis: 15000,
+      idleTimeoutMillis: 30000,
       max: 10,
     });
-    lastUsedConnectionString = cleanedUrl;
+
+    poolInstance.on('error', (err) => {
+      console.warn('[PostgreSQL Pool Client Error]:', err?.message || err);
+    });
+
+    lastUsedConnectionString = connectionString;
   }
 
   return poolInstance;
@@ -825,6 +864,100 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           p.quantityAvailable || null, p.stockStatus, p.farmerName || null, p.farmerSitio || null,
           p.farmerPhone || null, p.contactPerson || null, p.isPublished, p.updatedBy,
           p.managedBy || null, p.dateUpdated
+        ]);
+      }
+    }
+
+    if (state.resolutions && Array.isArray(state.resolutions)) {
+      for (const r of state.resolutions) {
+        await client.query(`
+          INSERT INTO resolutions (id, resolution_number, title, description, date_agreed, moved_by, seconded_by, vote_in_favor, vote_against, vote_abstain, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ON CONFLICT (id) DO UPDATE SET
+            resolution_number = EXCLUDED.resolution_number,
+            title = EXCLUDED.title,
+            description = EXCLUDED.description,
+            date_agreed = EXCLUDED.date_agreed,
+            moved_by = EXCLUDED.moved_by,
+            seconded_by = EXCLUDED.seconded_by,
+            vote_in_favor = EXCLUDED.vote_in_favor,
+            vote_against = EXCLUDED.vote_against,
+            vote_abstain = EXCLUDED.vote_abstain,
+            status = EXCLUDED.status;
+        `, [
+          r.id, r.resolutionNumber, r.title, r.description, r.dateAgreed,
+          r.movedBy, r.secondedBy, r.voteInFavor, r.voteAgainst, r.voteAbstain, r.status
+        ]);
+      }
+    }
+
+    if (state.announcements && Array.isArray(state.announcements)) {
+      for (const a of state.announcements) {
+        await client.query(`
+          INSERT INTO announcements (id, title, category, content, date_posted, priority, posted_by)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ON CONFLICT (id) DO UPDATE SET
+            title = EXCLUDED.title,
+            category = EXCLUDED.category,
+            content = EXCLUDED.content,
+            date_posted = EXCLUDED.date_posted,
+            priority = EXCLUDED.priority,
+            posted_by = EXCLUDED.posted_by;
+        `, [a.id, a.title, a.category, a.content, a.datePosted, a.priority, a.postedBy]);
+      }
+    }
+
+    if (state.activities && Array.isArray(state.activities)) {
+      for (const act of state.activities) {
+        await client.query(`
+          INSERT INTO activities (id, title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          ON CONFLICT (id) DO UPDATE SET
+            title = EXCLUDED.title,
+            category = EXCLUDED.category,
+            scheduled_date = EXCLUDED.scheduled_date,
+            date_scheduled = EXCLUDED.date_scheduled,
+            scheduled_time = EXCLUDED.scheduled_time,
+            time_scheduled = EXCLUDED.time_scheduled,
+            location = EXCLUDED.location,
+            description = EXCLUDED.description,
+            organizer = EXCLUDED.organizer,
+            status = EXCLUDED.status,
+            documented_notes = EXCLUDED.documented_notes,
+            attendees_count = EXCLUDED.attendees_count;
+        `, [
+          act.id, act.title, act.category,
+          act.scheduledDate || act.dateScheduled || null,
+          act.dateScheduled || act.scheduledDate || null,
+          act.scheduledTime || act.timeScheduled || null,
+          act.timeScheduled || act.scheduledTime || null,
+          act.location, act.description, act.organizer, act.status,
+          act.documentedNotes || null, act.attendeesCount || 0
+        ]);
+      }
+    }
+
+    if (state.users && Array.isArray(state.users)) {
+      for (const u of state.users) {
+        await client.query(`
+          INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          ON CONFLICT (id) DO UPDATE SET
+            username = EXCLUDED.username,
+            password = EXCLUDED.password,
+            name = EXCLUDED.name,
+            role = EXCLUDED.role,
+            is_approved = EXCLUDED.is_approved,
+            joined_date = EXCLUDED.joined_date,
+            farm_location = EXCLUDED.farm_location,
+            farm_size = EXCLUDED.farm_size,
+            primary_crops = EXCLUDED.primary_crops,
+            contact_number = EXCLUDED.contact_number,
+            status = EXCLUDED.status;
+        `, [
+          u.id, u.username, u.password || 'password123', u.name, u.role, u.isApproved,
+          u.joinedDate || null, u.farmLocation || null, u.farmSize || null,
+          u.primaryCrops || [], u.contactNumber || null, u.status || 'Active'
         ]);
       }
     }

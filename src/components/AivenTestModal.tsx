@@ -11,10 +11,12 @@ interface TestResult {
   status: 'success' | 'missing_config' | 'connection_error';
   message: string;
   details?: {
+    host?: string;
     databaseName: string;
     serverTime: string;
     version: string;
     publicTablesCount: number;
+    latencyMs?: number;
   };
   errorDetails?: string;
 }
@@ -175,17 +177,29 @@ export const AivenTestModal: React.FC<AivenTestModalProps> = ({ isOpen, onClose 
                   {result.details && (
                     <div className="pt-3 border-t border-emerald-200/80 grid grid-cols-2 gap-3 text-xs font-mono">
                       <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
-                        <span className="text-[10px] text-emerald-700 block uppercase font-sans font-bold">Database Name</span>
+                        <span className="text-[10px] text-emerald-700 block uppercase font-sans font-bold">Database</span>
                         <span className="font-bold text-emerald-900">{result.details.databaseName}</span>
                       </div>
                       <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
                         <span className="text-[10px] text-emerald-700 block uppercase font-sans font-bold">Public Tables</span>
                         <span className="font-bold text-emerald-900">{result.details.publicTablesCount} tables active</span>
                       </div>
-                      <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200 col-span-2">
+                      {result.details.host && (
+                        <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200 col-span-2">
+                          <span className="text-[10px] text-emerald-700 block uppercase font-sans font-bold">Target Aiven Host</span>
+                          <span className="font-bold text-emerald-900 text-[11px] truncate block">{result.details.host}</span>
+                        </div>
+                      )}
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
                         <span className="text-[10px] text-emerald-700 block uppercase font-sans font-bold">PostgreSQL Engine</span>
                         <span className="font-bold text-emerald-900 text-[11px] truncate block">{result.details.version}</span>
                       </div>
+                      {result.details.latencyMs !== undefined && (
+                        <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+                          <span className="text-[10px] text-emerald-700 block uppercase font-sans font-bold">Query Latency</span>
+                          <span className="font-bold text-emerald-900 text-[11px]">{result.details.latencyMs} ms</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -241,6 +255,14 @@ export const AivenTestModal: React.FC<AivenTestModalProps> = ({ isOpen, onClose 
                         <div className="bg-white p-2 rounded-lg border border-emerald-200">
                           <span className="text-emerald-700 block text-[9px] font-sans font-bold">PRODUCTS</span>
                           <span className="font-bold text-emerald-950">{migrationSummary.products} rows</span>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg border border-emerald-200">
+                          <span className="text-emerald-700 block text-[9px] font-sans font-bold">ANNOUNCEMENTS</span>
+                          <span className="font-bold text-emerald-950">{migrationSummary.announcements} rows</span>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg border border-emerald-200">
+                          <span className="text-emerald-700 block text-[9px] font-sans font-bold">ACTIVITIES</span>
+                          <span className="font-bold text-emerald-950">{migrationSummary.activities} rows</span>
                         </div>
                       </div>
                     )}

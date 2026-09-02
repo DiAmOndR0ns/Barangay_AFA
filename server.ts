@@ -5,7 +5,7 @@ import path from "path";
 import dotenv from "dotenv";
 import pg from "pg";
 import { createServer as createViteServer } from "vite";
-import { getPool, isDatabaseConfigured, migrateSeedData, fetchAllDataFromPostgres, saveFullStateToPostgres } from "./src/server/db";
+import { getPool, isDatabaseConfigured, cleanDatabaseUrl, migrateSeedData, fetchAllDataFromPostgres, saveFullStateToPostgres } from "./src/server/db";
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ const { Pool } = pg;
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   app.use(express.json({ limit: '15mb' }));
 
@@ -29,7 +29,9 @@ async function startServer() {
 
     let pool: pg.Pool | null = null;
     try {
+      const startTime = Date.now();
       pool = getPool();
+      const { hostInfo } = cleanDatabaseUrl(process.env.DATABASE_URL || '');
 
       // Test basic connection & query DB info
       const timeResult = await pool.query(
@@ -41,6 +43,7 @@ async function startServer() {
         "SELECT COUNT(*)::int as table_count FROM information_schema.tables WHERE table_schema = 'public';"
       );
 
+      const latencyMs = Date.now() - startTime;
       const dbInfo = timeResult.rows[0];
       const tableCount = tablesResult.rows[0].table_count;
 
@@ -49,10 +52,12 @@ async function startServer() {
         status: "success",
         message: "Successfully connected to Aiven PostgreSQL database!",
         details: {
+          host: hostInfo,
           databaseName: dbInfo.db_name,
           serverTime: dbInfo.current_time,
-          version: dbInfo.pg_version.split(",")[0],
+          version: dbInfo.pg_version ? dbInfo.pg_version.split(",")[0] : 'PostgreSQL',
           publicTablesCount: tableCount,
+          latencyMs,
         },
       });
     } catch (error: any) {
