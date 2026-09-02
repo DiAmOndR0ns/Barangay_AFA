@@ -3,9 +3,8 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import pg from "pg";
 import { createServer as createViteServer } from "vite";
-import { getPool, isDatabaseConfigured, cleanDatabaseUrl, migrateSeedData, fetchAllDataFromPostgres, saveFullStateToPostgres } from "./api/_db";
+import { getPool, isDatabaseConfigured, fetchAllDataFromPostgres, saveFullStateToPostgres } from "./api/_db";
 
 dotenv.config();
 
@@ -14,88 +13,6 @@ async function startServer() {
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   app.use(express.json({ limit: '15mb' }));
-
-  // Database Connection Test Endpoint
-  app.get("/api/db-test", async (req, res) => {
-    if (!isDatabaseConfigured()) {
-      return res.status(200).json({
-        connected: false,
-        status: "missing_config",
-        message: "DATABASE_URL is not configured. Running in offline/local storage mode. To sync with Aiven PostgreSQL, configure DATABASE_URL in environment variables.",
-      });
-    }
-
-    let pool: pg.Pool | null = null;
-    try {
-      const startTime = Date.now();
-      pool = getPool();
-      const { hostInfo } = cleanDatabaseUrl(process.env.DATABASE_URL || '');
-
-      // Test basic connection & query DB info
-      const timeResult = await pool.query(
-        "SELECT NOW() as current_time, version() as pg_version, current_database() as db_name;"
-      );
-
-      // Check existing tables count
-      const tablesResult = await pool.query(
-        "SELECT COUNT(*)::int as table_count FROM information_schema.tables WHERE table_schema = 'public';"
-      );
-
-      const latencyMs = Date.now() - startTime;
-      const dbInfo = timeResult.rows[0];
-      const tableCount = tablesResult.rows[0].table_count;
-
-      return res.json({
-        connected: true,
-        status: "success",
-        message: "Successfully connected to Aiven PostgreSQL database!",
-        details: {
-          host: hostInfo,
-          databaseName: dbInfo.db_name,
-          serverTime: dbInfo.current_time,
-          version: dbInfo.pg_version ? dbInfo.pg_version.split(",")[0] : 'PostgreSQL',
-          publicTablesCount: tableCount,
-          latencyMs,
-        },
-      });
-    } catch (error: any) {
-      console.warn("[Aiven DB Test Error]:", error?.message || error);
-      return res.status(200).json({
-        connected: false,
-        status: "connection_error",
-        message: `Failed to connect to Aiven database: ${error.message || "Unknown error"}`,
-        errorDetails: error.toString(),
-      });
-    }
-  });
-
-  // API to Migrate All Seed Data into Aiven PostgreSQL
-  app.post("/api/migrate-seed", async (req, res) => {
-    if (!isDatabaseConfigured()) {
-      return res.status(200).json({
-        success: false,
-        offlineMode: true,
-        message: "DATABASE_URL is not configured. Seed data remains in local offline storage.",
-      });
-    }
-
-    try {
-      const pool = getPool();
-      const summary = await migrateSeedData(pool);
-      return res.json({
-        success: true,
-        message: "All BAFA seed data successfully migrated to Aiven PostgreSQL!",
-        summary,
-      });
-    } catch (error: any) {
-      console.error("[Aiven Seed Migration Error]:", error);
-      return res.status(500).json({
-        success: false,
-        message: `Migration failed: ${error.message || "Unknown error"}`,
-        errorDetails: error.toString(),
-      });
-    }
-  });
 
   // API to Pull Full Data from Aiven PostgreSQL
   app.get("/api/sync/pull", async (req, res) => {

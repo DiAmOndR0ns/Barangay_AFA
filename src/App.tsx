@@ -22,12 +22,11 @@ import MemberDashboard from './components/MemberDashboard';
 import GuestPortal from './components/GuestPortal';
 import OfficerReportModal from './components/OfficerReportModal';
 import ProductManagementModal from './components/ProductManagementModal';
-import { AivenTestModal } from './components/AivenTestModal';
 import { buildAuditChain } from './utils/audit';
 import { 
   Building, ShieldCheck, Megaphone, Users, Coins, 
   Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, PiggyBank, FileText, ShoppingBag,
-  ChevronLeft, ChevronRight, Download, Database
+  ChevronLeft, ChevronRight, Download
 } from 'lucide-react';
 
 export default function App() {
@@ -59,7 +58,6 @@ export default function App() {
   const [officerTab, setOfficerTab] = useState<'tasks' | 'hog-raising' | 'announcements' | 'member-view'>('tasks');
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
   const [showProductModal, setShowProductModal] = useState<boolean>(false);
-  const [showAivenModal, setShowAivenModal] = useState<boolean>(false);
 
   // Core App Data States (hydrated from localStorage or initials)
   const [members, setMembers] = useState<Member[]>([]);
@@ -1154,18 +1152,6 @@ export default function App() {
               <span className="truncate">Products Catalog</span>
             </button>
 
-            {/* Aiven PostgreSQL Test Button */}
-            <button
-              id="header-aiven-db-test-btn"
-              type="button"
-              onClick={() => setShowAivenModal(true)}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#1B4332] hover:bg-[#2D6A4F] text-[#D8F3DC] border border-[#52B788] rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm min-w-0"
-              title="Test Live Connection to Aiven PostgreSQL Database"
-            >
-              <Database className="w-4 h-4 text-[#D8F3DC] shrink-0" />
-              <span className="truncate">Aiven DB Test</span>
-            </button>
-
             {/* Offline Switch & Sync Trigger */}
             <OfflineIndicator 
               isOnline={isOnline}
@@ -1467,13 +1453,6 @@ export default function App() {
           onClose={() => setShowProductModal(false)}
         />
       )}
-
-      {/* AIVEN POSTGRESQL CONNECTION TEST MODAL */}
-      <AivenTestModal 
-        isOpen={showAivenModal} 
-        onClose={() => setShowAivenModal(false)} 
-      />
-
 
     </div>
   );
