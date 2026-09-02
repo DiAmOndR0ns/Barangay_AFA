@@ -5,11 +5,9 @@ import path from "path";
 import dotenv from "dotenv";
 import pg from "pg";
 import { createServer as createViteServer } from "vite";
-import { getPool, isDatabaseConfigured, cleanDatabaseUrl, migrateSeedData, fetchAllDataFromPostgres, saveFullStateToPostgres } from "./src/server/db";
+import { getPool, isDatabaseConfigured, cleanDatabaseUrl, migrateSeedData, fetchAllDataFromPostgres, saveFullStateToPostgres } from "./api/_db";
 
 dotenv.config();
-
-const { Pool } = pg;
 
 async function startServer() {
   const app = express();

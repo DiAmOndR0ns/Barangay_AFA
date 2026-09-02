@@ -1,4 +1,4 @@
-import { getPool, isDatabaseConfigured, saveFullStateToPostgres } from '../../src/server/db';
+import { getPool, isDatabaseConfigured, saveFullStateToPostgres } from '../_db';
 import { sendResponse, parseRequestBody } from '../_helper';
 
 export default async function handler(req: any, res: any) {

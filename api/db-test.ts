@@ -1,4 +1,4 @@
-import { getPool, isDatabaseConfigured, cleanDatabaseUrl } from '../src/server/db';
+import { getPool, isDatabaseConfigured, cleanDatabaseUrl } from './_db';
 import { sendResponse } from './_helper';
 
 export default async function handler(req: any, res: any) {

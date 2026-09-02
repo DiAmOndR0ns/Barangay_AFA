@@ -1,19 +1,23 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
 export function sendResponse(res: any, statusCode: number, data: any) {
-  // Check if Express/Vercel helper methods are available
-  if (typeof res.status === 'function' && typeof res.json === 'function') {
-    return res.status(statusCode).json(data);
-  }
-
-  // Standard Node.js ServerResponse fallback
   try {
+    if (res.headersSent) return;
+    
+    // Check if Express/Vercel helper methods are available
+    if (typeof res.status === 'function' && typeof res.json === 'function') {
+      return res.status(statusCode).json(data);
+    }
+
+    // Standard Node.js ServerResponse fallback
     res.statusCode = statusCode;
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.end(JSON.stringify(data));
+    if (typeof res.setHeader === 'function') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
+    return res.end(JSON.stringify(data));
   } catch (err) {
     console.error('[sendResponse Error]:', err);
   }

@@ -1,4 +1,4 @@
-import { getPool, isDatabaseConfigured, fetchAllDataFromPostgres } from '../../src/server/db';
+import { getPool, isDatabaseConfigured, fetchAllDataFromPostgres } from '../_db';
 import { sendResponse } from '../_helper';
 
 export default async function handler(req: any, res: any) {
