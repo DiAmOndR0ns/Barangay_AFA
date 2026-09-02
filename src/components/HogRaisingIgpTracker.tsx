@@ -360,7 +360,7 @@ export default function HogRaisingIgpTracker({
     cardBg: isOfficerMode ? 'bg-slate-800 border-slate-700/80' : 'bg-[#FAF8F5] border-[#D5CFC1]',
     cardHover: isOfficerMode ? 'hover:border-slate-600 hover:bg-slate-800/80' : 'hover:border-[#1B4332] hover:bg-white',
     inputBg: isOfficerMode ? 'bg-slate-950 border-slate-750 text-white' : 'bg-white border-[#9E9785] text-[#1B4332] text-sm font-extrabold',
-    headerText: isOfficerMode ? 'text-white' : 'text-[#1B4332] text-base sm:text-xl font-black',
+    headerText: isOfficerMode ? 'text-[#1B4332]' : 'text-[#1B4332] text-base sm:text-xl font-black',
     subText: isOfficerMode ? 'text-slate-400' : 'text-[#2D3A22] font-bold text-xs sm:text-sm',
     accentText: isOfficerMode ? 'text-emerald-400' : 'text-[#BF360C]', // Darker high-contrast rust-red/orange
     accentBg: isOfficerMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[#FFCC80] text-[#8D2300]', // Darker contrast

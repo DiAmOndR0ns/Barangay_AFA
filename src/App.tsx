@@ -1164,8 +1164,8 @@ export default function App() {
       </header>
 
       {/* MAIN LAYOUT BODY */}
-      <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
-        <div className="max-w-7xl mx-auto space-y-6">
+      <main className="flex-1 p-3 sm:p-4 overflow-y-auto">
+        <div className="max-w-7xl mx-auto space-y-4">
 
           {/* OFFICER MAIN VIEWS TAB BAR WITH SCROLL INDICATOR ARROWS */}
           <div className="bg-white border-2 border-[#D5CFC1] rounded-2xl p-2.5 no-print space-y-1.5 shadow-sm">

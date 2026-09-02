@@ -118,7 +118,7 @@ export default function AnnouncementDashboard({
     cardBg: isOfficerMode ? 'bg-slate-800 border-slate-700/80' : 'bg-[#FAF8F5] border-[#E9E4D9]',
     cardHover: isOfficerMode ? 'hover:border-slate-600 hover:bg-slate-800/80' : 'hover:border-[#1B4332] hover:bg-white',
     inputBg: isOfficerMode ? 'bg-slate-950 border-slate-750 text-white' : 'bg-white border-[#D5CFC1] text-[#2D3A22]',
-    headerText: isOfficerMode ? 'text-white' : 'text-[#1B4332]',
+    headerText: isOfficerMode ? 'text-[#1B4332]' : 'text-[#1B4332]',
     subText: isOfficerMode ? 'text-slate-400' : 'text-[#5D6B54]',
     accentText: isOfficerMode ? 'text-emerald-400' : 'text-[#E65100]',
     accentBg: isOfficerMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[#FFF3E0] text-[#E65100]',
@@ -185,7 +185,7 @@ export default function AnnouncementDashboard({
   };
 
   return (
-    <div id="announcement-dashboard-container" className="space-y-6">
+    <div id="announcement-dashboard-container" className="space-y-4">
       
       {/* HEADER WITH ACTION ROW */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 text-left">
@@ -216,10 +216,10 @@ export default function AnnouncementDashboard({
       </div>
 
       {/* STATISTICS HIGHLIGHT BENTO BLOCKS */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 text-left">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 text-left">
         
         {/* Total Announcements block */}
-        <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col justify-between space-y-1.5 shadow-sm relative overflow-hidden`}>
+        <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Tanan (Total Bulletins)</span>
             <BookOpen className="w-4 h-4 text-slate-400" />
@@ -231,7 +231,7 @@ export default function AnnouncementDashboard({
         </div>
 
         {/* Unread block */}
-        <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col justify-between space-y-1.5 shadow-sm relative overflow-hidden`}>
+        <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Bag-o (New / Unread)</span>
             <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-amber-500 animate-swing' : 'text-slate-400'}`} />
@@ -248,7 +248,7 @@ export default function AnnouncementDashboard({
         </div>
 
         {/* Urgent Warnings block */}
-        <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col justify-between space-y-1.5 shadow-sm relative overflow-hidden`}>
+        <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Dinalian (Urgent Bulletins)</span>
             <AlertTriangle className={`w-4 h-4 ${highPriorityCount > 0 ? 'text-rose-500' : 'text-slate-400'}`} />
@@ -262,7 +262,7 @@ export default function AnnouncementDashboard({
         </div>
 
         {/* Assistance programs block */}
-        <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col justify-between space-y-1.5 shadow-sm relative overflow-hidden`}>
+        <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Tabang (Subsidies & Seeds)</span>
             <Tag className="w-4 h-4 text-emerald-500" />
@@ -274,7 +274,7 @@ export default function AnnouncementDashboard({
         </div>
 
         {/* Price Advisories block */}
-        <div className={`p-4 rounded-2xl border ${theme.cardBg} col-span-2 lg:col-span-1 flex flex-col justify-between space-y-1.5 shadow-sm relative overflow-hidden`}>
+        <div className={`p-4 rounded-2xl border ${theme.cardBg} col-span-2 lg:col-span-1 flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Presyo (Crop Price Updates)</span>
             <DollarSign className="w-4 h-4 text-blue-500" />
@@ -288,7 +288,7 @@ export default function AnnouncementDashboard({
       </div>
 
       {/* FILTER & SEARCH CONTROL BAR */}
-      <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col md:flex-row gap-4 items-stretch md:items-center text-left`}>
+      <div className={`p-3.5 rounded-2xl border ${theme.cardBg} flex flex-col md:flex-row gap-3 items-stretch md:items-center text-left`}>
         {/* Search Input */}
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
@@ -338,12 +338,12 @@ export default function AnnouncementDashboard({
       </div>
 
       {/* DASHBOARD LAYOUT GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start">
         
         {/* LEFT COMPONENT: BULLETIN CARDS LISTING (8 columns) */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-8 space-y-3">
           {filteredAnnouncements.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {filteredAnnouncements.map((ann) => {
                 const isRead = readIds.includes(ann.id);
                 const cebLabel = getCategoryLabel(ann.category).ceb;
@@ -360,7 +360,7 @@ export default function AnnouncementDashboard({
                     key={ann.id}
                     id={`bulletin-card-${ann.id}`}
                     onClick={() => handleReadAnnouncement(ann)}
-                    className={`border rounded-2xl p-5 text-left flex flex-col justify-between transition-all cursor-pointer shadow-sm relative group ${
+                    className={`border rounded-2xl p-4 text-left flex flex-col transition-all cursor-pointer shadow-sm relative group ${
                       theme.cardBg
                     } ${theme.cardHover} ${priorityStyles[ann.priority] || ''}`}
                   >
@@ -427,7 +427,7 @@ export default function AnnouncementDashboard({
         </div>
 
         {/* RIGHT COLUMN: INFORMATION CORNER (4 columns) */}
-        <div className="lg:col-span-4 space-y-6 text-left">
+        <div className="lg:col-span-4 space-y-4 text-left">
           
           {/* PIO Broadcast Info Desk */}
           <div className={`p-5 rounded-3xl border ${theme.cardBg} space-y-4 shadow-sm`}>

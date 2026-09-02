@@ -182,10 +182,10 @@ export default function MemberDashboard({
   };
 
   return (
-    <div id="member-dashboard-root" className="space-y-6 text-[#2D3A22]">
+    <div id="member-dashboard-root" className="space-y-4 text-[#2D3A22]">
       
       {/* HEADER ACTION AREA */}
-      <div className="bg-[#1B4332] text-[#F4EFE6] p-6 rounded-3xl border border-[#143326] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print text-left shadow-sm">
+      <div className="bg-[#1B4332] text-[#F4EFE6] p-5 rounded-3xl border border-[#143326] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print text-left shadow-sm">
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-[#D8F3DC] text-[#1B4332] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
@@ -311,10 +311,10 @@ export default function MemberDashboard({
 
       {activeTab === 'profile' && (
         /* DASHBOARD GRID */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start no-print text-left">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start no-print text-left">
         
         {/* LEFT COLUMN: PROFILE MANAGEMENT (5 columns) */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-4">
           
           {/* PROFILE PHOTO UPLOADER */}
           <div className="bg-white border border-[#E9E4D9] hover:border-[#1B4332] hover:shadow-md transition-all duration-200 rounded-3xl p-5 space-y-4 shadow-sm">
@@ -575,7 +575,7 @@ export default function MemberDashboard({
         </div>
 
         {/* RIGHT COLUMN: DIGITAL CREDENTIALS PREVIEW & SUITE ACTIONS (7 columns) */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-4">
           
           {/* MEMBERSHIP VALIDITY WARNING */}
           <div className="bg-[#FFF8E1] border border-[#FFE082] p-4 rounded-2xl flex gap-3 text-left">
@@ -593,7 +593,7 @@ export default function MemberDashboard({
           </div>
 
           {/* ASSOCIATION ANNOUNCEMENTS & BULLETIN BOARD */}
-          <div id="bulletin-board-section" className="bg-white border border-[#D5CFC1] rounded-3xl p-5 space-y-4 shadow-sm">
+          <div id="bulletin-board-section" className="bg-white border border-[#D5CFC1] rounded-3xl p-5 space-y-3 shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#FAF8F5] pb-3 text-left">
               <div>
                 <h3 className="text-base font-black text-[#1B4332] flex items-center gap-2 font-display">
@@ -646,7 +646,7 @@ export default function MemberDashboard({
             </div>
 
             {/* List of Announcements */}
-            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
               {(() => {
                 const filteredAnnouncements = announcements.filter(ann => {
                   const matchesSearch = ann.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -678,7 +678,7 @@ export default function MemberDashboard({
                             markAsRead(ann.id);
                           }
                         }}
-                        className={`bg-[#FAF8F5] hover:bg-white border-2 rounded-2xl p-5 transition-all text-left space-y-3 cursor-pointer ${
+                        className={`bg-[#FAF8F5] hover:bg-white border-2 rounded-2xl p-4 transition-all text-left space-y-2.5 cursor-pointer ${
                           isExpanded ? 'border-[#1B4332] ring-1 ring-[#1B4332]/25 shadow-md' : 'border-[#D5CFC1]'
                         } ${ann.priority === 'High' ? 'border-amber-500 bg-amber-50/20' : ''}`}
                       >
@@ -748,7 +748,7 @@ export default function MemberDashboard({
           </div>
 
           {/* PRINT SUITE PREVIEW CARD */}
-          <div className="bg-white border border-[#E9E4D9] rounded-3xl p-6 space-y-6 shadow-sm">
+          <div className="bg-white border border-[#E9E4D9] rounded-3xl p-5 space-y-4 shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#F0EBE1] pb-4">
               <div className="text-left">
                 <h3 className="text-xs font-black text-[#1B4332] uppercase tracking-wider flex items-center gap-1.5">
@@ -768,9 +768,9 @@ export default function MemberDashboard({
             </div>
 
             {/* PREVIEW CONTAINER WINDOW (Tailored to warm earth tones) */}
-            <div className="bg-[#FAF8F5] border border-[#E9E4D9] p-4 rounded-2xl space-y-8 select-none scale-[0.98]">
+            <div className="bg-[#FAF8F5] border border-[#E9E4D9] p-4 rounded-2xl grid grid-cols-1 xl:grid-cols-12 gap-4 select-none">
               
-              <div className="space-y-2 text-left">
+              <div className="xl:col-span-7 space-y-2 text-left">
                 <span className="text-[9px] font-black text-[#85947E] uppercase tracking-wider block">ID Card Preview:</span>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -856,9 +856,9 @@ export default function MemberDashboard({
               </div>
 
               {/* CERTIFICATE PREVIEW STATEMENT */}
-              <div className="text-left border-t border-[#E9E4D9] pt-4">
+              <div className="xl:col-span-5 text-left border-t xl:border-t-0 xl:border-l border-[#E9E4D9] pt-4 xl:pt-0 xl:pl-4">
                 <span className="text-[9px] font-black text-[#85947E] uppercase tracking-wider block mb-2">Sertipiko Preview (Certificate):</span>
-                <div className="bg-white text-slate-900 p-5 rounded-2xl border border-[#D5CFC1] text-center font-serif text-[10px] leading-relaxed relative max-w-lg mx-auto shadow-sm">
+                <div className="bg-white text-slate-900 p-4 rounded-2xl border border-[#D5CFC1] text-center font-serif text-[10px] leading-relaxed relative shadow-sm">
                   <div className="border-2 border-double border-[#1B4332] p-3 space-y-2">
                     <Landmark className="w-5 h-5 text-[#1B4332] mx-auto stroke-[1.5]" />
                     <div>
