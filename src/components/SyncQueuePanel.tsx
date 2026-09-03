@@ -22,7 +22,7 @@ export default function SyncQueuePanel({
   onDownloadBackup
 }: SyncQueuePanelProps) {
   return (
-    <div id="sync-queue-panel-container" className="bg-slate-800 border border-slate-700/50 rounded-2xl p-5 shadow-lg space-y-4">
+    <div id="sync-queue-panel-container" className="bg-slate-800 border border-slate-700/50 rounded-2xl p-4 shadow-lg space-y-3">
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-700/60 pb-3.5">
         <div className="flex items-center gap-2">
@@ -131,12 +131,9 @@ export default function SyncQueuePanel({
           </div>
         </div>
       ) : (
-        <div className="py-8 text-center text-slate-500 space-y-2 text-sm">
-          <CheckCircle2 className="w-10 h-10 text-slate-600 mx-auto" />
-          <p className="font-semibold text-slate-400">Sync Queue is Empty</p>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            All offline transactions, registrations, and logs have been synced correctly. When working offline, operations will automatically queue up here.
-          </p>
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-slate-400">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span><strong className="text-emerald-300">Sync queue clear.</strong> Offline changes will appear here when needed.</span>
         </div>
       )}
     </div>

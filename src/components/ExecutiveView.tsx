@@ -171,12 +171,12 @@ export default function ExecutiveView({
   };
 
   return (
-    <div id="executive-view-container" className="space-y-6 text-[#2D3A22]">
+    <div id="executive-view-container" className="flex flex-col space-y-5 text-[#2D3A22]">
       
       {/* EXECUTIVE HEADER */}
-      <div className="bg-[#1B4332] text-[#F4EFE6] p-4 sm:p-6 rounded-3xl border border-[#143326] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md w-full max-w-full overflow-hidden">
+      <div className="bg-[#1B4332] text-[#F4EFE6] p-4 sm:p-5 rounded-3xl border border-[#143326] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-md w-full max-w-full overflow-hidden">
         <div className="text-left min-w-0 w-full sm:w-auto">
-          <h2 className="text-lg sm:text-2xl font-black font-display text-white flex flex-wrap items-center gap-2">
+          <h2 className="text-lg sm:text-2xl font-black font-display text-white flex flex-wrap items-center gap-2 leading-tight">
             <ShieldCheck className="w-6 h-6 text-[#D8F3DC] shrink-0" />
             <span className="break-words">
               {currentRole === 'President' 
@@ -285,31 +285,31 @@ export default function ExecutiveView({
       </div>
 
       {/* SECTION: CREDENTIALS DESK & NEW REGISTRATIONS (UCSD Core focus) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="order-2 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start">
         
         {/* LEFT CARD: PENDING SIGNUPS & ROSTER REVIEW (7 columns) */}
-        <div className="lg:col-span-7 bg-white border border-[#E9E4D9] rounded-3xl p-6 shadow-sm space-y-4">
-          <div className="border-b border-[#F0EBE1] pb-3 text-left">
+        <div className="order-2 lg:col-span-12 self-start bg-white border border-[#E9E4D9] rounded-3xl p-4.5 shadow-sm space-y-2.5">
+          <div className="border-b border-[#F0EBE1] pb-2.5 text-left">
             <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
               <Users className="w-5.5 h-5.5 text-[#1B4332]" />
               <span>New Registration Desk</span>
             </h3>
-            <p className="text-xs text-[#5D6B54] mt-1 font-medium">
+            <p className="text-xs text-[#5D6B54] mt-0.5 font-medium leading-snug">
               Susiha ug aprobahi ang mga nagpalista nga miyembro o opisyal sa Barangay Alegria.
             </p>
           </div>
 
           {/* Pending Requests List */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h4 className="text-xs font-extrabold text-[#4F5E46] uppercase tracking-wider flex items-center gap-1">
               <Clock className="w-4 h-4 text-[#E65100]" />
               <span>Pending Registration ({users.filter(u => !u.isApproved).length})</span>
             </h4>
 
             {users.filter(u => !u.isApproved).length > 0 ? (
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
                 {users.filter(u => !u.isApproved).map((user) => (
-                  <div key={user.id} className="bg-[#FAF8F5] border border-[#E9E4D9] p-4 rounded-2xl text-left space-y-3 hover:border-[#85947E] transition-all">
+                  <div key={user.id} className="bg-[#FAF8F5] border border-[#E9E4D9] p-3 rounded-2xl text-left space-y-2 hover:border-[#85947E] transition-all">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -367,7 +367,7 @@ export default function ExecutiveView({
                 ))}
               </div>
             ) : (
-              <div className="bg-[#FAF8F5]/50 border border-dashed border-[#D5CFC1] p-8 rounded-2xl text-center text-[#85947E] text-xs py-10">
+              <div className="bg-[#FAF8F5]/50 border border-dashed border-[#D5CFC1] px-4 py-3 rounded-xl text-center text-[#85947E] text-xs leading-tight">
                 Walay nagpaabot nga rehistrasyon sa pagkakaron. Limpyo ang approval queue!
               </div>
             )}
@@ -375,7 +375,7 @@ export default function ExecutiveView({
         </div>
 
         {/* RIGHT CARD: CREDENTIALS MANAGEMENT DESK (5 columns) */}
-        <div id="credentials-desk-card" className="lg:col-span-5 bg-white border border-[#E9E4D9] rounded-3xl p-6 shadow-sm space-y-4">
+        <div id="credentials-desk-card" className="order-1 lg:col-span-12 self-start bg-white border border-[#E9E4D9] rounded-3xl p-5 shadow-sm space-y-3">
           <div className="border-b border-[#F0EBE1] pb-3 text-left">
             <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
               <KeyRound className="w-5.5 h-5.5 text-[#E65100]" />
@@ -492,10 +492,10 @@ export default function ExecutiveView({
       </div>
 
       {/* SECTION: RESOLUTIONS REVIEW & ASSEMBLY RECORDS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="order-1 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start">
         
         {/* LEFT COLUMN: RESOLUTIONS WAITLIST (7 Columns) */}
-        <div className="lg:col-span-7 bg-white border border-[#E9E4D9] rounded-3xl p-6 shadow-sm space-y-4">
+        <div className="lg:col-span-7 self-start bg-white border border-[#E9E4D9] rounded-3xl p-5 shadow-sm space-y-3">
           <div className="border-b border-[#F0EBE1] pb-3 text-left">
             <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
               <FileCheck className="w-5.5 h-5.5 text-[#1B4332]" />
@@ -507,7 +507,7 @@ export default function ExecutiveView({
           </div>
 
           {pendingResolutions.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {pendingResolutions.map(res => (
                 <div key={res.id} className="bg-[#FAF8F5] border border-[#E9E4D9] p-4 rounded-2xl text-left space-y-3 hover:border-[#85947E] transition-all">
                   <div className="flex justify-between items-center flex-wrap gap-2">
@@ -544,14 +544,14 @@ export default function ExecutiveView({
               ))}
             </div>
           ) : (
-            <div className="bg-[#FAF8F5]/50 border border-dashed border-[#D5CFC1] p-10 rounded-2xl text-center text-[#85947E] text-xs">
+            <div className="bg-[#FAF8F5]/50 border border-dashed border-[#D5CFC1] p-6 rounded-2xl text-center text-[#85947E] text-xs">
               Walay mga resolusyon nga naghulat sa executive approval sa pagkakaron.
             </div>
           )}
         </div>
 
         {/* RIGHT COLUMN: SIMPLIFIED CHRONOLOGICAL AUDIT TRAIL LOGS (5 Columns) */}
-        <div className="lg:col-span-5 bg-white border border-[#E9E4D9] rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-5 self-start bg-white border border-[#E9E4D9] rounded-3xl p-5 shadow-sm space-y-3">
           <div className="border-b border-[#F0EBE1] pb-3 text-left">
             <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
               <Activity className="w-5.5 h-5.5 text-[#1B4332]" />
@@ -623,7 +623,7 @@ export default function ExecutiveView({
           )}
 
           {/* Logs scroll container */}
-          <div className="space-y-3.5 max-h-[340px] overflow-y-auto pr-1">
+          <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
             {filteredLogs.length > 0 ? (
               filteredLogs.map((log) => (
                 <div 
@@ -650,7 +650,7 @@ export default function ExecutiveView({
                 </div>
               ))
             ) : (
-              <div className="text-center py-10 text-[#85947E] text-xs">
+              <div className="text-center py-6 text-[#85947E] text-xs">
                 Walay nakit-an nga logs nga nahiuyon sa imong gipangita.
               </div>
             )}
@@ -665,7 +665,7 @@ export default function ExecutiveView({
 
       {/* SECTION: ELECTION & PRESIDENTIAL TURNOVER DESK */}
       {currentRole === 'President' && (
-        <div id="presidential-turnover-desk" className="bg-[#FAF8F5] border-2 border-[#BF360C]/30 rounded-3xl p-6 shadow-sm space-y-4 text-left">
+        <div id="presidential-turnover-desk" className="order-3 bg-[#FAF8F5] border-2 border-[#BF360C]/30 rounded-3xl p-5 shadow-sm space-y-3 text-left">
           <div className="border-b border-[#E9E4D9] pb-3">
             <h3 className="text-base font-extrabold font-display text-[#BF360C] flex items-center gap-2">
               <ShieldCheck className="w-5.5 h-5.5 text-[#BF360C]" />
@@ -676,7 +676,7 @@ export default function ExecutiveView({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Turnover Info Form */}
             <div className="space-y-4">
               <div className="space-y-1">
@@ -755,7 +755,7 @@ export default function ExecutiveView({
             </div>
 
             {/* Turnover Education / Checklist Box */}
-            <div className="bg-[#FFF3E0] border border-[#FFE082] rounded-3xl p-5 space-y-3 flex flex-col justify-between">
+            <div className="bg-[#FFF3E0] border border-[#FFE082] rounded-3xl p-5 space-y-3">
               <div className="space-y-3">
                 <h4 className="text-xs font-black text-[#E65100] uppercase tracking-wider flex items-center gap-1.5 font-display">
                   <AlertTriangle className="w-4.5 h-4.5" />
