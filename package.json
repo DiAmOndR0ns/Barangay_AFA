@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build:api": "esbuild src/api/status.ts --bundle --platform=node --format=esm --packages=external --outfile=api/db/status.js && esbuild src/api/pull.ts --bundle --platform=node --format=esm --packages=external --outfile=api/sync/pull.js && esbuild src/api/push.ts --bundle --platform=node --format=esm --packages=external --outfile=api/sync/push.js",
+    "build": "vite build && npm run build:api && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",

@@ -1,5 +1,5 @@
-import { getPool, isDatabaseConfigured, fetchAllDataFromPostgres } from '../_db';
-import { sendResponse } from '../_helper';
+import { getPool, isDatabaseConfigured, fetchAllDataFromPostgres } from './db';
+import { sendResponse } from './helper';
 
 export default async function handler(req: any, res: any) {
   try {
@@ -22,7 +22,12 @@ export default async function handler(req: any, res: any) {
     }
 
     const pool = getPool();
-    const data = await fetchAllDataFromPostgres(pool);
+    const pullPromise = fetchAllDataFromPostgres(pool);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Cloud DB query timed out after 5 seconds.')), 5000)
+    );
+
+    const data = await Promise.race([pullPromise, timeoutPromise]);
     return sendResponse(res, 200, {
       success: true,
       data,
@@ -32,7 +37,7 @@ export default async function handler(req: any, res: any) {
     return sendResponse(res, 200, {
       success: false,
       offlineMode: true,
-      message: `Offline fallback: ${error.message}`,
+      message: `Offline fallback: ${error?.message || 'Database unavailable'}`,
     });
   }
 }

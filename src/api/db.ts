@@ -3,7 +3,7 @@ import {
   SEED_USERS, INITIAL_MEMBERS, INITIAL_MEETINGS, INITIAL_RESOLUTIONS, 
   INITIAL_TRANSACTIONS, INITIAL_ANNOUNCEMENTS, INITIAL_LOGS, INITIAL_HOG_RAISING, 
   INITIAL_PRODUCTS, INITIAL_ACTIVITIES, INITIAL_FUNDS 
-} from '../src/initialData';
+} from '../initialData';
 
 // Bulletproof Pool resolution across CJS, ESM, and bundled Vercel serverless environments
 const PgPool = (pg as any)?.Pool || (pg as any)?.default?.Pool || (pg as any)?.default || pg;
@@ -66,9 +66,9 @@ export function getPool(): pg.Pool {
       ssl: { 
         rejectUnauthorized: false 
       },
-      connectionTimeoutMillis: 15000,
-      idleTimeoutMillis: 30000,
-      max: 10,
+      connectionTimeoutMillis: 5000,
+      idleTimeoutMillis: 10000,
+      max: 4,
     });
 
     poolInstance.on('error', (err) => {
@@ -79,6 +79,19 @@ export function getPool(): pg.Pool {
   }
 
   return poolInstance;
+}
+
+export async function ensureDatabaseSchema(pool: pg.Pool) {
+  const client = await pool.connect();
+  try {
+    const check = await client.query(`SELECT to_regclass('public.members') as table_exists`);
+    if (check.rows[0]?.table_exists) {
+      return;
+    }
+    await initDatabaseSchema(pool);
+  } finally {
+    client.release();
+  }
 }
 
 export async function initDatabaseSchema(pool: pg.Pool) {
@@ -570,7 +583,7 @@ export async function migrateSeedData(pool: pg.Pool) {
 }
 
 export async function fetchAllDataFromPostgres(pool: pg.Pool) {
-  await initDatabaseSchema(pool);
+  await ensureDatabaseSchema(pool);
   const client = await pool.connect();
   try {
     const usersRes = await client.query('SELECT * FROM users ORDER BY name ASC');
@@ -732,7 +745,7 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
 }
 
 export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
-  await initDatabaseSchema(pool);
+  await ensureDatabaseSchema(pool);
   const client = await pool.connect();
 
   try {

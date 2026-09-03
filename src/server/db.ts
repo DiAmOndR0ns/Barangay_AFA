@@ -1,1 +1,1 @@
-export * from '../../api/_db';
+export * from '../api/db';
