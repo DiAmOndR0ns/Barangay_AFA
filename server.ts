@@ -14,7 +14,44 @@ async function startServer() {
 
   app.use(express.json({ limit: '15mb' }));
 
-  // API to Pull Full Data from Aiven PostgreSQL
+  // API to Check Live Cloud Database (Supabase / PostgreSQL) Status
+  app.get("/api/db/status", async (req, res) => {
+    if (!isDatabaseConfigured()) {
+      return res.json({
+        connected: false,
+        configured: false,
+        provider: 'Local Storage',
+        message: 'DATABASE_URL is not set or contains placeholder text.',
+      });
+    }
+
+    const rawUrl = process.env.DATABASE_URL || '';
+    const isSupabase = rawUrl.toLowerCase().includes('supabase');
+    const provider = isSupabase ? 'Supabase' : 'PostgreSQL';
+
+    try {
+      const pool = getPool();
+      const result = await pool.query('SELECT NOW() as current_time, current_database() as db_name');
+      return res.json({
+        connected: true,
+        configured: true,
+        provider,
+        database: result.rows[0]?.db_name || 'postgres',
+        timestamp: result.rows[0]?.current_time,
+        message: `Connected to ${provider} (${result.rows[0]?.db_name || 'postgres'})`,
+      });
+    } catch (err: any) {
+      return res.json({
+        connected: false,
+        configured: true,
+        provider,
+        error: err?.message || 'Connection failed',
+        message: `Failed to connect to ${provider}: ${err?.message || 'Unknown error'}`,
+      });
+    }
+  });
+
+  // API to Pull Full Data from Cloud Database (PostgreSQL / Supabase)
   app.get("/api/sync/pull", async (req, res) => {
     if (!isDatabaseConfigured()) {
       return res.json({
@@ -32,7 +69,7 @@ async function startServer() {
         data,
       });
     } catch (error: any) {
-      console.warn("[Aiven Pull Warning]:", error?.message || error);
+      console.warn("[Cloud DB Pull Warning]:", error?.message || error);
       return res.status(200).json({
         success: false,
         offlineMode: true,
@@ -41,7 +78,7 @@ async function startServer() {
     }
   });
 
-  // API to Push Full State / Sync Updates to Aiven PostgreSQL
+  // API to Push Full State / Sync Updates to Cloud Database (PostgreSQL / Supabase)
   app.post("/api/sync/push", async (req, res) => {
     if (!isDatabaseConfigured()) {
       return res.json({
@@ -56,10 +93,10 @@ async function startServer() {
       await saveFullStateToPostgres(pool, req.body);
       return res.json({
         success: true,
-        message: "State successfully synced to Aiven PostgreSQL!",
+        message: "State successfully synced to PostgreSQL Cloud DB!",
       });
     } catch (error: any) {
-      console.warn("[Aiven Push Warning]:", error?.message || error);
+      console.warn("[Cloud DB Push Warning]:", error?.message || error);
       return res.status(200).json({
         success: true,
         offlineMode: true,

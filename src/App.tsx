@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   OfficerRole, Member, Meeting, Resolution, 
   FinancialTransaction, Announcement, SyncQueueItem, SystemLog, User, HogRaisingState,
-  IgpExpense, IgpSale, IgpChoreLog, Product, AssociationActivity, OrganizationFund
+  IgpExpense, IgpSale, IgpChoreLog, Product, AssociationActivity, OrganizationFund, DatabaseStatus
 } from './types';
 import { 
   INITIAL_MEMBERS, INITIAL_MEETINGS, INITIAL_RESOLUTIONS, 
@@ -39,9 +39,50 @@ export default function App() {
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncQueue, setSyncQueue] = useState<SyncQueueItem[]>([]);
+  const [dbStatus, setDbStatus] = useState<DatabaseStatus>({
+    connected: false,
+    configured: false,
+    provider: 'Checking...',
+    checking: true,
+  });
+
+  const checkDatabaseConnection = async () => {
+    setDbStatus(prev => ({ ...prev, checking: true }));
+    try {
+      const res = await fetch('/api/db/status');
+      const text = await res.text();
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { connected: false, configured: false, provider: 'Local Storage', message: 'Offline mode active.' };
+      }
+      setDbStatus({
+        connected: Boolean(data.connected),
+        configured: Boolean(data.configured),
+        provider: data.provider || (data.configured ? 'Supabase' : 'Local Storage'),
+        database: data.database,
+        timestamp: data.timestamp || new Date().toISOString(),
+        message: data.message,
+        error: data.error,
+        checking: false,
+      });
+    } catch {
+      setDbStatus({
+        connected: false,
+        configured: false,
+        provider: 'Local Storage',
+        message: 'Running in local offline-first storage mode.',
+        checking: false,
+      });
+    }
+  };
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
+    const handleOnline = () => {
+      setIsOnline(true);
+      checkDatabaseConnection();
+    };
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
@@ -124,7 +165,10 @@ export default function App() {
       }
       setLogs(activeLogs);
 
-      // Attempt pulling fresh data from Aiven PostgreSQL if online
+      // Initial database status check
+      checkDatabaseConnection();
+
+      // Attempt pulling fresh data from PostgreSQL Cloud Database if online
       fetch('/api/sync/pull')
         .then(async res => {
           const text = await res.text();
@@ -146,12 +190,18 @@ export default function App() {
             if (res.data.funds?.length) { setFunds(res.data.funds); updateStorage('bafa_funds', res.data.funds); }
             if (res.data.hogRaising) { setHogRaising(res.data.hogRaising); updateStorage('bafa_hog_raising', res.data.hogRaising); }
             if (res.data.users?.length) { setUsers(res.data.users); updateStorage('bafa_users', res.data.users); }
-            console.log('[Aiven DB] Successfully loaded fresh data from Aiven PostgreSQL');
+            console.log('[Cloud DB] Successfully loaded fresh data from PostgreSQL Cloud DB');
+            setDbStatus(prev => ({
+              ...prev,
+              connected: true,
+              configured: true,
+              checking: false,
+            }));
           } else if (res?.offlineMode) {
-            console.log('[Aiven DB] Running in offline / local-first storage mode.');
+            console.log('[Cloud DB] Running in offline / local-first storage mode.');
           }
         })
-        .catch(err => console.log('[Aiven DB Offline / Unreachable]: using local state', err));
+        .catch(err => console.log('[Cloud DB Offline / Unreachable]: using local state', err));
     } catch (e) {
       console.error('Error reading localStorage: ', e);
       // Fallback
@@ -242,7 +292,7 @@ export default function App() {
   const handleSynchronize = async () => {
     if (!isOnline || syncQueue.length === 0 || isSyncing) return;
     setIsSyncing(true);
-    showToastMessage('Syncing with Aiven PostgreSQL Cloud Database...', 'info');
+    showToastMessage('Syncing with PostgreSQL Cloud Database...', 'info');
 
     try {
       await fetch('/api/sync/push', {
@@ -263,7 +313,7 @@ export default function App() {
       });
 
       const updatedLogsRaw = logs.map(l => l.syncStatus === 'pending' ? { ...l, syncStatus: 'synced' as const } : l);
-      const syncSummary = `Synchronized ${syncQueue.length} pending offline operation(s) to Aiven Cloud DB.`;
+      const syncSummary = `Synchronized ${syncQueue.length} pending offline operation(s) to PostgreSQL Cloud DB.`;
       const finalLogRaw: SystemLog = {
         id: `log-${Date.now()}`,
         timestamp: new Date().toISOString(),
@@ -282,10 +332,11 @@ export default function App() {
 
       setSyncQueue([]);
       updateStorage('bafa_sync_queue', []);
-      showToastMessage(`Sync complete! ${syncQueue.length} records pushed to Aiven PostgreSQL successfully.`, 'success');
+      showToastMessage(`Sync complete! ${syncQueue.length} records pushed to PostgreSQL Cloud DB successfully.`, 'success');
+      checkDatabaseConnection();
     } catch (err) {
       console.error('Sync error:', err);
-      showToastMessage('Failed to reach Aiven PostgreSQL server. Changes stored locally.', 'error');
+      showToastMessage('Failed to reach PostgreSQL server. Changes stored locally.', 'error');
     } finally {
       setIsSyncing(false);
     }
@@ -1158,6 +1209,8 @@ export default function App() {
               queueCount={syncQueue.length}
               onSync={handleSynchronize}
               isSyncing={isSyncing}
+              dbStatus={dbStatus}
+              onCheckDb={checkDatabaseConnection}
             />
           </div>
         </div>

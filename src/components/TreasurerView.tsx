@@ -311,7 +311,7 @@ export default function TreasurerView({
               <span>Registered Organization Fund Accounts & Database Audits</span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Live organizational treasury allocations & capital grant accounts recorded in Aiven PostgreSQL
+              Live organizational treasury allocations & capital grant accounts recorded in PostgreSQL Cloud Database
             </p>
           </div>
           <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-xl text-xs font-semibold">

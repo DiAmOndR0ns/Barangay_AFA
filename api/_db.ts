@@ -16,8 +16,11 @@ export function isDatabaseConfigured(): boolean {
   return Boolean(
     dbUrl && 
     dbUrl !== '' && 
+    !dbUrl.includes('[YOUR-PASSWORD]') && 
+    !dbUrl.includes('<password>') &&
+    !dbUrl.includes('YOUR_PASSWORD') && 
     !dbUrl.includes('your_aiven_connection_string') && 
-    !dbUrl.includes('YOUR_PASSWORD') &&
+    !dbUrl.includes('your_supabase_connection_string') &&
     (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'))
   );
 }

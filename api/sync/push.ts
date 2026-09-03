@@ -26,10 +26,10 @@ export default async function handler(req: any, res: any) {
     await saveFullStateToPostgres(pool, body);
     return sendResponse(res, 200, {
       success: true,
-      message: 'State successfully synced to Aiven PostgreSQL!',
+      message: 'State successfully synced to PostgreSQL Cloud DB!',
     });
   } catch (error: any) {
-    console.warn('[Aiven Push Warning]:', error?.message || error);
+    console.warn('[Cloud DB Push Warning]:', error?.message || error);
     return sendResponse(res, 200, {
       success: true,
       offlineMode: true,

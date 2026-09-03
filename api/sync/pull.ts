@@ -28,7 +28,7 @@ export default async function handler(req: any, res: any) {
       data,
     });
   } catch (error: any) {
-    console.warn('[Aiven Pull Warning]:', error?.message || error);
+    console.warn('[Cloud DB Pull Warning]:', error?.message || error);
     return sendResponse(res, 200, {
       success: false,
       offlineMode: true,
