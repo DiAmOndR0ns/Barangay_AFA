@@ -226,6 +226,61 @@ export default function OfflineIndicator({
               )}
             </div>
 
+            {/* Cloud Database Tables Status & Record Counts */}
+            {isConnected && (
+              <div className="bg-slate-800/60 border border-slate-750 p-3.5 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Supabase Table Record Counts</span>
+                  </span>
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                    (dbStatus?.totalRecords ?? 0) > 0 
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' 
+                      : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                  }`}>
+                    {dbStatus?.totalRecords !== undefined ? `${dbStatus.totalRecords} total rows` : 'Syncing counts...'}
+                  </span>
+                </div>
+
+                {dbStatus?.tableCounts && Object.keys(dbStatus.tableCounts).length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px]">
+                    {Object.entries(dbStatus.tableCounts).map(([table, count]) => (
+                      <div 
+                        key={table}
+                        className="bg-slate-900/70 border border-slate-800 px-2 py-1 rounded-lg flex items-center justify-between"
+                      >
+                        <span className="text-slate-400 capitalize truncate" title={table}>
+                          {table.replace(/_/g, ' ')}
+                        </span>
+                        <span className={`font-mono font-bold ml-1 ${count > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                          {count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-400 italic">
+                    Loading table inventory from Supabase...
+                  </div>
+                )}
+
+                {dbStatus?.totalRecords === 0 && (
+                  <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-2">
+                    <span>Tables are currently empty in Supabase.</span>
+                    <button
+                      type="button"
+                      disabled={isPopulating}
+                      onClick={() => onPopulateDb && onPopulateDb()}
+                      className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded text-[10px] uppercase tracking-wider shrink-0 cursor-pointer"
+                    >
+                      {isPopulating ? 'Seeding...' : 'Seed Now'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Quick Explanation / Setup Tips */}
             <div className="bg-slate-800/40 border border-slate-750 p-3 rounded-xl space-y-1.5 text-xs text-slate-300">
               <span className="font-bold text-white block text-[11px] uppercase tracking-wider flex items-center gap-1">

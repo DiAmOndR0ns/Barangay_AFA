@@ -66,8 +66,29 @@ export default function App() {
         timestamp: data.timestamp || new Date().toISOString(),
         message: data.message,
         error: data.error,
+        tableCounts: data.tableCounts,
+        totalRecords: data.totalRecords,
         checking: false,
       });
+
+      // If connected but tables are completely empty, auto-populate initial data
+      if (data.connected && typeof data.totalRecords === 'number' && data.totalRecords === 0) {
+        console.log('[Supabase]: Tables are empty. Triggering automated system data seeding...');
+        fetch('/api/db/seed', { method: 'POST' })
+          .then(seedRes => seedRes.json())
+          .then(seedData => {
+            if (seedData.success) {
+              setDbStatus(prev => ({
+                ...prev,
+                tableCounts: seedData.tableCounts,
+                totalRecords: seedData.totalRecords,
+                message: seedData.message,
+              }));
+              showToastMessage('Supabase tables were empty. Initial system data was automatically seeded!', 'success');
+            }
+          })
+          .catch(err => console.warn('[Auto-seed error]:', err));
+      }
     } catch {
       setDbStatus({
         connected: false,

@@ -4,7 +4,15 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
-import { getPool, isDatabaseConfigured, fetchAllDataFromPostgres, saveFullStateToPostgres } from "./src/api/db";
+import { 
+  getPool, 
+  isDatabaseConfigured, 
+  fetchAllDataFromPostgres, 
+  saveFullStateToPostgres,
+  ensureDatabaseSchema,
+  migrateSeedData,
+  getTableStats 
+} from "./src/api/db";
 
 dotenv.config();
 
@@ -60,7 +68,9 @@ async function startServer() {
 
     try {
       const pool = getPool();
+      await ensureDatabaseSchema(pool);
       const queryPromise = pool.query('SELECT NOW() as current_time, current_database() as db_name');
+      const statsPromise = getTableStats(pool);
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => {
           reject(new Error(
@@ -71,14 +81,20 @@ async function startServer() {
         }, 4000)
       );
 
-      const result = (await Promise.race([queryPromise, timeoutPromise])) as any;
+      const [result, stats] = await Promise.all([
+        Promise.race([queryPromise, timeoutPromise]) as any,
+        statsPromise
+      ]);
+
       return res.json({
         connected: true,
         configured: true,
         provider,
         database: result.rows[0]?.db_name || 'postgres',
         timestamp: result.rows[0]?.current_time,
-        message: `Connected to ${provider} (${result.rows[0]?.db_name || 'postgres'})`,
+        tableCounts: stats.tableCounts,
+        totalRecords: stats.totalRecords,
+        message: `Connected to ${provider} (${result.rows[0]?.db_name || 'postgres'}) — ${stats.totalRecords} records across 11 tables`,
       });
     } catch (err: any) {
       const errMsg = err?.message || 'Connection failed';
@@ -95,6 +111,39 @@ async function startServer() {
         provider,
         error: errMsg,
         message: `Failed to connect to ${provider}: ${errMsg}.${helpfulTip}`,
+      });
+    }
+  });
+
+  // API to Seed or Populate Supabase / PostgreSQL Tables
+  app.post("/api/db/seed", async (req, res) => {
+    if (!isDatabaseConfigured()) {
+      return res.status(400).json({
+        success: false,
+        message: "DATABASE_URL is not configured.",
+      });
+    }
+
+    try {
+      const pool = getPool();
+      await ensureDatabaseSchema(pool);
+      if (req.body && Object.keys(req.body).length > 0) {
+        await saveFullStateToPostgres(pool, req.body);
+      } else {
+        await migrateSeedData(pool);
+      }
+      const stats = await getTableStats(pool);
+      return res.json({
+        success: true,
+        message: `Successfully populated Supabase tables! (${stats.totalRecords} total records across 11 tables)`,
+        tableCounts: stats.tableCounts,
+        totalRecords: stats.totalRecords,
+      });
+    } catch (err: any) {
+      console.error("[Cloud DB Seed Error]:", err);
+      return res.status(500).json({
+        success: false,
+        message: `Failed to populate database: ${err?.message || err}`,
       });
     }
   });

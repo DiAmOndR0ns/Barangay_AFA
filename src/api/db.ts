@@ -32,27 +32,19 @@ export function cleanDatabaseUrl(rawUrl: string): { connectionString: string; is
   try {
     const parsed = new URL(urlStr);
     hostInfo = `${parsed.hostname}${parsed.port ? ':' + parsed.port : ''}${parsed.pathname}`;
-    const isLocal = parsed.hostname === 'localhost' || 
-                    parsed.hostname === '127.0.0.1' || 
-                    parsed.hostname === '0.0.0.0' || 
-                    parsed.hostname.endsWith('.local');
-    const hasExplicitSsl = parsed.searchParams.get('sslmode') === 'require' || parsed.searchParams.get('ssl') === 'true';
-    const isSsl = !isLocal || hasExplicitSsl;
-
     parsed.searchParams.delete('sslmode');
     parsed.searchParams.delete('ssl');
     return {
       connectionString: parsed.toString(),
-      isSsl,
+      isSsl: true,
       hostInfo,
     };
   } catch {
-    const isLocal = urlStr.includes('localhost') || urlStr.includes('127.0.0.1');
     const cleaned = urlStr
       .replace(/[\?&]sslmode=[^&]*/g, '')
       .replace(/[\?&]ssl=[^&]*/g, '')
       .replace(/\?$/, '');
-    return { connectionString: cleaned, isSsl: !isLocal, hostInfo };
+    return { connectionString: cleaned, isSsl: true, hostInfo };
   }
 }
 
@@ -62,24 +54,24 @@ export function getPool(): pg.Pool {
     throw new Error('DATABASE_URL environment variable is not configured');
   }
 
-  const { connectionString, isSsl } = cleanDatabaseUrl(rawDbUrl);
+  const { connectionString } = cleanDatabaseUrl(rawDbUrl);
 
   if (!poolInstance || lastUsedConnectionString !== connectionString) {
     if (poolInstance) {
       poolInstance.end().catch(() => {});
     }
-    if (isSsl) {
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-    }
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     poolInstance = new PgPool({
       connectionString,
-      ssl: isSsl ? { rejectUnauthorized: false } : false,
-      connectionTimeoutMillis: 5000,
+      ssl: { 
+        rejectUnauthorized: false 
+      },
+      connectionTimeoutMillis: 6000,
       idleTimeoutMillis: 10000,
-      max: 4,
+      max: 6,
     });
 
-    poolInstance.on('error', (err) => {
+    poolInstance.on('error', (err: any) => {
       console.warn('[PostgreSQL Pool Client Error]:', err?.message || err);
     });
 
@@ -89,16 +81,37 @@ export function getPool(): pg.Pool {
   return poolInstance;
 }
 
-export async function ensureDatabaseSchema(pool: pg.Pool) {
-  const client = await pool.connect();
-  try {
-    const check = await client.query(`SELECT to_regclass('public.members') as table_exists`);
-    if (check.rows[0]?.table_exists) {
-      return;
+export async function runSchemaMigrations(client: pg.PoolClient) {
+  const statements = [
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS member_id_number VARCHAR(100);`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS rsbsa_number VARCHAR(100);`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS is_rsbsa_registered BOOLEAN DEFAULT FALSE;`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS avatar_url TEXT;`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS gender VARCHAR(20);`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS birth_date VARCHAR(50);`,
+
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS member_id_number VARCHAR(100);`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS rsbsa_number VARCHAR(100);`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_rsbsa_registered BOOLEAN DEFAULT FALSE;`,
+
+    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS fund_source TEXT;`,
+
+    `ALTER TABLE meetings ADD COLUMN IF NOT EXISTS attendance_record JSONB;`,
+
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;`,
+
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS ceb_title TEXT;`,
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS target_audience TEXT;`,
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS image_url TEXT;`
+  ];
+
+  for (const stmt of statements) {
+    try {
+      await client.query(stmt);
+    } catch {
+      // safe fallback if column exists or dialect differences
     }
-    await initDatabaseSchema(pool);
-  } finally {
-    client.release();
   }
 }
 
@@ -121,7 +134,11 @@ export async function initDatabaseSchema(pool: pg.Pool) {
         farm_size NUMERIC,
         primary_crops TEXT[],
         contact_number VARCHAR(50),
-        status VARCHAR(50)
+        status VARCHAR(50),
+        avatar_url TEXT,
+        member_id_number VARCHAR(100),
+        rsbsa_number VARCHAR(100),
+        is_rsbsa_registered BOOLEAN DEFAULT FALSE
       );
     `);
 
@@ -135,7 +152,13 @@ export async function initDatabaseSchema(pool: pg.Pool) {
         primary_crops TEXT[],
         contact_number VARCHAR(50),
         status VARCHAR(50) DEFAULT 'Active',
-        joined_date VARCHAR(50)
+        joined_date VARCHAR(50),
+        member_id_number VARCHAR(100),
+        rsbsa_number VARCHAR(100),
+        is_rsbsa_registered BOOLEAN DEFAULT FALSE,
+        avatar_url TEXT,
+        gender VARCHAR(20),
+        birth_date VARCHAR(50)
       );
     `);
 
@@ -149,7 +172,8 @@ export async function initDatabaseSchema(pool: pg.Pool) {
         attendance_count INTEGER DEFAULT 0,
         agenda TEXT,
         minutes TEXT,
-        officer_in_charge TEXT
+        officer_in_charge TEXT,
+        attendance_record JSONB
       );
     `);
 
@@ -180,6 +204,7 @@ export async function initDatabaseSchema(pool: pg.Pool) {
         date VARCHAR(50),
         description TEXT,
         recorded_by TEXT,
+        fund_source TEXT,
         audited_status VARCHAR(50) DEFAULT 'Unaudited',
         audited_by TEXT,
         audited_date VARCHAR(50),
@@ -245,6 +270,7 @@ export async function initDatabaseSchema(pool: pg.Pool) {
         farmer_sitio TEXT,
         farmer_phone VARCHAR(50),
         contact_person TEXT,
+        image_url TEXT,
         is_published BOOLEAN DEFAULT TRUE,
         updated_by TEXT,
         managed_by TEXT,
@@ -257,6 +283,7 @@ export async function initDatabaseSchema(pool: pg.Pool) {
       CREATE TABLE IF NOT EXISTS activities (
         id VARCHAR(100) PRIMARY KEY,
         title TEXT NOT NULL,
+        ceb_title TEXT,
         category VARCHAR(100),
         scheduled_date VARCHAR(50),
         date_scheduled VARCHAR(50),
@@ -267,7 +294,9 @@ export async function initDatabaseSchema(pool: pg.Pool) {
         organizer TEXT,
         status VARCHAR(50),
         documented_notes TEXT,
-        attendees_count INTEGER DEFAULT 0
+        attendees_count INTEGER DEFAULT 0,
+        target_audience TEXT,
+        image_url TEXT
       );
     `);
 
@@ -294,6 +323,87 @@ export async function initDatabaseSchema(pool: pg.Pool) {
   }
 }
 
+export async function getTableStats(pool: pg.Pool): Promise<{
+  tableCounts: Record<string, number>;
+  totalRecords: number;
+}> {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(`
+      SELECT
+        (SELECT count(*) FROM users) as users,
+        (SELECT count(*) FROM members) as members,
+        (SELECT count(*) FROM meetings) as meetings,
+        (SELECT count(*) FROM resolutions) as resolutions,
+        (SELECT count(*) FROM financial_transactions) as financial_transactions,
+        (SELECT count(*) FROM announcements) as announcements,
+        (SELECT count(*) FROM system_logs) as system_logs,
+        (SELECT count(*) FROM hog_raising) as hog_raising,
+        (SELECT count(*) FROM products) as products,
+        (SELECT count(*) FROM activities) as activities,
+        (SELECT count(*) FROM organization_funds) as organization_funds
+    `);
+    const row = res.rows[0] || {};
+    const tableCounts: Record<string, number> = {
+      users: Number(row.users || 0),
+      members: Number(row.members || 0),
+      meetings: Number(row.meetings || 0),
+      resolutions: Number(row.resolutions || 0),
+      financial_transactions: Number(row.financial_transactions || 0),
+      announcements: Number(row.announcements || 0),
+      system_logs: Number(row.system_logs || 0),
+      hog_raising: Number(row.hog_raising || 0),
+      products: Number(row.products || 0),
+      activities: Number(row.activities || 0),
+      organization_funds: Number(row.organization_funds || 0),
+    };
+    const totalRecords = Object.values(tableCounts).reduce((a, b) => a + b, 0);
+    return { tableCounts, totalRecords };
+  } catch {
+    return {
+      tableCounts: {},
+      totalRecords: 0,
+    };
+  } finally {
+    client.release();
+  }
+}
+
+export async function ensureDatabaseSchema(pool: pg.Pool) {
+  const client = await pool.connect();
+  try {
+    // 1. Check if core table exists
+    const check = await client.query(`SELECT to_regclass('public.members') as members_table`);
+    if (!check.rows[0]?.members_table) {
+      await initDatabaseSchema(pool);
+    } else {
+      await runSchemaMigrations(client);
+    }
+
+    // 2. Check if primary tables are empty
+    const counts = await client.query(`
+      SELECT 
+        (SELECT count(*) FROM users) as users_count,
+        (SELECT count(*) FROM members) as members_count,
+        (SELECT count(*) FROM financial_transactions) as tx_count,
+        (SELECT count(*) FROM organization_funds) as funds_count
+    `);
+    const usersCount = Number(counts.rows[0]?.users_count || 0);
+    const membersCount = Number(counts.rows[0]?.members_count || 0);
+
+    // If tables are empty in Supabase/PostgreSQL, auto-populate initial seed records!
+    if (usersCount === 0 || membersCount === 0) {
+      console.log(`[Supabase / PostgreSQL]: Empty tables detected (users: ${usersCount}, members: ${membersCount}). Auto-seeding initial association dataset...`);
+      await migrateSeedData(pool);
+      console.log('[Supabase / PostgreSQL]: Initial dataset auto-seeded into Supabase successfully!');
+    }
+  } catch (err: any) {
+    console.warn('[ensureDatabaseSchema warning]:', err?.message || err);
+  } finally {
+    client.release();
+  }
+}
+
 export async function migrateSeedData(pool: pg.Pool) {
   await initDatabaseSchema(pool);
   const client = await pool.connect();
@@ -301,13 +411,14 @@ export async function migrateSeedData(pool: pg.Pool) {
 
   try {
     await client.query('BEGIN');
+    await runSchemaMigrations(client);
 
     // 1. Users
     let usersCount = 0;
     for (const u of SEED_USERS) {
       await client.query(`
-        INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status, avatar_url, member_id_number, rsbsa_number, is_rsbsa_registered)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         ON CONFLICT (id) DO UPDATE SET
           username = EXCLUDED.username,
           password = EXCLUDED.password,
@@ -319,11 +430,17 @@ export async function migrateSeedData(pool: pg.Pool) {
           farm_size = EXCLUDED.farm_size,
           primary_crops = EXCLUDED.primary_crops,
           contact_number = EXCLUDED.contact_number,
-          status = EXCLUDED.status;
+          status = EXCLUDED.status,
+          avatar_url = EXCLUDED.avatar_url,
+          member_id_number = EXCLUDED.member_id_number,
+          rsbsa_number = EXCLUDED.rsbsa_number,
+          is_rsbsa_registered = EXCLUDED.is_rsbsa_registered;
       `, [
         u.id, u.username, u.password || 'password123', u.name, u.role, u.isApproved,
         u.joinedDate || null, u.farmLocation || null, u.farmSize || null,
-        u.primaryCrops || [], u.contactNumber || null, u.status || 'Active'
+        u.primaryCrops || [], u.contactNumber || null, u.status || 'Active',
+        u.avatarUrl || null, u.memberIdNumber || null, u.rsbsaNumber || null,
+        Boolean(u.isRsbsaRegistered)
       ]);
       usersCount++;
     }
@@ -333,8 +450,8 @@ export async function migrateSeedData(pool: pg.Pool) {
     let membersCount = 0;
     for (const m of INITIAL_MEMBERS) {
       await client.query(`
-        INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date, member_id_number, rsbsa_number, is_rsbsa_registered, avatar_url, gender, birth_date)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
           farm_location = EXCLUDED.farm_location,
@@ -342,11 +459,19 @@ export async function migrateSeedData(pool: pg.Pool) {
           primary_crops = EXCLUDED.primary_crops,
           contact_number = EXCLUDED.contact_number,
           status = EXCLUDED.status,
-          joined_date = EXCLUDED.joined_date;
+          joined_date = EXCLUDED.joined_date,
+          member_id_number = EXCLUDED.member_id_number,
+          rsbsa_number = EXCLUDED.rsbsa_number,
+          is_rsbsa_registered = EXCLUDED.is_rsbsa_registered,
+          avatar_url = EXCLUDED.avatar_url,
+          gender = EXCLUDED.gender,
+          birth_date = EXCLUDED.birth_date;
       `, [
         m.id, m.name, m.farmLocation || null, m.farmSize || null,
         m.primaryCrops || [], m.contactNumber || null, m.status || 'Active',
-        m.joinedDate || null
+        m.joinedDate || null, m.memberIdNumber || null, m.rsbsaNumber || null,
+        Boolean(m.isRsbsaRegistered), m.avatarUrl || null, m.gender || null,
+        m.birthDate || null
       ]);
       membersCount++;
     }
@@ -356,8 +481,8 @@ export async function migrateSeedData(pool: pg.Pool) {
     let meetingsCount = 0;
     for (const mt of INITIAL_MEETINGS) {
       await client.query(`
-        INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge, attendance_record)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (id) DO UPDATE SET
           title = EXCLUDED.title,
           date = EXCLUDED.date,
@@ -365,10 +490,12 @@ export async function migrateSeedData(pool: pg.Pool) {
           attendance_count = EXCLUDED.attendance_count,
           agenda = EXCLUDED.agenda,
           minutes = EXCLUDED.minutes,
-          officer_in_charge = EXCLUDED.officer_in_charge;
+          officer_in_charge = EXCLUDED.officer_in_charge,
+          attendance_record = EXCLUDED.attendance_record;
       `, [
         mt.id, mt.title, mt.date, mt.location, mt.attendanceCount || 0,
-        mt.agenda || '', mt.minutes || '', mt.officerInCharge || ''
+        mt.agenda || '', mt.minutes || '', mt.officerInCharge || '',
+        JSON.stringify(mt.attendanceRecord || {})
       ]);
       meetingsCount++;
     }
@@ -403,8 +530,8 @@ export async function migrateSeedData(pool: pg.Pool) {
     let txCount = 0;
     for (const tx of INITIAL_TRANSACTIONS) {
       await client.query(`
-        INSERT INTO financial_transactions (id, type, category, amount, date, description, recorded_by, audited_status, audited_by, audited_date, audit_notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        INSERT INTO financial_transactions (id, type, category, amount, date, description, recorded_by, fund_source, audited_status, audited_by, audited_date, audit_notes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ON CONFLICT (id) DO UPDATE SET
           type = EXCLUDED.type,
           category = EXCLUDED.category,
@@ -412,18 +539,19 @@ export async function migrateSeedData(pool: pg.Pool) {
           date = EXCLUDED.date,
           description = EXCLUDED.description,
           recorded_by = EXCLUDED.recorded_by,
+          fund_source = EXCLUDED.fund_source,
           audited_status = EXCLUDED.audited_status,
           audited_by = EXCLUDED.audited_by,
           audited_date = EXCLUDED.audited_date,
           audit_notes = EXCLUDED.audit_notes;
       `, [
         tx.id, tx.type, tx.category, tx.amount, tx.date, tx.description,
-        tx.recordedBy, tx.auditedStatus || 'Unaudited', tx.auditedBy || null,
+        tx.recordedBy, tx.fundSource || null, tx.auditedStatus || 'Unaudited', tx.auditedBy || null,
         tx.auditedDate || null, tx.auditNotes || null
       ]);
       txCount++;
     }
-    summary.transactions = txCount;
+    summary.financial_transactions = txCount;
 
     // 6. Announcements
     let annCount = 0;
@@ -496,8 +624,8 @@ export async function migrateSeedData(pool: pg.Pool) {
     let productsCount = 0;
     for (const p of INITIAL_PRODUCTS) {
       await client.query(`
-        INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, is_published, updated_by, managed_by, date_updated)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+        INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, image_url, is_published, updated_by, managed_by, date_updated)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
           ceb_name = EXCLUDED.ceb_name,
@@ -511,6 +639,7 @@ export async function migrateSeedData(pool: pg.Pool) {
           farmer_sitio = EXCLUDED.farmer_sitio,
           farmer_phone = EXCLUDED.farmer_phone,
           contact_person = EXCLUDED.contact_person,
+          image_url = EXCLUDED.image_url,
           is_published = EXCLUDED.is_published,
           updated_by = EXCLUDED.updated_by,
           managed_by = EXCLUDED.managed_by,
@@ -519,8 +648,8 @@ export async function migrateSeedData(pool: pg.Pool) {
         p.id, p.name, p.cebName, p.category, p.description, p.unit,
         p.price, p.quantityAvailable, p.stockStatus, p.farmerName || null,
         p.farmerSitio || null, p.farmerPhone || null, p.contactPerson || null,
-        p.isPublished ?? true, p.updatedBy || null, p.managedBy || null,
-        p.dateUpdated || null
+        p.imageUrl || null, p.isPublished ?? true, p.updatedBy || null,
+        p.managedBy || null, p.dateUpdated || null
       ]);
       productsCount++;
     }
@@ -530,10 +659,11 @@ export async function migrateSeedData(pool: pg.Pool) {
     let activitiesCount = 0;
     for (const act of INITIAL_ACTIVITIES) {
       await client.query(`
-        INSERT INTO activities (id, title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        INSERT INTO activities (id, title, ceb_title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count, target_audience, image_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         ON CONFLICT (id) DO UPDATE SET
           title = EXCLUDED.title,
+          ceb_title = EXCLUDED.ceb_title,
           category = EXCLUDED.category,
           scheduled_date = EXCLUDED.scheduled_date,
           date_scheduled = EXCLUDED.date_scheduled,
@@ -544,15 +674,18 @@ export async function migrateSeedData(pool: pg.Pool) {
           organizer = EXCLUDED.organizer,
           status = EXCLUDED.status,
           documented_notes = EXCLUDED.documented_notes,
-          attendees_count = EXCLUDED.attendees_count;
+          attendees_count = EXCLUDED.attendees_count,
+          target_audience = EXCLUDED.target_audience,
+          image_url = EXCLUDED.image_url;
       `, [
-        act.id, act.title, act.category,
+        act.id, act.title, act.cebTitle || null, act.category,
         act.scheduledDate || act.dateScheduled || null,
         act.dateScheduled || act.scheduledDate || null,
         act.scheduledTime || act.timeScheduled || null,
         act.timeScheduled || act.scheduledTime || null,
         act.location, act.description, act.organizer, act.status,
-        act.documentedNotes || null, act.attendeesCount || 0
+        act.documentedNotes || null, act.attendeesCount || 0,
+        act.targetAudience || null, act.imageUrl || null
       ]);
       activitiesCount++;
     }
@@ -578,7 +711,7 @@ export async function migrateSeedData(pool: pg.Pool) {
       ]);
       fundsCount++;
     }
-    summary.funds = fundsCount;
+    summary.organization_funds = fundsCount;
 
     await client.query('COMMIT');
     return summary;
@@ -620,132 +753,171 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
       };
     }
 
+    const members = membersRes.rows.map(r => ({
+      id: r.id,
+      name: r.name,
+      farmLocation: r.farm_location,
+      farmSize: Number(r.farm_size || 0),
+      primaryCrops: r.primary_crops || [],
+      contactNumber: r.contact_number,
+      status: r.status,
+      joinedDate: r.joined_date,
+      memberIdNumber: r.member_id_number,
+      rsbsaNumber: r.rsbsa_number,
+      isRsbsaRegistered: Boolean(r.is_rsbsa_registered),
+      avatarUrl: r.avatar_url,
+      gender: r.gender,
+      birthDate: r.birth_date
+    }));
+
+    const users = usersRes.rows.map(r => ({
+      id: r.id,
+      username: r.username,
+      password: r.password,
+      name: r.name,
+      role: r.role,
+      isApproved: r.is_approved,
+      joinedDate: r.joined_date,
+      farmLocation: r.farm_location,
+      farmSize: Number(r.farm_size || 0),
+      primaryCrops: r.primary_crops || [],
+      contactNumber: r.contact_number,
+      status: r.status,
+      avatarUrl: r.avatar_url,
+      memberIdNumber: r.member_id_number,
+      rsbsaNumber: r.rsbsa_number,
+      isRsbsaRegistered: Boolean(r.is_rsbsa_registered)
+    }));
+
+    const meetings = meetingsRes.rows.map(r => ({
+      id: r.id,
+      title: r.title,
+      date: r.date,
+      location: r.location,
+      attendanceCount: Number(r.attendance_count || 0),
+      agenda: r.agenda,
+      minutes: r.minutes,
+      officerInCharge: r.officer_in_charge,
+      attendanceRecord: r.attendance_record || {}
+    }));
+
+    const resolutions = resolutionsRes.rows.map(r => ({
+      id: r.id,
+      resolutionNumber: r.resolution_number,
+      title: r.title,
+      description: r.description,
+      dateAgreed: r.date_agreed,
+      movedBy: r.moved_by,
+      secondedBy: r.seconded_by,
+      voteInFavor: Number(r.vote_in_favor || 0),
+      voteAgainst: Number(r.vote_against || 0),
+      voteAbstain: Number(r.vote_abstain || 0),
+      status: r.status
+    }));
+
+    const transactions = transactionsRes.rows.map(r => ({
+      id: r.id,
+      type: r.type,
+      category: r.category,
+      amount: Number(r.amount || 0),
+      date: r.date,
+      description: r.description,
+      recordedBy: r.recorded_by,
+      fundSource: r.fund_source,
+      auditedStatus: r.audited_status,
+      auditedBy: r.audited_by,
+      auditedDate: r.audited_date,
+      auditNotes: r.audit_notes
+    }));
+
+    const announcements = announcementsRes.rows.map(r => ({
+      id: r.id,
+      title: r.title,
+      category: r.category,
+      content: r.content,
+      datePosted: r.date_posted,
+      priority: r.priority,
+      postedBy: r.posted_by
+    }));
+
+    const logs = logsRes.rows.map(r => ({
+      id: r.id,
+      timestamp: r.timestamp,
+      user: r.user_name,
+      role: r.role,
+      action: r.action,
+      details: r.details,
+      syncStatus: r.sync_status || 'synced',
+      hash: r.hash,
+      previousHash: r.previous_hash
+    }));
+
+    const products = productsRes.rows.map(r => ({
+      id: r.id,
+      name: r.name,
+      cebName: r.ceb_name,
+      category: r.category,
+      description: r.description,
+      unit: r.unit,
+      price: Number(r.price || 0),
+      quantityAvailable: r.quantity_available,
+      stockStatus: r.stock_status,
+      farmerName: r.farmer_name,
+      farmerSitio: r.farmer_sitio,
+      farmerPhone: r.farmer_phone,
+      contactPerson: r.contact_person,
+      imageUrl: r.image_url,
+      isPublished: r.is_published,
+      updatedBy: r.updated_by,
+      managedBy: r.managed_by,
+      dateUpdated: r.date_updated
+    }));
+
+    const activities = activitiesRes.rows.map(r => ({
+      id: r.id,
+      title: r.title,
+      cebTitle: r.ceb_title,
+      category: r.category,
+      scheduledDate: r.scheduled_date || r.date_scheduled,
+      dateScheduled: r.date_scheduled || r.scheduled_date,
+      scheduledTime: r.scheduled_time || r.time_scheduled,
+      timeScheduled: r.time_scheduled || r.scheduled_time,
+      location: r.location,
+      description: r.description,
+      organizer: r.organizer,
+      status: r.status,
+      documentedNotes: r.documented_notes,
+      attendeesCount: Number(r.attendees_count || 0),
+      targetAudience: r.target_audience,
+      imageUrl: r.image_url
+    }));
+
+    const funds = fundsRes.rows.map(r => ({
+      id: r.id,
+      name: r.name,
+      code: r.code,
+      allocatedAmount: Number(r.allocated_amount || 0),
+      currentBalance: Number(r.current_balance || 0),
+      description: r.description,
+      custodian: r.custodian,
+      lastUpdated: r.last_updated
+    }));
+
     return {
-      users: usersRes.rows.map(r => ({
-        id: r.id,
-        username: r.username,
-        password: r.password,
-        name: r.name,
-        role: r.role,
-        isApproved: r.is_approved,
-        joinedDate: r.joined_date,
-        farmLocation: r.farm_location,
-        farmSize: Number(r.farm_size || 0),
-        primaryCrops: r.primary_crops || [],
-        contactNumber: r.contact_number,
-        status: r.status
-      })),
-      members: membersRes.rows.map(r => ({
-        id: r.id,
-        name: r.name,
-        farmLocation: r.farm_location,
-        farmSize: Number(r.farm_size || 0),
-        primaryCrops: r.primary_crops || [],
-        contactNumber: r.contact_number,
-        status: r.status,
-        joinedDate: r.joined_date
-      })),
-      meetings: meetingsRes.rows.map(r => ({
-        id: r.id,
-        title: r.title,
-        date: r.date,
-        location: r.location,
-        attendanceCount: Number(r.attendance_count || 0),
-        agenda: r.agenda,
-        minutes: r.minutes,
-        officerInCharge: r.officer_in_charge
-      })),
-      resolutions: resolutionsRes.rows.map(r => ({
-        id: r.id,
-        resolutionNumber: r.resolution_number,
-        title: r.title,
-        description: r.description,
-        dateAgreed: r.date_agreed,
-        movedBy: r.moved_by,
-        secondedBy: r.seconded_by,
-        voteInFavor: Number(r.vote_in_favor || 0),
-        voteAgainst: Number(r.vote_against || 0),
-        voteAbstain: Number(r.vote_abstain || 0),
-        status: r.status
-      })),
-      transactions: transactionsRes.rows.map(r => ({
-        id: r.id,
-        type: r.type,
-        category: r.category,
-        amount: Number(r.amount || 0),
-        date: r.date,
-        description: r.description,
-        recordedBy: r.recorded_by,
-        auditedStatus: r.audited_status,
-        auditedBy: r.audited_by,
-        auditedDate: r.audited_date,
-        auditNotes: r.audit_notes
-      })),
-      announcements: announcementsRes.rows.map(r => ({
-        id: r.id,
-        title: r.title,
-        category: r.category,
-        content: r.content,
-        datePosted: r.date_posted,
-        priority: r.priority,
-        postedBy: r.posted_by
-      })),
-      logs: logsRes.rows.map(r => ({
-        id: r.id,
-        timestamp: r.timestamp,
-        user: r.user_name,
-        role: r.role,
-        action: r.action,
-        details: r.details,
-        syncStatus: r.sync_status || 'synced',
-        hash: r.hash,
-        previousHash: r.previous_hash
-      })),
+      users,
+      members,
+      meetings,
+      resolutions,
+      transactions,
+      financialTransactions: transactions,
+      announcements,
+      logs,
+      systemLogs: logs,
       hogRaising: hogState,
-      products: productsRes.rows.map(r => ({
-        id: r.id,
-        name: r.name,
-        cebName: r.ceb_name,
-        category: r.category,
-        description: r.description,
-        unit: r.unit,
-        price: Number(r.price || 0),
-        quantityAvailable: r.quantity_available,
-        stockStatus: r.stock_status,
-        farmerName: r.farmer_name,
-        farmerSitio: r.farmer_sitio,
-        farmerPhone: r.farmer_phone,
-        contactPerson: r.contact_person,
-        isPublished: r.is_published,
-        updatedBy: r.updated_by,
-        managedBy: r.managed_by,
-        dateUpdated: r.date_updated
-      })),
-      activities: activitiesRes.rows.map(r => ({
-        id: r.id,
-        title: r.title,
-        category: r.category,
-        scheduledDate: r.scheduled_date || r.date_scheduled,
-        dateScheduled: r.date_scheduled || r.scheduled_date,
-        scheduledTime: r.scheduled_time || r.time_scheduled,
-        timeScheduled: r.time_scheduled || r.scheduled_time,
-        location: r.location,
-        description: r.description,
-        organizer: r.organizer,
-        status: r.status,
-        documentedNotes: r.documented_notes,
-        attendeesCount: Number(r.attendees_count || 0)
-      })),
-      funds: fundsRes.rows.map(r => ({
-        id: r.id,
-        name: r.name,
-        code: r.code,
-        allocatedAmount: Number(r.allocated_amount || 0),
-        currentBalance: Number(r.current_balance || 0),
-        description: r.description,
-        custodian: r.custodian,
-        lastUpdated: r.last_updated
-      }))
+      products,
+      activities,
+      funds,
+      organizationFunds: funds
     };
   } finally {
     client.release();
@@ -758,12 +930,46 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
 
   try {
     await client.query('BEGIN');
+    await runSchemaMigrations(client);
 
-    if (state.members && Array.isArray(state.members)) {
+    // 1. Users
+    if (state.users && Array.isArray(state.users) && state.users.length > 0) {
+      for (const u of state.users) {
+        await client.query(`
+          INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status, avatar_url, member_id_number, rsbsa_number, is_rsbsa_registered)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+          ON CONFLICT (id) DO UPDATE SET
+            username = EXCLUDED.username,
+            password = EXCLUDED.password,
+            name = EXCLUDED.name,
+            role = EXCLUDED.role,
+            is_approved = EXCLUDED.is_approved,
+            joined_date = EXCLUDED.joined_date,
+            farm_location = EXCLUDED.farm_location,
+            farm_size = EXCLUDED.farm_size,
+            primary_crops = EXCLUDED.primary_crops,
+            contact_number = EXCLUDED.contact_number,
+            status = EXCLUDED.status,
+            avatar_url = EXCLUDED.avatar_url,
+            member_id_number = EXCLUDED.member_id_number,
+            rsbsa_number = EXCLUDED.rsbsa_number,
+            is_rsbsa_registered = EXCLUDED.is_rsbsa_registered;
+        `, [
+          u.id, u.username, u.password || 'password123', u.name, u.role, u.isApproved,
+          u.joinedDate || null, u.farmLocation || null, u.farmSize || null,
+          u.primaryCrops || [], u.contactNumber || null, u.status || 'Active',
+          u.avatarUrl || null, u.memberIdNumber || null, u.rsbsaNumber || null,
+          Boolean(u.isRsbsaRegistered)
+        ]);
+      }
+    }
+
+    // 2. Members
+    if (state.members && Array.isArray(state.members) && state.members.length > 0) {
       for (const m of state.members) {
         await client.query(`
-          INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date, member_id_number, rsbsa_number, is_rsbsa_registered, avatar_url, gender, birth_date)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
           ON CONFLICT (id) DO UPDATE SET
             name = EXCLUDED.name,
             farm_location = EXCLUDED.farm_location,
@@ -771,20 +977,30 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             primary_crops = EXCLUDED.primary_crops,
             contact_number = EXCLUDED.contact_number,
             status = EXCLUDED.status,
-            joined_date = EXCLUDED.joined_date;
+            joined_date = EXCLUDED.joined_date,
+            member_id_number = EXCLUDED.member_id_number,
+            rsbsa_number = EXCLUDED.rsbsa_number,
+            is_rsbsa_registered = EXCLUDED.is_rsbsa_registered,
+            avatar_url = EXCLUDED.avatar_url,
+            gender = EXCLUDED.gender,
+            birth_date = EXCLUDED.birth_date;
         `, [
           m.id, m.name, m.farmLocation || null, m.farmSize || null,
           m.primaryCrops || [], m.contactNumber || null, m.status || 'Active',
-          m.joinedDate || null
+          m.joinedDate || null, m.memberIdNumber || null, m.rsbsaNumber || null,
+          Boolean(m.isRsbsaRegistered), m.avatarUrl || null, m.gender || null,
+          m.birthDate || null
         ]);
       }
     }
 
-    if (state.transactions && Array.isArray(state.transactions)) {
-      for (const tx of state.transactions) {
+    // 3. Transactions (handles financialTransactions OR transactions)
+    const txList = state.financialTransactions || state.transactions;
+    if (txList && Array.isArray(txList) && txList.length > 0) {
+      for (const tx of txList) {
         await client.query(`
-          INSERT INTO financial_transactions (id, type, category, amount, date, description, recorded_by, audited_status, audited_by, audited_date, audit_notes)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          INSERT INTO financial_transactions (id, type, category, amount, date, description, recorded_by, fund_source, audited_status, audited_by, audited_date, audit_notes)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
           ON CONFLICT (id) DO UPDATE SET
             type = EXCLUDED.type,
             category = EXCLUDED.category,
@@ -792,23 +1008,25 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             date = EXCLUDED.date,
             description = EXCLUDED.description,
             recorded_by = EXCLUDED.recorded_by,
+            fund_source = EXCLUDED.fund_source,
             audited_status = EXCLUDED.audited_status,
             audited_by = EXCLUDED.audited_by,
             audited_date = EXCLUDED.audited_date,
             audit_notes = EXCLUDED.audit_notes;
         `, [
           tx.id, tx.type, tx.category, tx.amount, tx.date, tx.description,
-          tx.recordedBy, tx.auditedStatus || 'Unaudited', tx.auditedBy || null,
+          tx.recordedBy, tx.fundSource || null, tx.auditedStatus || 'Unaudited', tx.auditedBy || null,
           tx.auditedDate || null, tx.auditNotes || null
         ]);
       }
     }
 
-    if (state.meetings && Array.isArray(state.meetings)) {
+    // 4. Meetings
+    if (state.meetings && Array.isArray(state.meetings) && state.meetings.length > 0) {
       for (const mt of state.meetings) {
         await client.query(`
-          INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge, attendance_record)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
           ON CONFLICT (id) DO UPDATE SET
             title = EXCLUDED.title,
             date = EXCLUDED.date,
@@ -816,14 +1034,17 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             attendance_count = EXCLUDED.attendance_count,
             agenda = EXCLUDED.agenda,
             minutes = EXCLUDED.minutes,
-            officer_in_charge = EXCLUDED.officer_in_charge;
+            officer_in_charge = EXCLUDED.officer_in_charge,
+            attendance_record = EXCLUDED.attendance_record;
         `, [
           mt.id, mt.title, mt.date, mt.location, mt.attendanceCount || 0,
-          mt.agenda || '', mt.minutes || '', mt.officerInCharge || ''
+          mt.agenda || '', mt.minutes || '', mt.officerInCharge || '',
+          JSON.stringify(mt.attendanceRecord || {})
         ]);
       }
     }
 
+    // 5. Hog Raising IGP State
     if (state.hogRaising) {
       await client.query(`
         INSERT INTO hog_raising (id, capital_grant, produces, expenses, sales, groups, chore_logs, closed_years)
@@ -848,8 +1069,10 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       ]);
     }
 
-    if (state.logs && Array.isArray(state.logs)) {
-      for (const lg of state.logs) {
+    // 6. System Logs (handles systemLogs OR logs)
+    const logList = state.systemLogs || state.logs;
+    if (logList && Array.isArray(logList) && logList.length > 0) {
+      for (const lg of logList) {
         await client.query(`
           INSERT INTO system_logs (id, timestamp, user_name, role, action, details, sync_status, hash, previous_hash)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -863,17 +1086,18 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             hash = EXCLUDED.hash,
             previous_hash = EXCLUDED.previous_hash;
         `, [
-          lg.id, lg.timestamp, lg.userName, lg.role, lg.action, lg.details,
+          lg.id, lg.timestamp, (lg as any).user || (lg as any).userName || 'Officer', lg.role, lg.action, lg.details,
           lg.syncStatus || 'Synced', lg.hash || null, lg.previousHash || null
         ]);
       }
     }
 
-    if (state.products && Array.isArray(state.products)) {
+    // 7. Products
+    if (state.products && Array.isArray(state.products) && state.products.length > 0) {
       for (const p of state.products) {
         await client.query(`
-          INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, is_published, updated_by, managed_by, date_updated)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+          INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, image_url, is_published, updated_by, managed_by, date_updated)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
           ON CONFLICT (id) DO UPDATE SET
             name = EXCLUDED.name,
             ceb_name = EXCLUDED.ceb_name,
@@ -887,6 +1111,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             farmer_sitio = EXCLUDED.farmer_sitio,
             farmer_phone = EXCLUDED.farmer_phone,
             contact_person = EXCLUDED.contact_person,
+            image_url = EXCLUDED.image_url,
             is_published = EXCLUDED.is_published,
             updated_by = EXCLUDED.updated_by,
             managed_by = EXCLUDED.managed_by,
@@ -895,13 +1120,14 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           p.id, p.name, p.cebName, p.category, p.description, p.unit,
           p.price, p.quantityAvailable, p.stockStatus, p.farmerName || null,
           p.farmerSitio || null, p.farmerPhone || null, p.contactPerson || null,
-          p.isPublished ?? true, p.updatedBy || null, p.managedBy || null,
-          p.dateUpdated || null
+          p.imageUrl || null, p.isPublished ?? true, p.updatedBy || null,
+          p.managedBy || null, p.dateUpdated || null
         ]);
       }
     }
 
-    if (state.resolutions && Array.isArray(state.resolutions)) {
+    // 8. Resolutions
+    if (state.resolutions && Array.isArray(state.resolutions) && state.resolutions.length > 0) {
       for (const r of state.resolutions) {
         await client.query(`
           INSERT INTO resolutions (id, resolution_number, title, description, date_agreed, moved_by, seconded_by, vote_in_favor, vote_against, vote_abstain, status)
@@ -924,7 +1150,8 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       }
     }
 
-    if (state.announcements && Array.isArray(state.announcements)) {
+    // 9. Announcements
+    if (state.announcements && Array.isArray(state.announcements) && state.announcements.length > 0) {
       for (const a of state.announcements) {
         await client.query(`
           INSERT INTO announcements (id, title, category, content, date_posted, priority, posted_by)
@@ -940,13 +1167,15 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       }
     }
 
-    if (state.activities && Array.isArray(state.activities)) {
+    // 10. Activities
+    if (state.activities && Array.isArray(state.activities) && state.activities.length > 0) {
       for (const act of state.activities) {
         await client.query(`
-          INSERT INTO activities (id, title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          INSERT INTO activities (id, title, ceb_title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count, target_audience, image_url)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
           ON CONFLICT (id) DO UPDATE SET
             title = EXCLUDED.title,
+            ceb_title = EXCLUDED.ceb_title,
             category = EXCLUDED.category,
             scheduled_date = EXCLUDED.scheduled_date,
             date_scheduled = EXCLUDED.date_scheduled,
@@ -957,40 +1186,40 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             organizer = EXCLUDED.organizer,
             status = EXCLUDED.status,
             documented_notes = EXCLUDED.documented_notes,
-            attendees_count = EXCLUDED.attendees_count;
+            attendees_count = EXCLUDED.attendees_count,
+            target_audience = EXCLUDED.target_audience,
+            image_url = EXCLUDED.image_url;
         `, [
-          act.id, act.title, act.category,
+          act.id, act.title, act.cebTitle || null, act.category,
           act.scheduledDate || act.dateScheduled || null,
           act.dateScheduled || act.scheduledDate || null,
           act.scheduledTime || act.timeScheduled || null,
           act.timeScheduled || act.scheduledTime || null,
           act.location, act.description, act.organizer, act.status,
-          act.documentedNotes || null, act.attendeesCount || 0
+          act.documentedNotes || null, act.attendeesCount || 0,
+          act.targetAudience || null, act.imageUrl || null
         ]);
       }
     }
 
-    if (state.users && Array.isArray(state.users)) {
-      for (const u of state.users) {
+    // 11. Organization Funds (handles organizationFunds OR funds)
+    const fundList = state.organizationFunds || state.funds;
+    if (fundList && Array.isArray(fundList) && fundList.length > 0) {
+      for (const f of fundList) {
         await client.query(`
-          INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          INSERT INTO organization_funds (id, name, code, allocated_amount, current_balance, description, custodian, last_updated)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           ON CONFLICT (id) DO UPDATE SET
-            username = EXCLUDED.username,
-            password = EXCLUDED.password,
             name = EXCLUDED.name,
-            role = EXCLUDED.role,
-            is_approved = EXCLUDED.is_approved,
-            joined_date = EXCLUDED.joined_date,
-            farm_location = EXCLUDED.farm_location,
-            farm_size = EXCLUDED.farm_size,
-            primary_crops = EXCLUDED.primary_crops,
-            contact_number = EXCLUDED.contact_number,
-            status = EXCLUDED.status;
+            code = EXCLUDED.code,
+            allocated_amount = EXCLUDED.allocated_amount,
+            current_balance = EXCLUDED.current_balance,
+            description = EXCLUDED.description,
+            custodian = EXCLUDED.custodian,
+            last_updated = EXCLUDED.last_updated;
         `, [
-          u.id, u.username, u.password || 'password123', u.name, u.role, u.isApproved,
-          u.joinedDate || null, u.farmLocation || null, u.farmSize || null,
-          u.primaryCrops || [], u.contactNumber || null, u.status || 'Active'
+          f.id, f.name, f.code, f.allocatedAmount || 0, f.currentBalance || 0,
+          f.description || '', f.custodian || '', f.lastUpdated || new Date().toISOString().split('T')[0]
         ]);
       }
     }

@@ -1,4 +1,4 @@
-import { isDatabaseConfigured, getPool } from './db';
+import { isDatabaseConfigured, getPool, ensureDatabaseSchema, getTableStats } from './db';
 import { sendResponse } from './helper';
 
 export default async function handler(req: any, res: any) {
@@ -53,7 +53,9 @@ export default async function handler(req: any, res: any) {
 
     // Guard against hanging direct IPv6 connection to Supabase on Vercel
     const pool = getPool();
+    await ensureDatabaseSchema(pool);
     const queryPromise = pool.query('SELECT NOW() as current_time, current_database() as db_name');
+    const statsPromise = getTableStats(pool);
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => {
         reject(new Error(
@@ -64,7 +66,10 @@ export default async function handler(req: any, res: any) {
       }, 4000)
     );
 
-    const result = (await Promise.race([queryPromise, timeoutPromise])) as any;
+    const [result, stats] = await Promise.all([
+      Promise.race([queryPromise, timeoutPromise]) as any,
+      statsPromise
+    ]);
 
     return sendResponse(res, 200, {
       connected: true,
@@ -72,7 +77,9 @@ export default async function handler(req: any, res: any) {
       provider,
       database: result.rows[0]?.db_name || 'postgres',
       timestamp: result.rows[0]?.current_time,
-      message: `Connected to ${provider} (${result.rows[0]?.db_name || 'postgres'})`,
+      tableCounts: stats.tableCounts,
+      totalRecords: stats.totalRecords,
+      message: `Connected to ${provider} (${result.rows[0]?.db_name || 'postgres'}) — ${stats.totalRecords} records across 11 tables`,
     });
   } catch (err: any) {
     const rawUrl = (process.env.DATABASE_URL || '').trim().replace(/^["']|["']$/g, '');

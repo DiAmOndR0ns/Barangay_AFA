@@ -221,6 +221,8 @@ export interface DatabaseStatus {
   error?: string;
   message?: string;
   checking?: boolean;
+  tableCounts?: Record<string, number>;
+  totalRecords?: number;
 }
 
 
