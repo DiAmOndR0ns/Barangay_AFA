@@ -19,6 +19,8 @@ interface OfflineIndicatorProps {
   isSyncing: boolean;
   dbStatus?: DatabaseStatus;
   onCheckDb?: () => void;
+  onPopulateDb?: () => void;
+  isPopulating?: boolean;
 }
 
 export default function OfflineIndicator({
@@ -27,7 +29,9 @@ export default function OfflineIndicator({
   onSync,
   isSyncing,
   dbStatus,
-  onCheckDb
+  onCheckDb,
+  onPopulateDb,
+  isPopulating = false,
 }: OfflineIndicatorProps) {
   const [showDbModal, setShowDbModal] = useState(false);
 
@@ -238,18 +242,38 @@ export default function OfflineIndicator({
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
-              <button
-                type="button"
-                disabled={isChecking}
-                onClick={() => {
-                  if (onCheckDb) onCheckDb();
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-750 text-white rounded-xl text-xs font-bold transition-all border border-slate-700 cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin' : ''}`} />
-                <span>{isChecking ? 'Checking...' : 'Test Connection'}</span>
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isChecking}
+                  onClick={() => {
+                    if (onCheckDb) onCheckDb();
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-750 text-white rounded-xl text-xs font-bold transition-all border border-slate-700 cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin' : ''}`} />
+                  <span>{isChecking ? 'Checking...' : 'Test Connection'}</span>
+                </button>
+
+                {isConnected && onPopulateDb && (
+                  <button
+                    id="populate-cloud-db-btn"
+                    type="button"
+                    disabled={isPopulating}
+                    onClick={() => {
+                      if (window.confirm('Populate Cloud Database with all current system records? This will push all current members, meetings, funds, transactions, announcements, and IGP logs into your Supabase database.')) {
+                        onPopulateDb();
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-xl text-xs font-bold transition-all border border-amber-500/40 cursor-pointer disabled:opacity-50"
+                    title="Upload all current system records to Supabase"
+                  >
+                    <Server className={`w-3.5 h-3.5 ${isPopulating ? 'animate-spin' : 'text-amber-400'}`} />
+                    <span>{isPopulating ? 'Pushing All Data...' : 'Populate All Data to DB'}</span>
+                  </button>
+                )}
+              </div>
 
               <button
                 type="button"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { SyncQueueItem } from '../types';
-import { RotateCw, Trash2, Cloud, CloudOff, RefreshCw, Layers, CheckCircle2, ArrowRight, Download } from 'lucide-react';
+import { RotateCw, Trash2, Cloud, CloudOff, RefreshCw, Layers, CheckCircle2, ArrowRight, Download, Server } from 'lucide-react';
 
 interface SyncQueuePanelProps {
   queue: SyncQueueItem[];
@@ -10,6 +10,8 @@ interface SyncQueuePanelProps {
   onClearQueue: () => void;
   onRemoveItem: (id: string) => void;
   onDownloadBackup?: () => void;
+  onPopulateAll?: () => void;
+  isPopulating?: boolean;
 }
 
 export default function SyncQueuePanel({
@@ -19,7 +21,9 @@ export default function SyncQueuePanel({
   isSyncing,
   onClearQueue,
   onRemoveItem,
-  onDownloadBackup
+  onDownloadBackup,
+  onPopulateAll,
+  isPopulating = false
 }: SyncQueuePanelProps) {
   return (
     <div id="sync-queue-panel-container" className="bg-slate-800 border border-slate-700/50 rounded-2xl p-4 shadow-lg space-y-3">
@@ -43,6 +47,27 @@ export default function SyncQueuePanel({
             >
               <Download className="w-3.5 h-3.5 text-emerald-400" />
               <span>Download System Backup</span>
+            </button>
+          )}
+
+          {onPopulateAll && (
+            <button
+              id="sync-panel-populate-all-btn"
+              disabled={!isOnline || isPopulating || isSyncing}
+              onClick={() => {
+                if (window.confirm('Upload and populate Supabase with all system data? This will push all current members, meetings, funds, transactions, announcements, and IGP logs.')) {
+                  onPopulateAll();
+                }
+              }}
+              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all w-full sm:w-auto cursor-pointer ${
+                !isOnline || isPopulating || isSyncing
+                  ? 'bg-slate-900 text-slate-500 border border-slate-750 cursor-not-allowed'
+                  : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-xs'
+              }`}
+              title="Push entire current dataset to PostgreSQL Cloud Database"
+            >
+              <Server className={`w-3.5 h-3.5 ${isPopulating ? 'animate-spin' : 'text-amber-400'}`} />
+              <span>{isPopulating ? 'Populating DB...' : 'Populate All Data to DB'}</span>
             </button>
           )}
 

@@ -38,6 +38,7 @@ export default function App() {
   // Connection and Sync State
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isPopulating, setIsPopulating] = useState<boolean>(false);
   const [syncQueue, setSyncQueue] = useState<SyncQueueItem[]>([]);
   const [dbStatus, setDbStatus] = useState<DatabaseStatus>({
     connected: false,
@@ -339,6 +340,48 @@ export default function App() {
       showToastMessage('Failed to reach PostgreSQL server. Changes stored locally.', 'error');
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  // Force Populate Cloud Database with All Current System Records
+  const handlePopulateAllToDatabase = async () => {
+    if (!isOnline || isPopulating) return;
+    setIsPopulating(true);
+    showToastMessage('Uploading and populating all system data to Supabase...', 'info');
+
+    try {
+      const res = await fetch('/api/sync/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          users,
+          members,
+          meetings,
+          resolutions,
+          financialTransactions: transactions,
+          announcements,
+          products,
+          activities,
+          hogRaising,
+          funds,
+          systemLogs: logs
+        })
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        showToastMessage('All system records successfully populated into Supabase!', 'success');
+        setSyncQueue([]);
+        updateStorage('bafa_sync_queue', []);
+        checkDatabaseConnection();
+      } else {
+        showToastMessage(result.message || 'Database push completed with warnings.', 'info');
+      }
+    } catch (err: any) {
+      console.error('Populate database error:', err);
+      showToastMessage(`Error populating database: ${err?.message || 'Connection error'}`, 'error');
+    } finally {
+      setIsPopulating(false);
     }
   };
 
@@ -1211,6 +1254,8 @@ export default function App() {
               isSyncing={isSyncing}
               dbStatus={dbStatus}
               onCheckDb={checkDatabaseConnection}
+              onPopulateDb={handlePopulateAllToDatabase}
+              isPopulating={isPopulating}
             />
           </div>
         </div>
@@ -1461,6 +1506,8 @@ export default function App() {
               onClearQueue={handleClearQueue}
               onRemoveItem={handleRemoveQueueItem}
               onDownloadBackup={handleDownloadSystemBackup}
+              onPopulateAll={handlePopulateAllToDatabase}
+              isPopulating={isPopulating}
             />
           </div>
 
