@@ -100,22 +100,6 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      checkDatabaseConnection();
-    };
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
   // Officer Role State
   const [currentRole, setCurrentRole] = useState<OfficerRole>('President');
   const [officerTab, setOfficerTab] = useState<'tasks' | 'hog-raising' | 'announcements' | 'member-view'>('tasks');
@@ -172,11 +156,16 @@ export default function App() {
       }
 
       if (storedCurrentUser) {
-        const parsedCurrentUser = JSON.parse(storedCurrentUser);
-        setCurrentUser(parsedCurrentUser);
-        if (parsedCurrentUser.role !== 'Member') {
-          setCurrentRole(parsedCurrentUser.role as OfficerRole);
-        }
+        try {
+          const parsedCurrentUser = JSON.parse(storedCurrentUser);
+          // Protect confidential credentials: remove plaintext password
+          delete parsedCurrentUser.password;
+          setCurrentUser(parsedCurrentUser);
+          updateStorage('bafa_current_user', parsedCurrentUser);
+          if (parsedCurrentUser.role !== 'Member') {
+            setCurrentRole(parsedCurrentUser.role as OfficerRole);
+          }
+        } catch {}
       }
 
       const rawLogs = storedLogs ? JSON.parse(storedLogs) : INITIAL_LOGS;
@@ -219,6 +208,40 @@ export default function App() {
               configured: true,
               checking: false,
             }));
+
+            // If there were pending offline operations/contributions queued in local storage, sync them immediately
+            if (storedQueue) {
+              try {
+                const parsedQ = JSON.parse(storedQueue);
+                if (parsedQ.length > 0) {
+                  console.log(`[Auto-Sync]: Found ${parsedQ.length} pending offline contributions. Syncing to Supabase...`);
+                  fetch('/api/sync/push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      users: res.data.users || parsedUsers,
+                      members: res.data.members || (storedMembers ? JSON.parse(storedMembers) : INITIAL_MEMBERS),
+                      meetings: res.data.meetings || (storedMeetings ? JSON.parse(storedMeetings) : INITIAL_MEETINGS),
+                      resolutions: res.data.resolutions || (storedResolutions ? JSON.parse(storedResolutions) : INITIAL_RESOLUTIONS),
+                      financialTransactions: res.data.financialTransactions || (storedTransactions ? JSON.parse(storedTransactions) : INITIAL_TRANSACTIONS),
+                      announcements: res.data.announcements || (storedAnnouncements ? JSON.parse(storedAnnouncements) : INITIAL_ANNOUNCEMENTS),
+                      products: res.data.products || (storedProducts ? JSON.parse(storedProducts) : INITIAL_PRODUCTS),
+                      activities: res.data.activities || (storedActivities ? JSON.parse(storedActivities) : INITIAL_ACTIVITIES),
+                      funds: res.data.funds || (storedFunds ? JSON.parse(storedFunds) : INITIAL_FUNDS),
+                      hogRaising: res.data.hogRaising || (storedHogRaising ? JSON.parse(storedHogRaising) : INITIAL_HOG_RAISING),
+                      systemLogs: activeLogs
+                    })
+                  }).then(r => r.json()).then(pushRes => {
+                    if (pushRes?.success) {
+                      setSyncQueue([]);
+                      localStorage.removeItem('bafa_sync_queue');
+                      updateStorage('bafa_sync_queue', []);
+                      console.log('[Auto-Sync]: Synced offline contributions on boot and purged local pending queue.');
+                    }
+                  }).catch(e => console.warn('[Boot sync push error]:', e));
+                }
+              } catch {}
+            }
           } else if (res?.offlineMode) {
             console.log('[Cloud DB] Running in offline / local-first storage mode.');
           }
@@ -310,52 +333,89 @@ export default function App() {
     showToastMessage('Saved offline! Operation queued for synchronization.', 'warning');
   };
 
-  // Flush Queue / Synchronize
-  const handleSynchronize = async () => {
-    if (!isOnline || syncQueue.length === 0 || isSyncing) return;
-    setIsSyncing(true);
-    showToastMessage('Syncing with PostgreSQL Cloud Database...', 'info');
+  // Central Cloud Synchronization Engine:
+  // Pushes all current records and contributions to PostgreSQL/Supabase,
+  // and upon successful persistence, immediately clears all locally stored pending queues.
+  const pushAllDataToCloud = async (
+    overrides?: {
+      users?: User[];
+      members?: Member[];
+      meetings?: Meeting[];
+      resolutions?: Resolution[];
+      financialTransactions?: FinancialTransaction[];
+      announcements?: Announcement[];
+      products?: Product[];
+      activities?: AssociationActivity[];
+      hogRaising?: HogRaisingState;
+      funds?: OrganizationFund[];
+      systemLogs?: SystemLog[];
+    },
+    options?: { silent?: boolean; source?: string }
+  ): Promise<boolean> => {
+    if (!navigator.onLine) return false;
 
     try {
-      await fetch('/api/sync/push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          members,
-          meetings,
-          resolutions,
-          financialTransactions: transactions,
-          announcements,
-          products,
-          activities,
-          hogRaising,
-          funds,
-          systemLogs: logs
-        })
-      });
-
-      const updatedLogsRaw = logs.map(l => l.syncStatus === 'pending' ? { ...l, syncStatus: 'synced' as const } : l);
-      const syncSummary = `Synchronized ${syncQueue.length} pending offline operation(s) to PostgreSQL Cloud DB.`;
-      const finalLogRaw: SystemLog = {
-        id: `log-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        user: getOfficerName(currentRole),
-        role: currentRole,
-        action: 'System Synchronization',
-        details: syncSummary,
-        syncStatus: 'synced',
-        hash: '',
-        previousHash: ''
+      const payload = {
+        users: overrides?.users || users,
+        members: overrides?.members || members,
+        meetings: overrides?.meetings || meetings,
+        resolutions: overrides?.resolutions || resolutions,
+        financialTransactions: overrides?.financialTransactions || transactions,
+        announcements: overrides?.announcements || announcements,
+        products: overrides?.products || products,
+        activities: overrides?.activities || activities,
+        hogRaising: overrides?.hogRaising || hogRaising,
+        funds: overrides?.funds || funds,
+        systemLogs: overrides?.systemLogs || logs
       };
 
-      const finalLogs = buildAuditChain([finalLogRaw, ...updatedLogsRaw]);
-      setLogs(finalLogs);
-      updateStorage('bafa_logs', finalLogs);
+      const res = await fetch('/api/sync/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-      setSyncQueue([]);
-      updateStorage('bafa_sync_queue', []);
-      showToastMessage(`Sync complete! ${syncQueue.length} records pushed to PostgreSQL Cloud DB successfully.`, 'success');
-      checkDatabaseConnection();
+      const result = await res.json();
+      if (result?.success) {
+        // Clear all locally stored pending contributions and mutations to protect confidentiality
+        setSyncQueue([]);
+        localStorage.removeItem('bafa_sync_queue');
+        updateStorage('bafa_sync_queue', []);
+
+        // Mark pending system logs as synced in state and storage
+        setLogs(prev => {
+          const updated = prev.map(l => l.syncStatus === 'pending' ? { ...l, syncStatus: 'synced' as const } : l);
+          updateStorage('bafa_logs', updated);
+          return updated;
+        });
+
+        // Refresh database row stats and status
+        checkDatabaseConnection();
+
+        if (!options?.silent) {
+          const prefix = options?.source ? `[${options.source}] ` : '';
+          showToastMessage(`${prefix}All contributions & records synced to database! Local pending queue cleared.`, 'success');
+        }
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.warn('[Cloud DB Sync Warning]:', err?.message || err);
+      return false;
+    }
+  };
+
+  // Flush Queue / Synchronize
+  const handleSynchronize = async () => {
+    if (!isOnline || isSyncing) return;
+    setIsSyncing(true);
+    showToastMessage('Syncing all local contributions & records with PostgreSQL Cloud DB...', 'info');
+
+    try {
+      const success = await pushAllDataToCloud(undefined, { silent: false, source: 'Sync' });
+      if (!success) {
+        showToastMessage('Could not reach cloud database. Changes remain safely stored locally.', 'error');
+      }
     } catch (err) {
       console.error('Sync error:', err);
       showToastMessage('Failed to reach PostgreSQL server. Changes stored locally.', 'error');
@@ -371,32 +431,9 @@ export default function App() {
     showToastMessage('Uploading and populating all system data to Supabase...', 'info');
 
     try {
-      const res = await fetch('/api/sync/push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          users,
-          members,
-          meetings,
-          resolutions,
-          financialTransactions: transactions,
-          announcements,
-          products,
-          activities,
-          hogRaising,
-          funds,
-          systemLogs: logs
-        })
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        showToastMessage('All system records successfully populated into Supabase!', 'success');
-        setSyncQueue([]);
-        updateStorage('bafa_sync_queue', []);
-        checkDatabaseConnection();
-      } else {
-        showToastMessage(result.message || 'Database push completed with warnings.', 'info');
+      const success = await pushAllDataToCloud(undefined, { silent: false, source: 'Full Populate' });
+      if (!success) {
+        showToastMessage('Database push completed with warnings or offline.', 'info');
       }
     } catch (err: any) {
       console.error('Populate database error:', err);
@@ -408,8 +445,9 @@ export default function App() {
 
   const handleClearQueue = () => {
     setSyncQueue([]);
+    localStorage.removeItem('bafa_sync_queue');
     updateStorage('bafa_sync_queue', []);
-    showToastMessage('Sync queue cleared. Changes remain in local view only.', 'info');
+    showToastMessage('Pending queue cleared. Confidential data purged from local cache.', 'info');
   };
 
   const handleRemoveQueueItem = (id: string) => {
@@ -418,6 +456,47 @@ export default function App() {
     updateStorage('bafa_sync_queue', updated);
     showToastMessage('Removed pending change from queue.', 'warning');
   };
+
+  // Network connectivity listener and auto-synchronization:
+  // Automatically detects internet connection recovery, syncs all pending contributions,
+  // and securely clears the pending queue from local storage.
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      checkDatabaseConnection();
+      console.log('[Network]: Internet connection restored. Syncing pending contributions to Supabase...');
+      pushAllDataToCloud(undefined, { silent: false, source: 'Internet Restored' });
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    const handleWindowFocus = () => {
+      if (navigator.onLine && syncQueue.length > 0) {
+        pushAllDataToCloud(undefined, { silent: true, source: 'Focus Auto-Sync' });
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('focus', handleWindowFocus);
+
+    // Periodic auto-sync worker every 20 seconds
+    const intervalId = setInterval(() => {
+      if (navigator.onLine && (syncQueue.length > 0 || logs.some(l => l.syncStatus === 'pending'))) {
+        console.log('[Auto-Sync Worker]: Found pending contributions/logs. Auto-syncing to cloud database...');
+        pushAllDataToCloud(undefined, { silent: true, source: 'Auto-Sync' });
+      }
+    }, 20000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('focus', handleWindowFocus);
+      clearInterval(intervalId);
+    };
+  }, [syncQueue.length, logs, members, meetings, resolutions, transactions, announcements, products, activities, hogRaising, funds, users]);
 
   // SECRETARY ACTION HANDLERS
   const handleAddMember = (memberData: Omit<Member, 'id' | 'joinedDate'>) => {
@@ -433,6 +512,7 @@ export default function App() {
     if (isOnline) {
       logAction('Registered Farmer', `Registered new member: ${newMember.name} from ${newMember.farmLocation}`);
       showToastMessage(`Registered ${newMember.name} successfully!`);
+      pushAllDataToCloud({ members: updated }, { silent: true });
     } else {
       addToSyncQueue('create', 'member', newMember);
     }
@@ -449,6 +529,7 @@ export default function App() {
     if (isOnline) {
       logAction('Updated Farmer Status', `Changed status of ${mName} to ${status}`);
       showToastMessage(`Updated status for ${mName} to ${status}.`);
+      pushAllDataToCloud({ members: updated }, { silent: true });
     } else {
       addToSyncQueue('update', 'member', { id, status, name: mName });
     }
@@ -465,6 +546,7 @@ export default function App() {
     if (isOnline) {
       logAction('Deleted Farmer Registration', `Removed member registration for: ${mName}`);
       showToastMessage(`Removed ${mName} from roster.`, 'warning');
+      pushAllDataToCloud({ members: updated }, { silent: true });
     } else {
       addToSyncQueue('delete', 'member', { id, name: mName });
     }
@@ -482,6 +564,7 @@ export default function App() {
     if (isOnline) {
       logAction('Logged Assembly Minutes', `Compiled minutes for assembly: "${newMeeting.title}" with ${newMeeting.attendanceCount} present.`);
       showToastMessage(`Minutes for "${newMeeting.title}" have been compiled successfully!`);
+      pushAllDataToCloud({ meetings: updated }, { silent: true });
     } else {
       addToSyncQueue('create', 'meeting', newMeeting);
     }
@@ -495,6 +578,7 @@ export default function App() {
     if (isOnline) {
       logAction('Updated Meeting Record', `Updated details/attendance for assembly: "${updatedMeeting.title}".`);
       showToastMessage(`Meeting "${updatedMeeting.title}" has been updated.`);
+      pushAllDataToCloud({ meetings: updated }, { silent: true });
     } else {
       addToSyncQueue('update', 'meeting', updatedMeeting);
     }
@@ -513,6 +597,7 @@ export default function App() {
     if (isOnline) {
       logAction('Drafted Association Resolution', `Drafted Resolution ${newResolution.resolutionNumber}: "${newResolution.title}"`);
       showToastMessage(`Draft Resolution ${newResolution.resolutionNumber} registered. Awaiting signature.`);
+      pushAllDataToCloud({ resolutions: updated }, { silent: true });
     } else {
       addToSyncQueue('create', 'resolution', newResolution);
     }
@@ -531,7 +616,8 @@ export default function App() {
 
     if (isOnline) {
       logAction('Recorded Transaction', `Logged PHP ${newTx.amount.toLocaleString()} ${newTx.type} under "${newTx.category}"`);
-      showToastMessage(`Ledger entry recorded successfully.`);
+      showToastMessage(`Contribution & ledger entry recorded. Syncing to database...`, 'info');
+      pushAllDataToCloud({ financialTransactions: updated }, { silent: false, source: 'Contribution Recorded' });
     } else {
       addToSyncQueue('create', 'transaction', newTx);
     }
@@ -562,6 +648,7 @@ export default function App() {
         `${status === 'Audited' ? 'Verified' : 'Flagged'} ledger item: ${txDescStr}. Comments: "${notes}"`
       );
       showToastMessage(`Audit submitted: marked as ${status}.`);
+      pushAllDataToCloud({ financialTransactions: updated }, { silent: true });
     } else {
       addToSyncQueue('update', 'transaction', { id, status, notes, desc: txDescStr });
     }
@@ -642,6 +729,7 @@ export default function App() {
     if (isOnline) {
       logAction('Added Product', `Registered new product: "${product.name}" (PHP ${product.price}/${product.unit})`);
       showToastMessage(`Gi-dugang ang bag-ong produkto "${product.name}"!`, 'success');
+      pushAllDataToCloud({ products: updated }, { silent: true });
     } else {
       addToSyncQueue('create', 'product', product);
     }
@@ -655,6 +743,7 @@ export default function App() {
     if (isOnline) {
       logAction('Updated Product', `Updated product details for "${updatedProd.name}"`);
       showToastMessage(`Gi-update ang produkto "${updatedProd.name}"!`, 'success');
+      pushAllDataToCloud({ products: updated }, { silent: true });
     } else {
       addToSyncQueue('update', 'product', updatedProd);
     }
@@ -669,6 +758,7 @@ export default function App() {
     if (isOnline) {
       logAction('Deleted Product', `Removed product: "${target?.name || id}"`);
       showToastMessage('Gipapas ang produkto!', 'info');
+      pushAllDataToCloud({ products: updated }, { silent: true });
     } else {
       addToSyncQueue('delete', 'product', { id });
     }
@@ -686,6 +776,7 @@ export default function App() {
     if (isOnline) {
       logAction('Scheduled Activity', `Created association activity: "${activity.title}" scheduled for ${activity.dateScheduled}`);
       showToastMessage(`Gipasa ang bag-ong kalihokan "${activity.title}"!`, 'success');
+      pushAllDataToCloud({ activities: updated }, { silent: true });
     } else {
       addToSyncQueue('create', 'activity', activity);
     }
@@ -699,6 +790,7 @@ export default function App() {
     if (isOnline) {
       logAction('Updated Activity', `Updated activity status/details for "${updatedAct.title}"`);
       showToastMessage(`Gi-update ang kalihokan "${updatedAct.title}"!`, 'success');
+      pushAllDataToCloud({ activities: updated }, { silent: true });
     } else {
       addToSyncQueue('update', 'activity', updatedAct);
     }
@@ -713,6 +805,7 @@ export default function App() {
     if (isOnline) {
       logAction('Deleted Activity', `Removed activity: "${target?.title || id}"`);
       showToastMessage('Gipapas ang kalihokan!', 'info');
+      pushAllDataToCloud({ activities: updated }, { silent: true });
     } else {
       addToSyncQueue('delete', 'activity', { id });
     }
@@ -733,6 +826,7 @@ export default function App() {
     if (isOnline) {
       logAction('Logged Pig Chore', `${newChore.checkedBy} checked-in: ${newChore.activities.join(', ')}`);
       showToastMessage('Daily pig care activity has been recorded successfully!');
+      pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
     } else {
       addToSyncQueue('create', 'hog_chore', newChore);
     }
@@ -749,6 +843,7 @@ export default function App() {
     if (isOnline) {
       logAction('Updated Capital Grant', `Modified Hog Raising IGP LGU capital grant to PHP ${amount.toLocaleString()}`);
       showToastMessage(`Successfully updated LGU Capital Grant to PHP ${amount.toLocaleString()}!`, 'success');
+      pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
     } else {
       addToSyncQueue('update', 'hog_expense', { id: 'capital-grant', amount });
     }
@@ -765,6 +860,7 @@ export default function App() {
     if (isOnline) {
       logAction('Added Dynamic IGP Produce', `Added new dynamic produce project: "${produceName}"`);
       showToastMessage(`Successfully added dynamic IGP project: "${produceName}"`, 'success');
+      pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
     }
   };
 
@@ -781,6 +877,7 @@ export default function App() {
     if (isOnline) {
       logAction('Closed Financial Book', `Officially closed and sealed the Hog Raising IGP financial book for December ${year}.`);
       showToastMessage(`Successfully closed and locked the financial books for ${year}!`, 'success');
+      pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
     } else {
       addToSyncQueue('update', 'hog_expense', { id: `close-book-${year}`, year });
     }
@@ -800,6 +897,7 @@ export default function App() {
     if (isOnline) {
       logAction('Posted Announcement', `Published notice: "${newAnn.title}" under ${newAnn.category}`);
       showToastMessage(`Notice published to public board.`);
+      pushAllDataToCloud({ announcements: updated }, { silent: true });
     } else {
       addToSyncQueue('create', 'announcement', newAnn);
     }
@@ -816,6 +914,7 @@ export default function App() {
     if (isOnline) {
       logAction('Deleted Announcement', `Removed board publication: "${titleStr}"`);
       showToastMessage(`Announcement removed from board.`, 'warning');
+      pushAllDataToCloud({ announcements: updated }, { silent: true });
     } else {
       addToSyncQueue('delete', 'announcement', { id, title: titleStr });
     }
@@ -833,6 +932,7 @@ export default function App() {
     if (isOnline) {
       logAction('Signed & Approved Resolution', `Officially approved Resolution ${resNo}: "${targetRes?.title}"`);
       showToastMessage(`Resolution ${resNo} has been signed and enacted!`, 'success');
+      pushAllDataToCloud({ resolutions: updated }, { silent: true });
     } else {
       addToSyncQueue('update', 'resolution', { id, status: 'Approved', resNo });
     }
@@ -840,8 +940,10 @@ export default function App() {
 
   // USER AUTHENTICATION & MANAGEMENT ACTIONS
   const handleLogin = (user: User) => {
-    setCurrentUser(user);
-    updateStorage('bafa_current_user', user);
+    // Sanitize user object: strip password from local session to protect credentials
+    const { password, ...safeUser } = user;
+    setCurrentUser(safeUser as User);
+    updateStorage('bafa_current_user', safeUser);
     if (user.role !== 'Member') {
       setCurrentRole(user.role as OfficerRole);
     }
@@ -855,7 +957,7 @@ export default function App() {
     setCurrentUser(null);
     localStorage.removeItem('bafa_current_user');
     setGuestMode(true);
-    showToastMessage('You have been signed out successfully.', 'info');
+    showToastMessage('You have been signed out securely. Session ended.', 'info');
   };
 
   const handleRegister = (userData: Omit<User, 'id' | 'isApproved'>) => {
@@ -869,6 +971,9 @@ export default function App() {
     setUsers(updated);
     updateStorage('bafa_users', updated);
     
+    if (isOnline) {
+      pushAllDataToCloud({ users: updated }, { silent: true });
+    }
     showToastMessage('Sign-up request received! Awaiting President/Admin approval.', 'warning');
   };
 

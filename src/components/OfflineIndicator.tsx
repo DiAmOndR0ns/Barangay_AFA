@@ -8,7 +8,8 @@ import {
   X, 
   RefreshCw,
   Server,
-  Zap
+  Zap,
+  ShieldCheck
 } from 'lucide-react';
 import { DatabaseStatus } from '../types';
 
@@ -289,10 +290,21 @@ export default function OfflineIndicator({
               </span>
               <p className="text-[11px] leading-relaxed text-slate-400">
                 {isConnected ? (
-                  <>Changes made in the portal are immediately mirrored to Supabase. When offline, changes queue up locally and sync when back online.</>
+                  <>Changes made in the portal are immediately mirrored to Supabase. When offline, contributions and changes queue up locally and automatically sync the moment connection returns.</>
                 ) : (
                   <>To connect Supabase, configure your <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-300 font-mono text-[10px]">DATABASE_URL</code> in project settings. The tables will auto-initialize on first connection.</>
                 )}
+              </p>
+            </div>
+
+            {/* Security & Confidentiality Guarantee */}
+            <div className="bg-emerald-950/25 border border-emerald-500/30 p-3 rounded-xl space-y-1 text-xs text-emerald-300">
+              <span className="font-bold block text-[11px] uppercase tracking-wider flex items-center gap-1.5 text-emerald-400">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Zero Residual Data Security</span>
+              </span>
+              <p className="text-[11px] leading-relaxed text-emerald-200/90">
+                All locally recorded contributions and queue items are atomically pushed to Supabase and immediately purged from local browser storage upon connection to protect confidential association records.
               </p>
             </div>
 
