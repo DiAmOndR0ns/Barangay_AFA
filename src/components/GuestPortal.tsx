@@ -38,7 +38,7 @@ export default function GuestPortal({
     headerText: 'text-[#1B4332] font-black',
     accentText: 'text-[#BF360C] font-black',
     accentBg: 'bg-[#FFCC80] text-[#8D2300]',
-    primaryBtn: 'bg-[#1B4332] hover:bg-[#143326] text-white shadow-lg text-sm sm:text-base font-black px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.02]'
+    primaryBtn: 'bg-[#1B4332] hover:bg-[#143326] text-white shadow-lg text-sm sm:text-base font-black px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl cursor-pointer'
   };
 
   // Default Showcase Product Data
@@ -149,10 +149,6 @@ export default function GuestPortal({
                 <h1 className="text-sm sm:text-lg md:text-xl font-black tracking-tight text-[#1B4332] uppercase font-display leading-tight break-words">
                   Alegria Farmers Association
                 </h1>
-                <span className="text-[10px] sm:text-xs bg-[#EAF4EC] text-[#1B4332] px-2 sm:px-2.5 py-0.5 rounded-full border border-emerald-800/20 font-black tracking-wide flex items-center gap-1.5 shrink-0 shadow-sm whitespace-nowrap">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Official Portal
-                </span>
               </div>
               <p className="text-[10px] sm:text-xs text-slate-600 font-bold mt-0.5 leading-snug break-words">
                 Barangay Alegria, Tuburan, Cebu Province • Official Public Portal
@@ -163,7 +159,7 @@ export default function GuestPortal({
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end shrink-0">
             <button
               onClick={onEnterLogin}
-              className="w-full sm:w-auto bg-[#BF360C] hover:bg-[#8D2300] text-white font-black text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.01] whitespace-nowrap"
+              className="w-full sm:w-auto bg-[#BF360C] hover:bg-[#8D2300] text-white font-black text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
               <LogIn className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
               <span>Log In</span>
@@ -173,14 +169,8 @@ export default function GuestPortal({
       </header>
 
       {/* GUEST BANNER */}
-      <section className="bg-gradient-to-r from-[#1B4332] to-[#2D6A4F] text-white py-8 sm:py-12 md:py-14 px-4 sm:px-6 text-center relative overflow-hidden shadow-inner">
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-emerald-500 rounded-full opacity-10 pointer-events-none" />
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500 rounded-full opacity-10 pointer-events-none" />
-        
-        <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4 relative z-10 min-w-0">
-          <span className="bg-[#FFCC80] text-[#8D2300] text-[10px] sm:text-xs font-black px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full uppercase tracking-wider inline-block shadow-sm break-words max-w-full">
-            Maayong Pag-abot sa Atong Asosasyon!
-          </span>
+      <section className="bg-[#1B4332] text-white py-8 sm:py-12 md:py-14 px-4 sm:px-6 text-center shadow-inner">
+        <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4 min-w-0">
           <h2 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight font-display break-words max-w-3xl mx-auto px-2">
             Magkauban sa Pag-uma ug Pagpalambo sa Atong Yutang Natawhan
           </h2>
@@ -198,15 +188,15 @@ export default function GuestPortal({
           {/* Mobile Phone Scroll Hint Indicator */}
           <div className="flex sm:hidden items-center justify-between w-full px-2.5 py-1 text-[11px] font-black text-[#1B4332] bg-[#EAF4EC] rounded-lg mb-1.5 border border-emerald-800/20 shadow-xs">
             <span className="flex items-center gap-1">
-              <ChevronLeft className="w-3.5 h-3.5 text-[#BF360C] animate-pulse" />
+              <ChevronLeft className="w-3.5 h-3.5 text-[#BF360C]" />
               I-scroll o i-swipe ang menu sa ubos →
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#BF360C] animate-pulse" />
+              <ChevronRight className="w-3.5 h-3.5 text-[#BF360C]" />
           </div>
 
           <div className="relative w-full flex items-center">
             {/* Left Scroll Indicator Arrow */}
-            <div className="hidden sm:flex absolute left-0 z-10 p-1 bg-gradient-to-r from-[#FAF8F5] via-[#FAF8F5] to-transparent items-center text-[#1B4332]">
+            <div className="hidden sm:flex absolute left-0 z-10 p-1 bg-[#FAF8F5] items-center text-[#1B4332]">
               <ChevronLeft className="w-5 h-5 text-[#BF360C] animate-bounce-x" />
             </div>
 
@@ -239,7 +229,7 @@ export default function GuestPortal({
             </div>
 
             {/* Right Scroll Indicator Arrow */}
-            <div className="hidden sm:flex absolute right-0 z-10 p-1 bg-gradient-to-l from-[#FAF8F5] via-[#FAF8F5] to-transparent items-center text-[#1B4332]">
+            <div className="hidden sm:flex absolute right-0 z-10 p-1 bg-[#FAF8F5] items-center text-[#1B4332]">
               <ChevronRight className="w-5 h-5 text-[#BF360C] animate-bounce-x" />
             </div>
           </div>
@@ -251,13 +241,13 @@ export default function GuestPortal({
         
         {/* TAB 1: OVERVIEW & DASHBOARD */}
         {activeTab === 'home' && (
-          <div className="space-y-6 sm:space-y-8 animate-fade-in text-left min-w-0">
+          <div className="space-y-6 sm:space-y-8 text-left min-w-0">
             
             {/* Dynamic Statistics Grid with Hover Functions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               
-              <div className="bg-white border-2 border-[#D5CFC1] hover:border-[#1B4332] hover:shadow-xl hover:-translate-y-1 hover:bg-[#F2F8F4] transition-all duration-300 rounded-3xl p-4 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-sm min-w-0 cursor-pointer group">
-                <div className="p-3 sm:p-4 rounded-2xl bg-[#EAF4EC] text-[#1B4332] shrink-0 group-hover:scale-110 transition-transform">
+              <div className="bg-white rounded-3xl p-4 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-sm min-w-0">
+                <div className="p-3 sm:p-4 rounded-2xl bg-[#EAF4EC] text-[#1B4332] shrink-0">
                   <Users className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -267,8 +257,8 @@ export default function GuestPortal({
                 </div>
               </div>
 
-              <div className="bg-white border-2 border-[#D5CFC1] hover:border-[#1B4332] hover:shadow-xl hover:-translate-y-1 hover:bg-[#F0F7FB] transition-all duration-300 rounded-3xl p-4 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-sm min-w-0 cursor-pointer group">
-                <div className="p-3 sm:p-4 rounded-2xl bg-sky-100 text-sky-800 shrink-0 group-hover:scale-110 transition-transform">
+              <div className="bg-white rounded-3xl p-4 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-sm min-w-0">
+                <div className="p-3 sm:p-4 rounded-2xl bg-sky-100 text-sky-800 shrink-0">
                   <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -281,7 +271,7 @@ export default function GuestPortal({
             </div>
 
             {/* Quick Introduction Banner */}
-            <div className="bg-white border-2 border-[#D5CFC1] rounded-3xl p-4 sm:p-6 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center shadow-md min-w-0">
+            <div className="bg-white rounded-3xl p-4 sm:p-6 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center shadow-md min-w-0">
               <div className="md:col-span-8 space-y-3 sm:space-y-4 min-w-0">
                 <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
                   Mahitungod sa Barangay Alegria Farmers Association
@@ -308,7 +298,7 @@ export default function GuestPortal({
                 </div>
               </div>
 
-              <div className="md:col-span-4 bg-[#FAF8F5] border-2 border-[#D5CFC1] p-4 sm:p-6 rounded-2xl space-y-3.5 min-w-0">
+              <div className="md:col-span-4 bg-[#FAF8F5] p-4 sm:p-6 rounded-2xl space-y-3.5 min-w-0">
                 <h4 className="font-black text-[#1B4332] text-xs sm:text-sm md:text-base uppercase tracking-wider flex items-center gap-1.5 border-b border-[#D5CFC1] pb-2 break-words">
                   <ShieldCheck className="w-5 h-5 text-[#BF360C] shrink-0" />
                   <span>Kasaligan nga Serbisyo</span>
@@ -333,7 +323,7 @@ export default function GuestPortal({
             {/* LATEST ANNOUNCEMENTS & ACTIVITIES PREVIEW BANNER */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Latest Announcements Preview */}
-              <div className="bg-white border-2 border-[#D5CFC1] rounded-3xl p-4 sm:p-6 space-y-3.5 shadow-sm">
+              <div className="bg-white rounded-3xl p-4 sm:p-6 space-y-3.5 shadow-sm">
                 <div className="flex items-center justify-between border-b border-[#D5CFC1] pb-2.5">
                   <h4 className="font-black text-[#1B4332] text-sm sm:text-base flex items-center gap-2">
                     <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-[#BF360C]" />
@@ -350,7 +340,7 @@ export default function GuestPortal({
 
                 <div className="space-y-2.5">
                   {announcements.slice(0, 3).map((ann) => (
-                    <div key={ann.id} className="p-3 bg-[#FAF8F5] border border-[#E2DCCE] rounded-2xl space-y-1.5 hover:border-[#1B4332] transition-colors">
+                    <div key={ann.id} className="p-3 bg-[#FAF8F5] rounded-2xl space-y-1.5">
                       <div className="flex items-center justify-between gap-2 flex-wrap text-[11px]">
                         <span className={`px-2 py-0.5 rounded font-black uppercase text-[10px] ${
                           ann.priority === 'High' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
@@ -372,7 +362,7 @@ export default function GuestPortal({
               </div>
 
               {/* Upcoming Community Activities Preview */}
-              <div className="bg-white border-2 border-[#D5CFC1] rounded-3xl p-4 sm:p-6 space-y-3.5 shadow-sm">
+              <div className="bg-white rounded-3xl p-4 sm:p-6 space-y-3.5 shadow-sm">
                 <div className="flex items-center justify-between border-b border-[#D5CFC1] pb-2.5">
                   <h4 className="font-black text-[#1B4332] text-sm sm:text-base flex items-center gap-2">
                     <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-700" />
@@ -389,7 +379,7 @@ export default function GuestPortal({
 
                 <div className="space-y-2.5">
                   {activities.slice(0, 3).map((act) => (
-                    <div key={act.id} className="p-3 bg-[#FAF8F5] border border-[#E2DCCE] rounded-2xl space-y-1.5 hover:border-emerald-700 transition-colors">
+                    <div key={act.id} className="p-3 bg-[#FAF8F5] rounded-2xl space-y-1.5">
                       <div className="flex items-center justify-between gap-2 flex-wrap text-[11px]">
                         <span className="px-2 py-0.5 rounded font-black text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300">
                           {act.category}
@@ -411,7 +401,7 @@ export default function GuestPortal({
             </div>
 
             {/* Quick Portal Switch Card */}
-            <div className="bg-[#FFF8E1] border-2 border-[#FFE082] rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm min-w-0">
+            <div className="bg-[#FFF8E1] rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm min-w-0">
               <div className="space-y-1 min-w-0">
                 <h4 className="text-base sm:text-lg font-black text-[#5D4037] flex items-center gap-2 flex-wrap break-words">
                   <Milestone className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFB300] shrink-0" />
@@ -423,7 +413,7 @@ export default function GuestPortal({
               </div>
               <button
                 onClick={onEnterLogin}
-                className="w-full md:w-auto bg-[#BF360C] hover:bg-[#8D2300] text-white font-black text-xs sm:text-sm px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl cursor-pointer shadow-md shrink-0 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] whitespace-nowrap"
+                className="w-full md:w-auto bg-[#BF360C] hover:bg-[#8D2300] text-white font-black text-xs sm:text-sm px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl cursor-pointer shadow-md shrink-0 flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 <span>Access Member / Officer Portal</span>
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -435,7 +425,7 @@ export default function GuestPortal({
 
         {/* TAB: ANNOUNCEMENTS (PAHIBALO) */}
         {activeTab === 'announcements' && (
-          <div className="space-y-6 sm:space-y-8 animate-fade-in text-left min-w-0">
+          <div className="space-y-6 sm:space-y-8 text-left min-w-0">
             <div className="bg-white border-2 border-[#D5CFC1] p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm space-y-3 min-w-0">
               <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
                 <Megaphone className="w-6 h-6 sm:w-7 sm:h-7 text-[#BF360C] shrink-0" />
@@ -490,7 +480,7 @@ export default function GuestPortal({
 
         {/* TAB: ACTIVITIES (MGA KALIHOKAN) */}
         {activeTab === 'activities' && (
-          <div className="space-y-6 sm:space-y-8 animate-fade-in text-left min-w-0">
+          <div className="space-y-6 sm:space-y-8 text-left min-w-0">
             <div className="bg-white border-2 border-[#D5CFC1] p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm space-y-3 min-w-0">
               <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
                 <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-700 shrink-0" />
@@ -553,7 +543,7 @@ export default function GuestPortal({
 
         {/* TAB 2: KASAYSAYAN (HISTORY) */}
         {activeTab === 'history' && (
-          <div className="space-y-6 animate-fade-in text-left bg-white border-2 border-[#D5CFC1] p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm min-w-0">
+          <div className="space-y-6 text-left bg-white p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm min-w-0">
             <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
               <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-[#BF360C] shrink-0" />
               <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
@@ -650,7 +640,7 @@ export default function GuestPortal({
 
         {/* TAB 3: MGA KALAMPOSAN (ACHIEVEMENTS) */}
         {activeTab === 'achievements' && (
-          <div className="space-y-6 sm:space-y-8 animate-fade-in text-left min-w-0">
+          <div className="space-y-6 sm:space-y-8 text-left min-w-0">
             <div className="bg-white border-2 border-[#D5CFC1] p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm space-y-3 min-w-0">
               <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
                 <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600 shrink-0" />
@@ -722,7 +712,7 @@ export default function GuestPortal({
 
         {/* TAB 4: MGA PRODUKTO (PRODUCTS) */}
         {activeTab === 'products' && (
-          <div className="space-y-6 sm:space-y-8 animate-fade-in text-left min-w-0">
+          <div className="space-y-6 sm:space-y-8 text-left min-w-0">
             <div className="bg-white border-2 border-[#D5CFC1] p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm space-y-3 min-w-0">
               <div className="border-b-2 border-[#F0EBE1] pb-3.5 sm:pb-4 flex items-center gap-2.5 flex-wrap">
                 <Coffee className="w-6 h-6 sm:w-7 sm:h-7 text-amber-700 shrink-0" />
@@ -794,7 +784,7 @@ export default function GuestPortal({
 
 
             {/* Buying Note Card */}
-            <div className="bg-[#EAF4EC] border-2 border-[#1B4332]/30 rounded-3xl p-5 sm:p-8 text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto min-w-0">
+            <div className="bg-[#EAF4EC] rounded-3xl p-5 sm:p-8 text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto min-w-0">
               <h4 className="text-base sm:text-lg md:text-xl font-black text-[#1B4332] font-display break-words">Gusto ba ka mopalit o mo-order?</h4>
               <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words">
                 Ang tanang halin niini direkta nga moadto sa atong mga kaubang mag-uuma sa unom ka Sitio sa Alegria, Tuburan, Cebu. 
@@ -818,9 +808,10 @@ export default function GuestPortal({
           </div>
           <div className="flex flex-col items-center md:items-end gap-1.5 shrink-0">
             <span className="flex items-center gap-1.5 bg-[#143326] px-3.5 py-1.5 rounded-xl border border-emerald-600/30">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
               <span className="font-black text-[10px] tracking-wider uppercase">LGU & DA REGISTERED PORTAL</span>
             </span>
+            <a href="/privacy" className="text-[11px] font-bold text-[#D8F3DC] hover:text-white hover:underline">Privacy Policy</a>
             <span className="text-[10px] text-[#85947E] break-words">© 2026 BAFA • Design Optimized for Senior Citizen Accessibility</span>
           </div>
         </div>

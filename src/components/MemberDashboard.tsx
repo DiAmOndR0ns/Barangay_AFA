@@ -254,7 +254,7 @@ export default function MemberDashboard({
               }`}
             >
               <PiggyBank className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-              <span>Hog Raising Project (IGP)</span>
+              <span>Project IGP</span>
             </button>
 
             <button
@@ -903,7 +903,7 @@ export default function MemberDashboard({
       )}
 
       {activeTab === 'hog-raising' && (
-        <div className="bg-white border border-[#E9E4D9] rounded-3xl p-6 shadow-sm no-print">
+        <div className="bg-[#FAF8F5] border border-[#E9E4D9] rounded-3xl p-6 shadow-sm no-print">
           <HogRaisingIgpTracker
             state={hogRaisingState}
             members={members}

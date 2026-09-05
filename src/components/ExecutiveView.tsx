@@ -180,12 +180,12 @@ export default function ExecutiveView({
             <ShieldCheck className="w-6 h-6 text-[#D8F3DC] shrink-0" />
             <span className="break-words">
               {currentRole === 'President' 
-                ? 'Dapito sa Presidente (President\'s Suite)' 
-                : 'Dapito sa Bise Presidente (Vice President\'s Desk)'}
+                ? 'President\'s Suite' 
+                : 'Vice President\'s Desk'}
             </span>
           </h2>
           <p className="text-xs sm:text-sm text-[#B7E4C7] mt-1 font-medium max-w-xl break-words">
-            Susiha ang rehistrasyon sa mga mag-uuma, pagdumala sa mga koda / credentials, ug aprobahi ang mga resolusyon sa asosasyon.
+            Review farmer registrations, manage credentials, and approve association resolutions.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto min-w-0">

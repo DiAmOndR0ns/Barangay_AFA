@@ -118,7 +118,7 @@ export default function AnnouncementDashboard({
     cardBg: isOfficerMode ? 'bg-slate-800 border-slate-700/80' : 'bg-[#FAF8F5] border-[#E9E4D9]',
     cardHover: isOfficerMode ? 'hover:border-slate-600 hover:bg-slate-800/80' : 'hover:border-[#1B4332] hover:bg-white',
     inputBg: isOfficerMode ? 'bg-slate-950 border-slate-750 text-white' : 'bg-white border-[#D5CFC1] text-[#2D3A22]',
-    headerText: isOfficerMode ? 'text-[#1B4332]' : 'text-[#1B4332]',
+    headerText: isOfficerMode ? 'text-white' : 'text-[#1B4332]',
     subText: isOfficerMode ? 'text-slate-400' : 'text-[#5D6B54]',
     accentText: isOfficerMode ? 'text-emerald-400' : 'text-[#E65100]',
     accentBg: isOfficerMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[#FFF3E0] text-[#E65100]',
@@ -192,10 +192,10 @@ export default function AnnouncementDashboard({
         <div>
           <h2 className={`text-xl font-black ${theme.headerText} flex items-center gap-2.5 font-display`}>
             <Megaphone className={`w-6 h-6 ${isOfficerMode ? 'text-emerald-400' : 'text-[#E65100]'}`} />
-            <span>Pahibalo ug Anunsyo (Association Bulletin Board)</span>
+            <span>Announcements</span>
           </h2>
           <p className={`text-xs ${theme.subText} mt-1 font-medium`}>
-            Tan-awa ang mga dinalian nga balita, tabang pinansyal, liso, ug presyo sa merkado gikan sa atong Public Information Officer (PIO).
+            View notices, financial assistance updates, seed information, and market prices from the Public Information Officer (PIO).
           </p>
         </div>
 
@@ -369,7 +369,7 @@ export default function AnnouncementDashboard({
                       <div className="flex justify-between items-start gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5 mb-3">
                         <div className="flex items-center gap-1.5">
                           {getCategoryIcon(ann.category)}
-                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">
+                          <span className={`text-[10px] font-black uppercase tracking-wider block ${isOfficerMode ? 'text-slate-300' : 'text-slate-500'}`}>
                             {cebLabel}
                           </span>
                         </div>
@@ -442,8 +442,8 @@ export default function AnnouncementDashboard({
                   <span className="font-black text-slate-600 text-sm">I</span>
                 </div>
                 <div>
-                  <h4 className="font-black text-sm">Ida S Manera</h4>
-                  <p className="text-[10px] text-slate-400">Public Information Officer (PIO), BAFA</p>
+                  <h4 className={`font-black text-sm ${isOfficerMode ? 'text-white' : 'text-[#1B4332]'}`}>Ida S Manera</h4>
+                  <p className={`text-[10px] ${isOfficerMode ? 'text-slate-300' : 'text-slate-500'}`}>Public Information Officer (PIO), BAFA</p>
                 </div>
               </div>
 
@@ -569,14 +569,14 @@ export default function AnnouncementDashboard({
                   {selectedAnnouncement.title}
                 </h2>
 
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-850 text-[11px] text-slate-500 font-medium">
+                <div className={`grid grid-cols-2 gap-4 p-3.5 rounded-2xl border text-[11px] font-medium ${isOfficerMode ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
                   <div>
                     <p>Adlaw nga Gi-post (Date Posted):</p>
-                    <strong className="text-slate-800 dark:text-slate-300 block text-xs mt-0.5">{selectedAnnouncement.datePosted}</strong>
+                    <strong className={`block text-xs mt-0.5 ${isOfficerMode ? 'text-slate-200' : 'text-slate-800'}`}>{selectedAnnouncement.datePosted}</strong>
                   </div>
                   <div>
                     <p>Nag-post sa Bulletin (Posted By):</p>
-                    <strong className="text-slate-800 dark:text-slate-300 block text-xs mt-0.5">{selectedAnnouncement.postedBy}</strong>
+                    <strong className={`block text-xs mt-0.5 ${isOfficerMode ? 'text-slate-200' : 'text-slate-800'}`}>{selectedAnnouncement.postedBy}</strong>
                   </div>
                 </div>
               </div>

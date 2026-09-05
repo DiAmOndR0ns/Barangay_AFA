@@ -176,20 +176,20 @@ export default function PioView({
       case 'Medium':
         return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
       default:
-        return 'bg-slate-700/60 text-slate-300 border border-slate-700';
+        return 'bg-[#EAF4EC] text-[#1B4332] border border-[#B7D9BF]';
     }
   };
 
   return (
     <div id="pio-view-container" className="space-y-6">
       {/* PIO BANNER AND ACTION BUTTON */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800 p-4 rounded-2xl border border-slate-700/65">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#EAF4EC] p-4 rounded-2xl border border-[#B7D9BF]">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Megaphone className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-xl font-bold text-[#1B4332] flex items-center gap-2">
+            <Megaphone className="w-5 h-5 text-[#1B4332]" />
             <span>PIO Communications & Activity Management</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#4B6259] mt-1">
             Create public announcements, schedule association events, and document community activities.
           </p>
         </div>
@@ -200,9 +200,9 @@ export default function PioView({
               id="pio-report-btn"
               type="button"
               onClick={onOpenReportModal}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold bg-slate-900 hover:bg-slate-850 text-emerald-400 border border-emerald-500/30 rounded-xl shadow-sm transition-all cursor-pointer w-full sm:w-auto"
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold bg-white hover:bg-[#F5FAF6] text-[#1B4332] border border-[#B7D9BF] rounded-xl shadow-sm transition-all cursor-pointer w-full sm:w-auto"
             >
-              <Printer className="w-4 h-4 text-emerald-400 shrink-0" />
+              <Printer className="w-4 h-4 text-[#1B4332] shrink-0" />
               <span>Export PIO Report</span>
             </button>
           )}
@@ -211,7 +211,7 @@ export default function PioView({
             <button
               id="post-announcement-btn"
               onClick={() => setShowAddModal(true)}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm transition-all w-full sm:w-auto shrink-0 cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold bg-[#1B4332] hover:bg-[#143326] text-white rounded-xl shadow-sm transition-all w-full sm:w-auto shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Post Bulletin</span>
@@ -220,7 +220,7 @@ export default function PioView({
             <button
               id="add-activity-btn"
               onClick={handleOpenAddActivity}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-sm transition-all w-full sm:w-auto shrink-0 cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold bg-[#2D6A4F] hover:bg-[#1B4332] text-white rounded-xl shadow-sm transition-all w-full sm:w-auto shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Schedule Activity</span>
@@ -230,13 +230,13 @@ export default function PioView({
       </div>
 
       {/* MODULE TABS */}
-      <div className="flex border-b border-slate-700/60 space-x-4">
+      <div className="flex border-b border-[#D5CFC1] space-x-4">
         <button
           onClick={() => setActiveTab('bulletins')}
           className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
             activeTab === 'bulletins'
-              ? 'border-emerald-500 text-emerald-400'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-[#1B4332] text-[#1B4332]'
+              : 'border-transparent text-[#6A7F72] hover:text-[#1B4332]'
           }`}
         >
           <Megaphone className="w-4 h-4" />
@@ -247,8 +247,8 @@ export default function PioView({
           onClick={() => setActiveTab('activities')}
           className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
             activeTab === 'activities'
-              ? 'border-blue-500 text-blue-400'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-[#2D6A4F] text-[#2D6A4F]'
+              : 'border-transparent text-[#6A7F72] hover:text-[#1B4332]'
           }`}
         >
           <Calendar className="w-4 h-4" />
@@ -263,15 +263,15 @@ export default function PioView({
             announcements.map((ann) => (
               <div 
                 key={ann.id} 
-                className={`bg-slate-800 border rounded-2xl p-5 hover:border-slate-600 transition-all shadow-md flex flex-col justify-between ${
-                  ann.priority === 'High' ? 'border-red-500/15' : 'border-slate-700/50'
+                className={`bg-white border rounded-2xl p-5 hover:border-[#1B4332] transition-all shadow-md flex flex-col justify-between ${
+                  ann.priority === 'High' ? 'border-red-500/15' : 'border-[#D5CFC1]'
                 }`}
               >
                 <div>
-                  <div className="flex justify-between items-start gap-2 border-b border-slate-750 pb-2.5 mb-3.5">
+                  <div className="flex justify-between items-start gap-2 border-b border-[#E9E4D9] pb-2.5 mb-3.5">
                     <div className="flex items-center gap-2">
                       {getCategoryIcon(ann.category)}
-                      <span className="text-xs text-slate-400 font-medium">
+                      <span className="text-xs text-[#6A7F72] font-medium">
                         {ann.category}
                       </span>
                     </div>
@@ -280,16 +280,16 @@ export default function PioView({
                     </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-white leading-snug">{ann.title}</h3>
-                  <p className="text-xs text-slate-500 mt-1">Posted: {ann.datePosted}</p>
+                  <h3 className="text-base font-bold text-[#1B4332] leading-snug">{ann.title}</h3>
+                  <p className="text-xs text-[#6A7F72] mt-1">Posted: {ann.datePosted}</p>
 
-                  <p className="text-sm text-slate-300 mt-3 whitespace-pre-line leading-relaxed">
+                  <p className="text-sm text-[#4B6259] mt-3 whitespace-pre-line leading-relaxed">
                     {ann.content}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3.5 border-t border-slate-750/70 flex justify-between items-center text-xs">
-                  <span className="text-slate-500">By: {ann.postedBy}</span>
+                <div className="mt-5 pt-3.5 border-t border-[#E9E4D9] flex justify-between items-center text-xs">
+                  <span className="text-[#6A7F72]">By: {ann.postedBy}</span>
                   <button
                     id={`delete-ann-${ann.id}`}
                     onClick={() => onDeleteAnnouncement(ann.id)}
@@ -302,7 +302,7 @@ export default function PioView({
               </div>
             ))
           ) : (
-            <div className="col-span-full bg-slate-800 border border-slate-700/50 rounded-2xl p-8 text-center text-slate-500">
+            <div className="col-span-full bg-white border border-[#D5CFC1] rounded-2xl p-8 text-center text-[#6A7F72]">
               No announcements posted on the board yet.
             </div>
           )}
@@ -317,17 +317,17 @@ export default function PioView({
               {activities.map((act) => (
                 <div
                   key={act.id}
-                  className="bg-slate-800 border border-slate-700/60 rounded-2xl p-5 shadow-md flex flex-col justify-between space-y-4 hover:border-slate-600 transition-all"
+                  className="bg-white border border-[#D5CFC1] rounded-2xl p-5 shadow-md flex flex-col justify-between space-y-4 hover:border-[#1B4332] transition-all"
                 >
                   <div className="space-y-3">
-                    <div className="flex justify-between items-start gap-2 border-b border-slate-700/60 pb-3">
+                    <div className="flex justify-between items-start gap-2 border-b border-[#E9E4D9] pb-3">
                       <div>
                         <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                           {act.category}
                         </span>
-                        <h3 className="text-base font-bold text-white mt-1.5">{act.title}</h3>
+                        <h3 className="text-base font-bold text-[#1B4332] mt-1.5">{act.title}</h3>
                         {act.cebTitle && (
-                          <p className="text-xs font-semibold text-emerald-400">{act.cebTitle}</p>
+                          <p className="text-xs font-semibold text-[#2D6A4F]">{act.cebTitle}</p>
                         )}
                       </div>
 
@@ -344,7 +344,7 @@ export default function PioView({
                         <button
                           type="button"
                           onClick={() => handleOpenEditActivity(act)}
-                          className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer"
+                          className="p-1.5 rounded-lg bg-[#F5FAF6] border border-[#D5CFC1] text-[#4B6259] hover:text-[#1B4332] transition-all cursor-pointer"
                           title="Edit Activity & Record Documentation"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -365,7 +365,7 @@ export default function PioView({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 bg-slate-900/60 p-3 rounded-xl border border-slate-750">
+                    <div className="grid grid-cols-2 gap-2 text-xs text-[#4B6259] bg-[#F5FAF6] p-3 rounded-xl border border-[#E9E4D9]">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                         <span>{act.scheduledDate}</span>
@@ -406,7 +406,7 @@ export default function PioView({
               ))}
             </div>
           ) : (
-            <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-8 text-center text-slate-500">
+            <div className="bg-white border border-[#D5CFC1] rounded-2xl p-8 text-center text-[#6A7F72]">
               No association activities or events scheduled yet.
             </div>
           )}
