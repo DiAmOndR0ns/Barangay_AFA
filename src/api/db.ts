@@ -1,9 +1,6 @@
 import pg from 'pg';
-import { 
-  SEED_USERS, INITIAL_MEMBERS, INITIAL_MEETINGS, INITIAL_RESOLUTIONS, 
-  INITIAL_TRANSACTIONS, INITIAL_ANNOUNCEMENTS, INITIAL_LOGS, INITIAL_HOG_RAISING, 
-  INITIAL_PRODUCTS, INITIAL_ACTIVITIES, INITIAL_FUNDS 
-} from '../initialData';
+import { SEED_USERS } from '../initialData';
+import { AuditorReport, DelegationRequest } from '../types';
 
 // Bulletproof Pool resolution across CJS, ESM, and bundled Vercel serverless environments
 const PgPool = (pg as any)?.Pool || (pg as any)?.default?.Pool || (pg as any)?.default || pg;
@@ -66,7 +63,7 @@ export function getPool(): pg.Pool {
       ssl: { 
         rejectUnauthorized: false 
       },
-      connectionTimeoutMillis: 6000,
+      connectionTimeoutMillis: 7000,
       idleTimeoutMillis: 10000,
       max: 6,
     });
@@ -96,21 +93,78 @@ export async function runSchemaMigrations(client: pg.PoolClient) {
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_rsbsa_registered BOOLEAN DEFAULT FALSE;`,
 
     `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS fund_source TEXT;`,
+    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_status VARCHAR(50) DEFAULT 'Unaudited';`,
+    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_by TEXT;`,
+    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_date VARCHAR(50);`,
+    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audit_notes TEXT;`,
 
     `ALTER TABLE meetings ADD COLUMN IF NOT EXISTS attendance_record JSONB;`,
 
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS ceb_name TEXT;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS quantity_available VARCHAR(100);`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_name TEXT;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_sitio TEXT;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_phone VARCHAR(50);`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS contact_person TEXT;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT TRUE;`,
 
     `ALTER TABLE activities ADD COLUMN IF NOT EXISTS ceb_title TEXT;`,
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS date_scheduled VARCHAR(50);`,
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS scheduled_time VARCHAR(100);`,
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS time_scheduled VARCHAR(100);`,
     `ALTER TABLE activities ADD COLUMN IF NOT EXISTS target_audience TEXT;`,
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS image_url TEXT;`
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS image_url TEXT;`,
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS attendees_count INTEGER DEFAULT 0;`,
+    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS documented_notes TEXT;`,
+
+    // Formal Auditor Reports (Proposal Requirement)
+    `CREATE TABLE IF NOT EXISTS auditor_reports (
+      id VARCHAR(100) PRIMARY KEY,
+      report_period VARCHAR(100) NOT NULL,
+      report_type VARCHAR(50) NOT NULL,
+      total_income NUMERIC DEFAULT 0,
+      total_expenses NUMERIC DEFAULT 0,
+      net_surplus NUMERIC DEFAULT 0,
+      findings TEXT,
+      recommendations TEXT,
+      prepared_by TEXT NOT NULL,
+      certified_by TEXT,
+      status VARCHAR(50) DEFAULT 'Submitted',
+      date_submitted VARCHAR(50),
+      date_certified VARCHAR(50)
+    );`,
+
+    // Executive Delegation Requests (Proposal Requirement: President to VP delegation)
+    `CREATE TABLE IF NOT EXISTS delegation_requests (
+      id VARCHAR(100) PRIMARY KEY,
+      requested_by TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      requested_date VARCHAR(50) NOT NULL,
+      effective_start VARCHAR(50),
+      effective_end VARCHAR(50),
+      status VARCHAR(50) DEFAULT 'Pending',
+      reviewed_by TEXT,
+      reviewed_date VARCHAR(50),
+      remarks TEXT
+    );`,
+
+    // Sync Queue Audit Table
+    `CREATE TABLE IF NOT EXISTS sync_queue (
+      id VARCHAR(100) PRIMARY KEY,
+      timestamp VARCHAR(100),
+      action VARCHAR(50),
+      entity_type VARCHAR(50),
+      payload JSONB,
+      status VARCHAR(50) DEFAULT 'synced'
+    );`
   ];
 
   for (const stmt of statements) {
     try {
       await client.query(stmt);
-    } catch {
-      // safe fallback if column exists or dialect differences
+    } catch (e: any) {
+      // Safe non-blocking execution for schema adjustments
     }
   }
 }
@@ -314,6 +368,41 @@ export async function initDatabaseSchema(pool: pg.Pool) {
       );
     `);
 
+    // 12. Auditor Reports
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS auditor_reports (
+        id VARCHAR(100) PRIMARY KEY,
+        report_period VARCHAR(100) NOT NULL,
+        report_type VARCHAR(50) NOT NULL,
+        total_income NUMERIC DEFAULT 0,
+        total_expenses NUMERIC DEFAULT 0,
+        net_surplus NUMERIC DEFAULT 0,
+        findings TEXT,
+        recommendations TEXT,
+        prepared_by TEXT NOT NULL,
+        certified_by TEXT,
+        status VARCHAR(50) DEFAULT 'Submitted',
+        date_submitted VARCHAR(50),
+        date_certified VARCHAR(50)
+      );
+    `);
+
+    // 13. Delegation Requests
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS delegation_requests (
+        id VARCHAR(100) PRIMARY KEY,
+        requested_by TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        requested_date VARCHAR(50) NOT NULL,
+        effective_start VARCHAR(50),
+        effective_end VARCHAR(50),
+        status VARCHAR(50) DEFAULT 'Pending',
+        reviewed_by TEXT,
+        reviewed_date VARCHAR(50),
+        remarks TEXT
+      );
+    `);
+
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');
@@ -341,7 +430,9 @@ export async function getTableStats(pool: pg.Pool): Promise<{
         (SELECT count(*) FROM hog_raising) as hog_raising,
         (SELECT count(*) FROM products) as products,
         (SELECT count(*) FROM activities) as activities,
-        (SELECT count(*) FROM organization_funds) as organization_funds
+        (SELECT count(*) FROM organization_funds) as organization_funds,
+        (SELECT count(*) FROM auditor_reports) as auditor_reports,
+        (SELECT count(*) FROM delegation_requests) as delegation_requests
     `);
     const row = res.rows[0] || {};
     const tableCounts: Record<string, number> = {
@@ -356,6 +447,8 @@ export async function getTableStats(pool: pg.Pool): Promise<{
       products: Number(row.products || 0),
       activities: Number(row.activities || 0),
       organization_funds: Number(row.organization_funds || 0),
+      auditor_reports: Number(row.auditor_reports || 0),
+      delegation_requests: Number(row.delegation_requests || 0),
     };
     const totalRecords = Object.values(tableCounts).reduce((a, b) => a + b, 0);
     return { tableCounts, totalRecords };
@@ -369,10 +462,15 @@ export async function getTableStats(pool: pg.Pool): Promise<{
   }
 }
 
+/**
+ * Ensures the database tables and columns exist.
+ * CRITICAL: NEVER auto-seeds dummy records.
+ * Only if the users table has 0 accounts, it creates the 6 designated officer
+ * credentials using ON CONFLICT DO NOTHING, allowing officers to log in.
+ */
 export async function ensureDatabaseSchema(pool: pg.Pool) {
   const client = await pool.connect();
   try {
-    // 1. Check if core table exists
     const check = await client.query(`SELECT to_regclass('public.members') as members_table`);
     if (!check.rows[0]?.members_table) {
       await initDatabaseSchema(pool);
@@ -380,22 +478,28 @@ export async function ensureDatabaseSchema(pool: pg.Pool) {
       await runSchemaMigrations(client);
     }
 
-    // 2. Check if primary tables are empty
-    const counts = await client.query(`
-      SELECT 
-        (SELECT count(*) FROM users) as users_count,
-        (SELECT count(*) FROM members) as members_count,
-        (SELECT count(*) FROM financial_transactions) as tx_count,
-        (SELECT count(*) FROM organization_funds) as funds_count
-    `);
-    const usersCount = Number(counts.rows[0]?.users_count || 0);
-    const membersCount = Number(counts.rows[0]?.members_count || 0);
+    // Only provision the 6 official officer logins if users table is empty
+    const counts = await client.query(`SELECT count(*) as count FROM users`);
+    const usersCount = Number(counts.rows[0]?.count || 0);
 
-    // If tables are empty in Supabase/PostgreSQL, auto-populate initial seed records!
-    if (usersCount === 0 || membersCount === 0) {
-      console.log(`[Supabase / PostgreSQL]: Empty tables detected (users: ${usersCount}, members: ${membersCount}). Auto-seeding initial association dataset...`);
-      await migrateSeedData(pool);
-      console.log('[Supabase / PostgreSQL]: Initial dataset auto-seeded into Supabase successfully!');
+    if (usersCount === 0) {
+      console.log('[Supabase / PostgreSQL]: No users found. Provisioning the 6 official officer accounts...');
+      for (const u of SEED_USERS) {
+        await client.query(`
+          INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT (id) DO NOTHING;
+        `, [
+          u.id, 
+          u.username, 
+          u.password || 'password123', 
+          u.name, 
+          u.role, 
+          true, 
+          u.joinedDate || '2024-01-01', 
+          'Active'
+        ]);
+      }
     }
   } catch (err: any) {
     console.warn('[ensureDatabaseSchema warning]:', err?.message || err);
@@ -404,6 +508,11 @@ export async function ensureDatabaseSchema(pool: pg.Pool) {
   }
 }
 
+/**
+ * Clean & Initialize Officer Accounts
+ * Only ensures the 6 official officer logins exist with ON CONFLICT DO NOTHING.
+ * Zero dummy members, transactions, or fake records are inserted.
+ */
 export async function migrateSeedData(pool: pg.Pool) {
   await initDatabaseSchema(pool);
   const client = await pool.connect();
@@ -413,308 +522,96 @@ export async function migrateSeedData(pool: pg.Pool) {
     await client.query('BEGIN');
     await runSchemaMigrations(client);
 
-    // 1. Users
+    // Only insert official officer accounts if they do not exist
     let usersCount = 0;
     for (const u of SEED_USERS) {
       await client.query(`
-        INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status, avatar_url, member_id_number, rsbsa_number, is_rsbsa_registered)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-        ON CONFLICT (id) DO UPDATE SET
-          username = EXCLUDED.username,
-          password = EXCLUDED.password,
-          name = EXCLUDED.name,
-          role = EXCLUDED.role,
-          is_approved = EXCLUDED.is_approved,
-          joined_date = EXCLUDED.joined_date,
-          farm_location = EXCLUDED.farm_location,
-          farm_size = EXCLUDED.farm_size,
-          primary_crops = EXCLUDED.primary_crops,
-          contact_number = EXCLUDED.contact_number,
-          status = EXCLUDED.status,
-          avatar_url = EXCLUDED.avatar_url,
-          member_id_number = EXCLUDED.member_id_number,
-          rsbsa_number = EXCLUDED.rsbsa_number,
-          is_rsbsa_registered = EXCLUDED.is_rsbsa_registered;
+        INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (id) DO NOTHING;
       `, [
-        u.id, u.username, u.password || 'password123', u.name, u.role, u.isApproved,
-        u.joinedDate || null, u.farmLocation || null, u.farmSize || null,
-        u.primaryCrops || [], u.contactNumber || null, u.status || 'Active',
-        u.avatarUrl || null, u.memberIdNumber || null, u.rsbsaNumber || null,
-        Boolean(u.isRsbsaRegistered)
+        u.id, 
+        u.username, 
+        u.password || 'password123', 
+        u.name, 
+        u.role, 
+        true, 
+        u.joinedDate || '2024-01-01', 
+        'Active'
       ]);
       usersCount++;
     }
     summary.users = usersCount;
 
-    // 2. Members
-    let membersCount = 0;
-    for (const m of INITIAL_MEMBERS) {
-      await client.query(`
-        INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date, member_id_number, rsbsa_number, is_rsbsa_registered, avatar_url, gender, birth_date)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-        ON CONFLICT (id) DO UPDATE SET
-          name = EXCLUDED.name,
-          farm_location = EXCLUDED.farm_location,
-          farm_size = EXCLUDED.farm_size,
-          primary_crops = EXCLUDED.primary_crops,
-          contact_number = EXCLUDED.contact_number,
-          status = EXCLUDED.status,
-          joined_date = EXCLUDED.joined_date,
-          member_id_number = EXCLUDED.member_id_number,
-          rsbsa_number = EXCLUDED.rsbsa_number,
-          is_rsbsa_registered = EXCLUDED.is_rsbsa_registered,
-          avatar_url = EXCLUDED.avatar_url,
-          gender = EXCLUDED.gender,
-          birth_date = EXCLUDED.birth_date;
-      `, [
-        m.id, m.name, m.farmLocation || null, m.farmSize || null,
-        m.primaryCrops || [], m.contactNumber || null, m.status || 'Active',
-        m.joinedDate || null, m.memberIdNumber || null, m.rsbsaNumber || null,
-        Boolean(m.isRsbsaRegistered), m.avatarUrl || null, m.gender || null,
-        m.birthDate || null
-      ]);
-      membersCount++;
-    }
-    summary.members = membersCount;
-
-    // 3. Meetings
-    let meetingsCount = 0;
-    for (const mt of INITIAL_MEETINGS) {
-      await client.query(`
-        INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge, attendance_record)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        ON CONFLICT (id) DO UPDATE SET
-          title = EXCLUDED.title,
-          date = EXCLUDED.date,
-          location = EXCLUDED.location,
-          attendance_count = EXCLUDED.attendance_count,
-          agenda = EXCLUDED.agenda,
-          minutes = EXCLUDED.minutes,
-          officer_in_charge = EXCLUDED.officer_in_charge,
-          attendance_record = EXCLUDED.attendance_record;
-      `, [
-        mt.id, mt.title, mt.date, mt.location, mt.attendanceCount || 0,
-        mt.agenda || '', mt.minutes || '', mt.officerInCharge || '',
-        JSON.stringify(mt.attendanceRecord || {})
-      ]);
-      meetingsCount++;
-    }
-    summary.meetings = meetingsCount;
-
-    // 4. Resolutions
-    let resolutionsCount = 0;
-    for (const r of INITIAL_RESOLUTIONS) {
-      await client.query(`
-        INSERT INTO resolutions (id, resolution_number, title, description, date_agreed, moved_by, seconded_by, vote_in_favor, vote_against, vote_abstain, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        ON CONFLICT (id) DO UPDATE SET
-          resolution_number = EXCLUDED.resolution_number,
-          title = EXCLUDED.title,
-          description = EXCLUDED.description,
-          date_agreed = EXCLUDED.date_agreed,
-          moved_by = EXCLUDED.moved_by,
-          seconded_by = EXCLUDED.seconded_by,
-          vote_in_favor = EXCLUDED.vote_in_favor,
-          vote_against = EXCLUDED.vote_against,
-          vote_abstain = EXCLUDED.vote_abstain,
-          status = EXCLUDED.status;
-      `, [
-        r.id, r.resolutionNumber, r.title, r.description, r.dateAgreed,
-        r.movedBy, r.secondedBy, r.voteInFavor, r.voteAgainst, r.voteAbstain, r.status
-      ]);
-      resolutionsCount++;
-    }
-    summary.resolutions = resolutionsCount;
-
-    // 5. Transactions
-    let txCount = 0;
-    for (const tx of INITIAL_TRANSACTIONS) {
-      await client.query(`
-        INSERT INTO financial_transactions (id, type, category, amount, date, description, recorded_by, fund_source, audited_status, audited_by, audited_date, audit_notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        ON CONFLICT (id) DO UPDATE SET
-          type = EXCLUDED.type,
-          category = EXCLUDED.category,
-          amount = EXCLUDED.amount,
-          date = EXCLUDED.date,
-          description = EXCLUDED.description,
-          recorded_by = EXCLUDED.recorded_by,
-          fund_source = EXCLUDED.fund_source,
-          audited_status = EXCLUDED.audited_status,
-          audited_by = EXCLUDED.audited_by,
-          audited_date = EXCLUDED.audited_date,
-          audit_notes = EXCLUDED.audit_notes;
-      `, [
-        tx.id, tx.type, tx.category, tx.amount, tx.date, tx.description,
-        tx.recordedBy, tx.fundSource || null, tx.auditedStatus || 'Unaudited', tx.auditedBy || null,
-        tx.auditedDate || null, tx.auditNotes || null
-      ]);
-      txCount++;
-    }
-    summary.financial_transactions = txCount;
-
-    // 6. Announcements
-    let annCount = 0;
-    for (const an of INITIAL_ANNOUNCEMENTS) {
-      await client.query(`
-        INSERT INTO announcements (id, title, category, content, date_posted, priority, posted_by)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (id) DO UPDATE SET
-          title = EXCLUDED.title,
-          category = EXCLUDED.category,
-          content = EXCLUDED.content,
-          date_posted = EXCLUDED.date_posted,
-          priority = EXCLUDED.priority,
-          posted_by = EXCLUDED.posted_by;
-      `, [
-        an.id, an.title, an.category, an.content, an.datePosted, an.priority, an.postedBy
-      ]);
-      annCount++;
-    }
-    summary.announcements = annCount;
-
-    // 7. System Logs
-    let logsCount = 0;
-    for (const lg of INITIAL_LOGS) {
-      await client.query(`
-        INSERT INTO system_logs (id, timestamp, user_name, role, action, details, sync_status, hash, previous_hash)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        ON CONFLICT (id) DO UPDATE SET
-          timestamp = EXCLUDED.timestamp,
-          user_name = EXCLUDED.user_name,
-          role = EXCLUDED.role,
-          action = EXCLUDED.action,
-          details = EXCLUDED.details,
-          sync_status = EXCLUDED.sync_status,
-          hash = EXCLUDED.hash,
-          previous_hash = EXCLUDED.previous_hash;
-      `, [
-        lg.id, lg.timestamp, (lg as any).user || (lg as any).userName || 'System', lg.role, lg.action, lg.details,
-        lg.syncStatus || 'synced', lg.hash || null, lg.previousHash || null
-      ]);
-      logsCount++;
-    }
-    summary.system_logs = logsCount;
-
-    // 8. Hog Raising IGP
-    await client.query(`
-      INSERT INTO hog_raising (id, capital_grant, produces, expenses, sales, groups, chore_logs, closed_years)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      ON CONFLICT (id) DO UPDATE SET
-        capital_grant = EXCLUDED.capital_grant,
-        produces = EXCLUDED.produces,
-        expenses = EXCLUDED.expenses,
-        sales = EXCLUDED.sales,
-        groups = EXCLUDED.groups,
-        chore_logs = EXCLUDED.chore_logs,
-        closed_years = EXCLUDED.closed_years;
-    `, [
-      'hog_raising_main',
-      INITIAL_HOG_RAISING.capitalGrant,
-      INITIAL_HOG_RAISING.produces,
-      JSON.stringify(INITIAL_HOG_RAISING.expenses),
-      JSON.stringify(INITIAL_HOG_RAISING.sales),
-      JSON.stringify(INITIAL_HOG_RAISING.groups),
-      JSON.stringify(INITIAL_HOG_RAISING.choreLogs),
-      INITIAL_HOG_RAISING.closedYears || []
-    ]);
-    summary.hog_raising = 1;
-
-    // 9. Products
-    let productsCount = 0;
-    for (const p of INITIAL_PRODUCTS) {
-      await client.query(`
-        INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, image_url, is_published, updated_by, managed_by, date_updated)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-        ON CONFLICT (id) DO UPDATE SET
-          name = EXCLUDED.name,
-          ceb_name = EXCLUDED.ceb_name,
-          category = EXCLUDED.category,
-          description = EXCLUDED.description,
-          unit = EXCLUDED.unit,
-          price = EXCLUDED.price,
-          quantity_available = EXCLUDED.quantity_available,
-          stock_status = EXCLUDED.stock_status,
-          farmer_name = EXCLUDED.farmer_name,
-          farmer_sitio = EXCLUDED.farmer_sitio,
-          farmer_phone = EXCLUDED.farmer_phone,
-          contact_person = EXCLUDED.contact_person,
-          image_url = EXCLUDED.image_url,
-          is_published = EXCLUDED.is_published,
-          updated_by = EXCLUDED.updated_by,
-          managed_by = EXCLUDED.managed_by,
-          date_updated = EXCLUDED.date_updated;
-      `, [
-        p.id, p.name, p.cebName, p.category, p.description, p.unit,
-        p.price, p.quantityAvailable, p.stockStatus, p.farmerName || null,
-        p.farmerSitio || null, p.farmerPhone || null, p.contactPerson || null,
-        p.imageUrl || null, p.isPublished ?? true, p.updatedBy || null,
-        p.managedBy || null, p.dateUpdated || null
-      ]);
-      productsCount++;
-    }
-    summary.products = productsCount;
-
-    // 10. Activities
-    let activitiesCount = 0;
-    for (const act of INITIAL_ACTIVITIES) {
-      await client.query(`
-        INSERT INTO activities (id, title, ceb_title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count, target_audience, image_url)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-        ON CONFLICT (id) DO UPDATE SET
-          title = EXCLUDED.title,
-          ceb_title = EXCLUDED.ceb_title,
-          category = EXCLUDED.category,
-          scheduled_date = EXCLUDED.scheduled_date,
-          date_scheduled = EXCLUDED.date_scheduled,
-          scheduled_time = EXCLUDED.scheduled_time,
-          time_scheduled = EXCLUDED.time_scheduled,
-          location = EXCLUDED.location,
-          description = EXCLUDED.description,
-          organizer = EXCLUDED.organizer,
-          status = EXCLUDED.status,
-          documented_notes = EXCLUDED.documented_notes,
-          attendees_count = EXCLUDED.attendees_count,
-          target_audience = EXCLUDED.target_audience,
-          image_url = EXCLUDED.image_url;
-      `, [
-        act.id, act.title, act.cebTitle || null, act.category,
-        act.scheduledDate || act.dateScheduled || null,
-        act.dateScheduled || act.scheduledDate || null,
-        act.scheduledTime || act.timeScheduled || null,
-        act.timeScheduled || act.scheduledTime || null,
-        act.location, act.description, act.organizer, act.status,
-        act.documentedNotes || null, act.attendeesCount || 0,
-        act.targetAudience || null, act.imageUrl || null
-      ]);
-      activitiesCount++;
-    }
-    summary.activities = activitiesCount;
-
-    // 11. Funds
-    let fundsCount = 0;
-    for (const f of INITIAL_FUNDS) {
-      await client.query(`
-        INSERT INTO organization_funds (id, name, code, allocated_amount, current_balance, description, custodian, last_updated)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (id) DO UPDATE SET
-          name = EXCLUDED.name,
-          code = EXCLUDED.code,
-          allocated_amount = EXCLUDED.allocated_amount,
-          current_balance = EXCLUDED.current_balance,
-          description = EXCLUDED.description,
-          custodian = EXCLUDED.custodian,
-          last_updated = EXCLUDED.last_updated;
-      `, [
-        f.id, f.name, f.code, f.allocatedAmount || 0, f.currentBalance || 0,
-        f.description || '', f.custodian || '', f.lastUpdated || new Date().toISOString().split('T')[0]
-      ]);
-      fundsCount++;
-    }
-    summary.organization_funds = fundsCount;
-
     await client.query('COMMIT');
     return summary;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Wipes out all dummy and seed data from Supabase/PostgreSQL.
+ * Leaves the 6 officer accounts intact so officers can log in, but
+ * empties all members, meetings, resolutions, transactions, announcements,
+ * products, activities, and funds so real data can be entered.
+ */
+export async function purgeAllDummyData(pool: pg.Pool) {
+  await ensureDatabaseSchema(pool);
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Truncate all operational tables
+    await client.query('TRUNCATE TABLE members CASCADE');
+    await client.query('TRUNCATE TABLE meetings CASCADE');
+    await client.query('TRUNCATE TABLE resolutions CASCADE');
+    await client.query('TRUNCATE TABLE financial_transactions CASCADE');
+    await client.query('TRUNCATE TABLE announcements CASCADE');
+    await client.query('TRUNCATE TABLE products CASCADE');
+    await client.query('TRUNCATE TABLE activities CASCADE');
+    await client.query('TRUNCATE TABLE organization_funds CASCADE');
+    await client.query('TRUNCATE TABLE system_logs CASCADE');
+    
+    try {
+      await client.query('TRUNCATE TABLE auditor_reports CASCADE');
+      await client.query('TRUNCATE TABLE delegation_requests CASCADE');
+      await client.query('TRUNCATE TABLE sync_queue CASCADE');
+    } catch {}
+
+    // Reset hog_raising to blank
+    await client.query(`
+      INSERT INTO hog_raising (id, capital_grant, produces, expenses, sales, groups, chore_logs, closed_years)
+      VALUES ('hog_raising_main', 0, ARRAY['Hog Raising'], '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, ARRAY[]::int[])
+      ON CONFLICT (id) DO UPDATE SET
+        capital_grant = 0,
+        produces = ARRAY['Hog Raising'],
+        expenses = '[]'::jsonb,
+        sales = '[]'::jsonb,
+        groups = '[]'::jsonb,
+        chore_logs = '[]'::jsonb,
+        closed_years = ARRAY[]::int[];
+    `);
+
+    // Remove dummy members from users, keep only officers
+    await client.query(`DELETE FROM users WHERE role = 'Member'`);
+    for (const u of SEED_USERS) {
+      await client.query(`
+        INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (id) DO NOTHING;
+      `, [u.id, u.username, u.password || 'password123', u.name, u.role, true, u.joinedDate || '2024-01-01', 'Active']);
+    }
+
+    await client.query('COMMIT');
+    return {
+      success: true,
+      message: 'All dummy and seed records successfully purged from Supabase! Database is now empty and ready for real data.',
+    };
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -738,13 +635,59 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
     const productsRes = await client.query('SELECT * FROM products ORDER BY name ASC');
     const activitiesRes = await client.query('SELECT * FROM activities ORDER BY scheduled_date DESC');
     const fundsRes = await client.query('SELECT * FROM organization_funds ORDER BY name ASC');
+    
+    let auditorReports: any[] = [];
+    let delegationRequests: any[] = [];
+    try {
+      const audRes = await client.query('SELECT * FROM auditor_reports ORDER BY date_submitted DESC');
+      auditorReports = audRes.rows.map(r => ({
+        id: r.id,
+        reportPeriod: r.report_period,
+        reportType: r.report_type,
+        totalIncome: Number(r.total_income || 0),
+        totalExpenses: Number(r.total_expenses || 0),
+        netSurplus: Number(r.net_surplus || 0),
+        findings: r.findings,
+        recommendations: r.recommendations,
+        preparedBy: r.prepared_by,
+        certifiedBy: r.certified_by,
+        status: r.status,
+        dateSubmitted: r.date_submitted,
+        dateCertified: r.date_certified
+      }));
+    } catch {}
 
-    let hogState = INITIAL_HOG_RAISING;
+    try {
+      const delRes = await client.query('SELECT * FROM delegation_requests ORDER BY requested_date DESC');
+      delegationRequests = delRes.rows.map(r => ({
+        id: r.id,
+        requestedBy: r.requested_by,
+        reason: r.reason,
+        requestedDate: r.requested_date,
+        effectiveStart: r.effective_start,
+        effectiveEnd: r.effective_end,
+        status: r.status,
+        reviewedBy: r.reviewed_by,
+        reviewedDate: r.reviewed_date,
+        remarks: r.remarks
+      }));
+    } catch {}
+
+    let hogState = {
+      capitalGrant: 0,
+      produces: ['Hog Raising'],
+      expenses: [],
+      sales: [],
+      groups: [],
+      choreLogs: [],
+      closedYears: []
+    };
+
     if (hogRes.rows.length > 0) {
       const row = hogRes.rows[0];
       hogState = {
         capitalGrant: Number(row.capital_grant || 0),
-        produces: row.produces || [],
+        produces: row.produces || ['Hog Raising'],
         expenses: row.expenses || [],
         sales: row.sales || [],
         groups: row.groups || [],
@@ -917,7 +860,9 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
       products,
       activities,
       funds,
-      organizationFunds: funds
+      organizationFunds: funds,
+      auditorReports,
+      delegationRequests
     };
   } finally {
     client.release();
@@ -932,8 +877,54 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
     await client.query('BEGIN');
     await runSchemaMigrations(client);
 
+    // Handle Explicit Deletions if specified
+    if (state.deletedIds && typeof state.deletedIds === 'object') {
+      if (Array.isArray(state.deletedIds.members) && state.deletedIds.members.length > 0) {
+        await client.query('DELETE FROM members WHERE id = ANY($1)', [state.deletedIds.members]);
+      }
+      if (Array.isArray(state.deletedIds.meetings) && state.deletedIds.meetings.length > 0) {
+        await client.query('DELETE FROM meetings WHERE id = ANY($1)', [state.deletedIds.meetings]);
+      }
+      if (Array.isArray(state.deletedIds.resolutions) && state.deletedIds.resolutions.length > 0) {
+        await client.query('DELETE FROM resolutions WHERE id = ANY($1)', [state.deletedIds.resolutions]);
+      }
+      if (Array.isArray(state.deletedIds.financialTransactions) && state.deletedIds.financialTransactions.length > 0) {
+        await client.query('DELETE FROM financial_transactions WHERE id = ANY($1)', [state.deletedIds.financialTransactions]);
+      }
+      if (Array.isArray(state.deletedIds.announcements) && state.deletedIds.announcements.length > 0) {
+        await client.query('DELETE FROM announcements WHERE id = ANY($1)', [state.deletedIds.announcements]);
+      }
+      if (Array.isArray(state.deletedIds.products) && state.deletedIds.products.length > 0) {
+        await client.query('DELETE FROM products WHERE id = ANY($1)', [state.deletedIds.products]);
+      }
+      if (Array.isArray(state.deletedIds.activities) && state.deletedIds.activities.length > 0) {
+        await client.query('DELETE FROM activities WHERE id = ANY($1)', [state.deletedIds.activities]);
+      }
+      if (Array.isArray(state.deletedIds.funds) && state.deletedIds.funds.length > 0) {
+        await client.query('DELETE FROM organization_funds WHERE id = ANY($1)', [state.deletedIds.funds]);
+      }
+    }
+
+    // Single item deletion support
+    if (state.deleteItem && state.deleteItem.entity && state.deleteItem.id) {
+      const tableMap: Record<string, string> = {
+        member: 'members',
+        meeting: 'meetings',
+        resolution: 'resolutions',
+        transaction: 'financial_transactions',
+        announcement: 'announcements',
+        product: 'products',
+        activity: 'activities',
+        fund: 'organization_funds'
+      };
+      const tbl = tableMap[state.deleteItem.entity];
+      if (tbl) {
+        await client.query(`DELETE FROM ${tbl} WHERE id = $1`, [state.deleteItem.id]);
+      }
+    }
+
     // 1. Users
-    if (state.users && Array.isArray(state.users) && state.users.length > 0) {
+    if (state.users && Array.isArray(state.users)) {
       for (const u of state.users) {
         await client.query(`
           INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status, avatar_url, member_id_number, rsbsa_number, is_rsbsa_registered)
@@ -965,7 +956,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
     }
 
     // 2. Members
-    if (state.members && Array.isArray(state.members) && state.members.length > 0) {
+    if (state.members && Array.isArray(state.members)) {
       for (const m of state.members) {
         await client.query(`
           INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date, member_id_number, rsbsa_number, is_rsbsa_registered, avatar_url, gender, birth_date)
@@ -994,9 +985,9 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       }
     }
 
-    // 3. Transactions (handles financialTransactions OR transactions)
+    // 3. Transactions
     const txList = state.financialTransactions || state.transactions;
-    if (txList && Array.isArray(txList) && txList.length > 0) {
+    if (txList && Array.isArray(txList)) {
       for (const tx of txList) {
         await client.query(`
           INSERT INTO financial_transactions (id, type, category, amount, date, description, recorded_by, fund_source, audited_status, audited_by, audited_date, audit_notes)
@@ -1022,7 +1013,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
     }
 
     // 4. Meetings
-    if (state.meetings && Array.isArray(state.meetings) && state.meetings.length > 0) {
+    if (state.meetings && Array.isArray(state.meetings)) {
       for (const mt of state.meetings) {
         await client.query(`
           INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge, attendance_record)
@@ -1060,7 +1051,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       `, [
         'hog_raising_main',
         state.hogRaising.capitalGrant || 0,
-        state.hogRaising.produces || [],
+        state.hogRaising.produces || ['Hog Raising'],
         JSON.stringify(state.hogRaising.expenses || []),
         JSON.stringify(state.hogRaising.sales || []),
         JSON.stringify(state.hogRaising.groups || []),
@@ -1069,9 +1060,9 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       ]);
     }
 
-    // 6. System Logs (handles systemLogs OR logs)
+    // 6. System Logs
     const logList = state.systemLogs || state.logs;
-    if (logList && Array.isArray(logList) && logList.length > 0) {
+    if (logList && Array.isArray(logList)) {
       for (const lg of logList) {
         await client.query(`
           INSERT INTO system_logs (id, timestamp, user_name, role, action, details, sync_status, hash, previous_hash)
@@ -1087,13 +1078,13 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             previous_hash = EXCLUDED.previous_hash;
         `, [
           lg.id, lg.timestamp, (lg as any).user || (lg as any).userName || 'Officer', lg.role, lg.action, lg.details,
-          lg.syncStatus || 'Synced', lg.hash || null, lg.previousHash || null
+          lg.syncStatus || 'synced', lg.hash || null, lg.previousHash || null
         ]);
       }
     }
 
     // 7. Products
-    if (state.products && Array.isArray(state.products) && state.products.length > 0) {
+    if (state.products && Array.isArray(state.products)) {
       for (const p of state.products) {
         await client.query(`
           INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, image_url, is_published, updated_by, managed_by, date_updated)
@@ -1117,8 +1108,8 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             managed_by = EXCLUDED.managed_by,
             date_updated = EXCLUDED.date_updated;
         `, [
-          p.id, p.name, p.cebName, p.category, p.description, p.unit,
-          p.price, p.quantityAvailable, p.stockStatus, p.farmerName || null,
+          p.id, p.name, p.cebName || null, p.category, p.description, p.unit,
+          p.price, p.quantityAvailable || null, p.stockStatus, p.farmerName || null,
           p.farmerSitio || null, p.farmerPhone || null, p.contactPerson || null,
           p.imageUrl || null, p.isPublished ?? true, p.updatedBy || null,
           p.managedBy || null, p.dateUpdated || null
@@ -1127,7 +1118,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
     }
 
     // 8. Resolutions
-    if (state.resolutions && Array.isArray(state.resolutions) && state.resolutions.length > 0) {
+    if (state.resolutions && Array.isArray(state.resolutions)) {
       for (const r of state.resolutions) {
         await client.query(`
           INSERT INTO resolutions (id, resolution_number, title, description, date_agreed, moved_by, seconded_by, vote_in_favor, vote_against, vote_abstain, status)
@@ -1151,7 +1142,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
     }
 
     // 9. Announcements
-    if (state.announcements && Array.isArray(state.announcements) && state.announcements.length > 0) {
+    if (state.announcements && Array.isArray(state.announcements)) {
       for (const a of state.announcements) {
         await client.query(`
           INSERT INTO announcements (id, title, category, content, date_posted, priority, posted_by)
@@ -1168,7 +1159,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
     }
 
     // 10. Activities
-    if (state.activities && Array.isArray(state.activities) && state.activities.length > 0) {
+    if (state.activities && Array.isArray(state.activities)) {
       for (const act of state.activities) {
         await client.query(`
           INSERT INTO activities (id, title, ceb_title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count, target_audience, image_url)
@@ -1202,9 +1193,9 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       }
     }
 
-    // 11. Organization Funds (handles organizationFunds OR funds)
+    // 11. Organization Funds
     const fundList = state.organizationFunds || state.funds;
-    if (fundList && Array.isArray(fundList) && fundList.length > 0) {
+    if (fundList && Array.isArray(fundList)) {
       for (const f of fundList) {
         await client.query(`
           INSERT INTO organization_funds (id, name, code, allocated_amount, current_balance, description, custodian, last_updated)
@@ -1220,6 +1211,57 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
         `, [
           f.id, f.name, f.code, f.allocatedAmount || 0, f.currentBalance || 0,
           f.description || '', f.custodian || '', f.lastUpdated || new Date().toISOString().split('T')[0]
+        ]);
+      }
+    }
+
+    // 12. Auditor Reports
+    if (state.auditorReports && Array.isArray(state.auditorReports)) {
+      for (const ar of state.auditorReports) {
+        await client.query(`
+          INSERT INTO auditor_reports (id, report_period, report_type, total_income, total_expenses, net_surplus, findings, recommendations, prepared_by, certified_by, status, date_submitted, date_certified)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          ON CONFLICT (id) DO UPDATE SET
+            report_period = EXCLUDED.report_period,
+            report_type = EXCLUDED.report_type,
+            total_income = EXCLUDED.total_income,
+            total_expenses = EXCLUDED.total_expenses,
+            net_surplus = EXCLUDED.net_surplus,
+            findings = EXCLUDED.findings,
+            recommendations = EXCLUDED.recommendations,
+            prepared_by = EXCLUDED.prepared_by,
+            certified_by = EXCLUDED.certified_by,
+            status = EXCLUDED.status,
+            date_submitted = EXCLUDED.date_submitted,
+            date_certified = EXCLUDED.date_certified;
+        `, [
+          ar.id, ar.reportPeriod, ar.reportType, ar.totalIncome || 0, ar.totalExpenses || 0,
+          ar.netSurplus || 0, ar.findings || '', ar.recommendations || '', ar.preparedBy,
+          ar.certifiedBy || null, ar.status || 'Submitted', ar.dateSubmitted, ar.dateCertified || null
+        ]);
+      }
+    }
+
+    // 13. Delegation Requests
+    if (state.delegationRequests && Array.isArray(state.delegationRequests)) {
+      for (const dr of state.delegationRequests) {
+        await client.query(`
+          INSERT INTO delegation_requests (id, requested_by, reason, requested_date, effective_start, effective_end, status, reviewed_by, reviewed_date, remarks)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          ON CONFLICT (id) DO UPDATE SET
+            requested_by = EXCLUDED.requested_by,
+            reason = EXCLUDED.reason,
+            requested_date = EXCLUDED.requested_date,
+            effective_start = EXCLUDED.effective_start,
+            effective_end = EXCLUDED.effective_end,
+            status = EXCLUDED.status,
+            reviewed_by = EXCLUDED.reviewed_by,
+            reviewed_date = EXCLUDED.reviewed_date,
+            remarks = EXCLUDED.remarks;
+        `, [
+          dr.id, dr.requestedBy, dr.reason, dr.requestedDate, dr.effectiveStart || null,
+          dr.effectiveEnd || null, dr.status || 'Pending', dr.reviewedBy || null,
+          dr.reviewedDate || null, dr.remarks || null
         ]);
       }
     }

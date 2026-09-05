@@ -40,6 +40,7 @@ export default function App() {
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isPopulating, setIsPopulating] = useState<boolean>(false);
+  const [isPurging, setIsPurging] = useState<boolean>(false);
   const [syncQueue, setSyncQueue] = useState<SyncQueueItem[]>([]);
   const [dbStatus, setDbStatus] = useState<DatabaseStatus>({
     connected: false,
@@ -138,22 +139,47 @@ export default function App() {
       const storedLogs = localStorage.getItem('bafa_logs');
       const storedUsers = localStorage.getItem('bafa_users');
 
-      setMembers(storedMembers ? JSON.parse(storedMembers) : INITIAL_MEMBERS);
-      setMeetings(storedMeetings ? JSON.parse(storedMeetings) : INITIAL_MEETINGS);
-      setResolutions(storedResolutions ? JSON.parse(storedResolutions) : INITIAL_RESOLUTIONS);
-      setTransactions(storedTransactions ? JSON.parse(storedTransactions) : INITIAL_TRANSACTIONS);
-      setAnnouncements(storedAnnouncements ? JSON.parse(storedAnnouncements) : INITIAL_ANNOUNCEMENTS);
-      setHogRaising(storedHogRaising ? JSON.parse(storedHogRaising) : INITIAL_HOG_RAISING);
-      setProducts(storedProducts ? JSON.parse(storedProducts) : INITIAL_PRODUCTS);
-      setActivities(storedActivities ? JSON.parse(storedActivities) : INITIAL_ACTIVITIES);
-      setFunds(storedFunds ? JSON.parse(storedFunds) : INITIAL_FUNDS);
+      // Detect and clear legacy dummy seed data from previous versions (e.g. Roberto Cañete / m-001)
+      const hasOldSeedMembers = storedMembers && (storedMembers.includes('m-001') || storedMembers.includes('Roberto M. Cañete') || storedMembers.includes('Juanito') || storedMembers.includes('user-m1'));
+      if (hasOldSeedMembers) {
+        console.log('[Auto-Cleanup]: Detected legacy dummy seed data in local cache. Cleaning storage for real data...');
+        localStorage.removeItem('bafa_members');
+        localStorage.removeItem('bafa_meetings');
+        localStorage.removeItem('bafa_resolutions');
+        localStorage.removeItem('bafa_transactions');
+        localStorage.removeItem('bafa_announcements');
+        localStorage.removeItem('bafa_products');
+        localStorage.removeItem('bafa_activities');
+        localStorage.removeItem('bafa_funds');
+        localStorage.removeItem('bafa_hog_raising');
+        setMembers([]);
+        setMeetings([]);
+        setResolutions([]);
+        setTransactions([]);
+        setAnnouncements([]);
+        setProducts([]);
+        setActivities([]);
+        setFunds([]);
+        setHogRaising(INITIAL_HOG_RAISING);
+      } else {
+        setMembers(storedMembers ? JSON.parse(storedMembers) : INITIAL_MEMBERS);
+        setMeetings(storedMeetings ? JSON.parse(storedMeetings) : INITIAL_MEETINGS);
+        setResolutions(storedResolutions ? JSON.parse(storedResolutions) : INITIAL_RESOLUTIONS);
+        setTransactions(storedTransactions ? JSON.parse(storedTransactions) : INITIAL_TRANSACTIONS);
+        setAnnouncements(storedAnnouncements ? JSON.parse(storedAnnouncements) : INITIAL_ANNOUNCEMENTS);
+        setHogRaising(storedHogRaising ? JSON.parse(storedHogRaising) : INITIAL_HOG_RAISING);
+        setProducts(storedProducts ? JSON.parse(storedProducts) : INITIAL_PRODUCTS);
+        setActivities(storedActivities ? JSON.parse(storedActivities) : INITIAL_ACTIVITIES);
+        setFunds(storedFunds ? JSON.parse(storedFunds) : INITIAL_FUNDS);
+      }
+
       setSyncQueue(storedQueue ? JSON.parse(storedQueue) : []);
       
       const parsedUsers = storedUsers ? JSON.parse(storedUsers) : SEED_USERS;
-      setUsers(parsedUsers);
-      if (!storedUsers) {
-        localStorage.setItem('bafa_users', JSON.stringify(SEED_USERS));
-      }
+      // Filter out any dummy members from users, keep only real officers
+      const sanitizedUsers = parsedUsers.filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'));
+      setUsers(sanitizedUsers.length > 0 ? sanitizedUsers : SEED_USERS);
+      localStorage.setItem('bafa_users', JSON.stringify(sanitizedUsers.length > 0 ? sanitizedUsers : SEED_USERS));
 
       const rawLogs = storedLogs ? JSON.parse(storedLogs) : INITIAL_LOGS;
       const needsChaining = rawLogs.some((l: any) => !l.hash || !l.previousHash);
@@ -178,16 +204,20 @@ export default function App() {
         })
         .then(res => {
           if (res?.success && res.data) {
-            if (res.data.members?.length) { setMembers(res.data.members); updateStorage('bafa_members', res.data.members); }
-            if (res.data.meetings?.length) { setMeetings(res.data.meetings); updateStorage('bafa_meetings', res.data.meetings); }
-            if (res.data.resolutions?.length) { setResolutions(res.data.resolutions); updateStorage('bafa_resolutions', res.data.resolutions); }
-            if (res.data.financialTransactions?.length) { setTransactions(res.data.financialTransactions); updateStorage('bafa_transactions', res.data.financialTransactions); }
-            if (res.data.announcements?.length) { setAnnouncements(res.data.announcements); updateStorage('bafa_announcements', res.data.announcements); }
-            if (res.data.products?.length) { setProducts(res.data.products); updateStorage('bafa_products', res.data.products); }
-            if (res.data.activities?.length) { setActivities(res.data.activities); updateStorage('bafa_activities', res.data.activities); }
-            if (res.data.funds?.length) { setFunds(res.data.funds); updateStorage('bafa_funds', res.data.funds); }
+            if (Array.isArray(res.data.members)) { setMembers(res.data.members); updateStorage('bafa_members', res.data.members); }
+            if (Array.isArray(res.data.meetings)) { setMeetings(res.data.meetings); updateStorage('bafa_meetings', res.data.meetings); }
+            if (Array.isArray(res.data.resolutions)) { setResolutions(res.data.resolutions); updateStorage('bafa_resolutions', res.data.resolutions); }
+            if (Array.isArray(res.data.financialTransactions)) { setTransactions(res.data.financialTransactions); updateStorage('bafa_transactions', res.data.financialTransactions); }
+            if (Array.isArray(res.data.announcements)) { setAnnouncements(res.data.announcements); updateStorage('bafa_announcements', res.data.announcements); }
+            if (Array.isArray(res.data.products)) { setProducts(res.data.products); updateStorage('bafa_products', res.data.products); }
+            if (Array.isArray(res.data.activities)) { setActivities(res.data.activities); updateStorage('bafa_activities', res.data.activities); }
+            if (Array.isArray(res.data.funds)) { setFunds(res.data.funds); updateStorage('bafa_funds', res.data.funds); }
             if (res.data.hogRaising) { setHogRaising(res.data.hogRaising); updateStorage('bafa_hog_raising', res.data.hogRaising); }
-            if (res.data.users?.length) { setUsers(res.data.users); updateStorage('bafa_users', res.data.users); }
+            if (Array.isArray(res.data.users) && res.data.users.length > 0) {
+              const officersOnly = res.data.users.filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'));
+              setUsers(officersOnly.length > 0 ? officersOnly : SEED_USERS);
+              updateStorage('bafa_users', officersOnly.length > 0 ? officersOnly : SEED_USERS);
+            }
             console.log('[Cloud DB] Successfully loaded fresh data from PostgreSQL Cloud DB');
             setDbStatus(prev => ({
               ...prev,
@@ -206,16 +236,16 @@ export default function App() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      users: res.data.users || parsedUsers,
-                      members: res.data.members || (storedMembers ? JSON.parse(storedMembers) : INITIAL_MEMBERS),
-                      meetings: res.data.meetings || (storedMeetings ? JSON.parse(storedMeetings) : INITIAL_MEETINGS),
-                      resolutions: res.data.resolutions || (storedResolutions ? JSON.parse(storedResolutions) : INITIAL_RESOLUTIONS),
-                      financialTransactions: res.data.financialTransactions || (storedTransactions ? JSON.parse(storedTransactions) : INITIAL_TRANSACTIONS),
-                      announcements: res.data.announcements || (storedAnnouncements ? JSON.parse(storedAnnouncements) : INITIAL_ANNOUNCEMENTS),
-                      products: res.data.products || (storedProducts ? JSON.parse(storedProducts) : INITIAL_PRODUCTS),
-                      activities: res.data.activities || (storedActivities ? JSON.parse(storedActivities) : INITIAL_ACTIVITIES),
-                      funds: res.data.funds || (storedFunds ? JSON.parse(storedFunds) : INITIAL_FUNDS),
-                      hogRaising: res.data.hogRaising || (storedHogRaising ? JSON.parse(storedHogRaising) : INITIAL_HOG_RAISING),
+                      users: res.data.users || sanitizedUsers,
+                      members: res.data.members || [],
+                      meetings: res.data.meetings || [],
+                      resolutions: res.data.resolutions || [],
+                      financialTransactions: res.data.financialTransactions || [],
+                      announcements: res.data.announcements || [],
+                      products: res.data.products || [],
+                      activities: res.data.activities || [],
+                      funds: res.data.funds || [],
+                      hogRaising: res.data.hogRaising || INITIAL_HOG_RAISING,
                       systemLogs: activeLogs
                     })
                   }).then(r => r.json()).then(pushRes => {
@@ -427,6 +457,59 @@ export default function App() {
       showToastMessage(`Error populating database: ${err?.message || 'Connection error'}`, 'error');
     } finally {
       setIsPopulating(false);
+    }
+  };
+
+  // Permanently Purge All Demo & Dummy Seed Records from Supabase and Local Storage
+  const handlePurgeAllDummyData = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete all demo/seed data? This will clear all dummy records in Supabase and local browser cache so you can start inputting real data.")) {
+      return;
+    }
+    setIsPurging(true);
+    showToastMessage('Purging all demo and seed data from Supabase & local storage...', 'info');
+
+    try {
+      // 1. Wipe Cloud Supabase database tables
+      const res = await fetch('/api/db/purge', { method: 'POST' });
+      const data = await res.json();
+
+      // 2. Clear browser local storage
+      localStorage.removeItem('bafa_members');
+      localStorage.removeItem('bafa_meetings');
+      localStorage.removeItem('bafa_resolutions');
+      localStorage.removeItem('bafa_transactions');
+      localStorage.removeItem('bafa_announcements');
+      localStorage.removeItem('bafa_products');
+      localStorage.removeItem('bafa_activities');
+      localStorage.removeItem('bafa_funds');
+      localStorage.removeItem('bafa_hog_raising');
+      localStorage.removeItem('bafa_logs');
+      localStorage.removeItem('bafa_sync_queue');
+
+      // 3. Reset React states
+      setMembers([]);
+      setMeetings([]);
+      setResolutions([]);
+      setTransactions([]);
+      setAnnouncements([]);
+      setProducts([]);
+      setActivities([]);
+      setFunds([]);
+      setHogRaising(INITIAL_HOG_RAISING);
+      setSyncQueue([]);
+      setLogs([]);
+
+      // Keep only the 6 official officer logins in users
+      setUsers(SEED_USERS);
+      localStorage.setItem('bafa_users', JSON.stringify(SEED_USERS));
+
+      showToastMessage(data?.message || 'All demo & seed data deleted! Ready for real data input.', 'success');
+      checkDatabaseConnection();
+    } catch (err: any) {
+      console.error('Purge error:', err);
+      showToastMessage(`Purged locally: ${err?.message || 'Ready for real data.'}`, 'info');
+    } finally {
+      setIsPurging(false);
     }
   };
 
@@ -1395,6 +1478,8 @@ export default function App() {
               onCheckDb={checkDatabaseConnection}
               onPopulateDb={handlePopulateAllToDatabase}
               isPopulating={isPopulating}
+              onPurgeDb={handlePurgeAllDummyData}
+              isPurging={isPurging}
             />
           </div>
         </div>

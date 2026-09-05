@@ -1,4 +1,4 @@
-import { getPool, isDatabaseConfigured, ensureDatabaseSchema, migrateSeedData, saveFullStateToPostgres, getTableStats } from './db';
+import { getPool, isDatabaseConfigured, ensureDatabaseSchema, purgeAllDummyData, saveFullStateToPostgres, getTableStats } from './db';
 import { sendResponse, parseRequestBody } from './helper';
 
 export default async function handler(req: any, res: any) {
@@ -24,16 +24,27 @@ export default async function handler(req: any, res: any) {
     await ensureDatabaseSchema(pool);
     const body = await parseRequestBody(req);
 
+    if (body?.action === 'purge' || body?.purge === true) {
+      const purgeResult = await purgeAllDummyData(pool);
+      const stats = await getTableStats(pool);
+      return sendResponse(res, 200, {
+        success: true,
+        message: purgeResult.message,
+        tableCounts: stats.tableCounts,
+        totalRecords: stats.totalRecords,
+      });
+    }
+
     if (body && Object.keys(body).length > 0) {
       await saveFullStateToPostgres(pool, body);
     } else {
-      await migrateSeedData(pool);
+      await ensureDatabaseSchema(pool);
     }
 
     const stats = await getTableStats(pool);
     return sendResponse(res, 200, {
       success: true,
-      message: `Successfully populated Supabase tables! (${stats.totalRecords} records across 11 tables)`,
+      message: `Database synchronized! (${stats.totalRecords} records across 13 tables)`,
       tableCounts: stats.tableCounts,
       totalRecords: stats.totalRecords,
     });
@@ -41,7 +52,7 @@ export default async function handler(req: any, res: any) {
     console.error('[Cloud DB Seed Handler Error]:', error);
     return sendResponse(res, 500, {
       success: false,
-      message: `Failed to seed database: ${error?.message || error}`,
+      message: `Database operation failed: ${error?.message || error}`,
     });
   }
 }

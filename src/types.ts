@@ -225,4 +225,33 @@ export interface DatabaseStatus {
   totalRecords?: number;
 }
 
+export interface AuditorReport {
+  id: string;
+  reportPeriod: string;
+  reportType: string;
+  totalIncome: number;
+  totalExpenses: number;
+  netSurplus: number;
+  findings: string;
+  recommendations: string;
+  preparedBy: string;
+  certifiedBy?: string;
+  status: 'Draft' | 'Submitted' | 'Certified' | 'Returned';
+  dateSubmitted: string;
+  dateCertified?: string;
+}
+
+export interface DelegationRequest {
+  id: string;
+  requestedBy: string;
+  reason: string;
+  requestedDate: string;
+  effectiveStart?: string;
+  effectiveEnd?: string;
+  status: 'Pending' | 'Approved' | 'Declined' | 'Revoked';
+  reviewedBy?: string;
+  reviewedDate?: string;
+  remarks?: string;
+}
+
 

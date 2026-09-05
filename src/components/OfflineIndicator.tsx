@@ -9,7 +9,8 @@ import {
   RefreshCw,
   Server,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  Trash2
 } from 'lucide-react';
 import { DatabaseStatus } from '../types';
 
@@ -22,6 +23,8 @@ interface OfflineIndicatorProps {
   onCheckDb?: () => void;
   onPopulateDb?: () => void;
   isPopulating?: boolean;
+  onPurgeDb?: () => void;
+  isPurging?: boolean;
 }
 
 export default function OfflineIndicator({
@@ -33,6 +36,8 @@ export default function OfflineIndicator({
   onCheckDb,
   onPopulateDb,
   isPopulating = false,
+  onPurgeDb,
+  isPurging = false,
 }: OfflineIndicatorProps) {
   const [showDbModal, setShowDbModal] = useState(false);
 
@@ -267,16 +272,8 @@ export default function OfflineIndicator({
                 )}
 
                 {dbStatus?.totalRecords === 0 && (
-                  <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-2">
-                    <span>Tables are currently empty in Supabase.</span>
-                    <button
-                      type="button"
-                      disabled={isPopulating}
-                      onClick={() => onPopulateDb && onPopulateDb()}
-                      className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded text-[10px] uppercase tracking-wider shrink-0 cursor-pointer"
-                    >
-                      {isPopulating ? 'Seeding...' : 'Seed Now'}
-                    </button>
+                  <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between gap-2">
+                    <span>Database tables are clean and empty. Ready for real operational data.</span>
                   </div>
                 )}
               </div>
@@ -310,7 +307,7 @@ export default function OfflineIndicator({
 
             {/* Modal Actions */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   disabled={isChecking}
@@ -323,13 +320,27 @@ export default function OfflineIndicator({
                   <span>{isChecking ? 'Checking...' : 'Test Connection'}</span>
                 </button>
 
+                {onPurgeDb && (
+                  <button
+                    id="purge-demo-db-btn"
+                    type="button"
+                    disabled={isPurging}
+                    onClick={onPurgeDb}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-xl text-xs font-bold transition-all border border-rose-500/40 cursor-pointer disabled:opacity-50"
+                    title="Permanently remove all demo and seed records"
+                  >
+                    <Trash2 className={`w-3.5 h-3.5 ${isPurging ? 'animate-spin' : 'text-rose-400'}`} />
+                    <span>{isPurging ? 'Purging Demo Data...' : 'Purge All Demo Data'}</span>
+                  </button>
+                )}
+
                 {isConnected && onPopulateDb && (
                   <button
                     id="populate-cloud-db-btn"
                     type="button"
                     disabled={isPopulating}
                     onClick={() => {
-                      if (window.confirm('Populate Cloud Database with all current system records? This will push all current members, meetings, funds, transactions, announcements, and IGP logs into your Supabase database.')) {
+                      if (window.confirm('Sync all current local records into your Supabase database?')) {
                         onPopulateDb();
                       }
                     }}
@@ -337,7 +348,7 @@ export default function OfflineIndicator({
                     title="Upload all current system records to Supabase"
                   >
                     <Server className={`w-3.5 h-3.5 ${isPopulating ? 'animate-spin' : 'text-amber-400'}`} />
-                    <span>{isPopulating ? 'Pushing All Data...' : 'Populate All Data to DB'}</span>
+                    <span>{isPopulating ? 'Pushing All Data...' : 'Sync All Data to DB'}</span>
                   </button>
                 )}
               </div>

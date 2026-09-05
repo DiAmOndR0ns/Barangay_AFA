@@ -11,6 +11,7 @@ import {
   saveFullStateToPostgres,
   ensureDatabaseSchema,
   migrateSeedData,
+  purgeAllDummyData,
   getTableStats 
 } from "./src/api/db";
 
@@ -115,7 +116,7 @@ async function startServer() {
     }
   });
 
-  // API to Seed or Populate Supabase / PostgreSQL Tables
+  // API to Seed, Populate, or Purge Supabase / PostgreSQL Tables
   app.post("/api/db/seed", async (req, res) => {
     if (!isDatabaseConfigured()) {
       return res.status(400).json({
@@ -127,15 +128,27 @@ async function startServer() {
     try {
       const pool = getPool();
       await ensureDatabaseSchema(pool);
+
+      if (req.body?.action === 'purge' || req.body?.purge === true) {
+        const purgeRes = await purgeAllDummyData(pool);
+        const stats = await getTableStats(pool);
+        return res.json({
+          success: true,
+          message: purgeRes.message,
+          tableCounts: stats.tableCounts,
+          totalRecords: stats.totalRecords,
+        });
+      }
+
       if (req.body && Object.keys(req.body).length > 0) {
         await saveFullStateToPostgres(pool, req.body);
       } else {
-        await migrateSeedData(pool);
+        await ensureDatabaseSchema(pool);
       }
       const stats = await getTableStats(pool);
       return res.json({
         success: true,
-        message: `Successfully populated Supabase tables! (${stats.totalRecords} total records across 11 tables)`,
+        message: `Supabase database synchronized! (${stats.totalRecords} records across tables)`,
         tableCounts: stats.tableCounts,
         totalRecords: stats.totalRecords,
       });
@@ -144,6 +157,34 @@ async function startServer() {
       return res.status(500).json({
         success: false,
         message: `Failed to populate database: ${err?.message || err}`,
+      });
+    }
+  });
+
+  // Dedicated API to Purge All Seed and Dummy Data from Supabase
+  app.post("/api/db/purge", async (req, res) => {
+    if (!isDatabaseConfigured()) {
+      return res.status(400).json({
+        success: false,
+        message: "DATABASE_URL is not configured.",
+      });
+    }
+
+    try {
+      const pool = getPool();
+      const purgeRes = await purgeAllDummyData(pool);
+      const stats = await getTableStats(pool);
+      return res.json({
+        success: true,
+        message: purgeRes.message,
+        tableCounts: stats.tableCounts,
+        totalRecords: stats.totalRecords,
+      });
+    } catch (err: any) {
+      console.error("[Cloud DB Purge Error]:", err);
+      return res.status(500).json({
+        success: false,
+        message: `Failed to purge dummy data: ${err?.message || err}`,
       });
     }
   });
@@ -162,7 +203,7 @@ async function startServer() {
       const pool = getPool();
       const pullPromise = fetchAllDataFromPostgres(pool);
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Cloud DB query timed out after 5 seconds.')), 5000)
+        setTimeout(() => reject(new Error('Cloud DB query timed out after 12 seconds.')), 12000)
       );
       const data = await Promise.race([pullPromise, timeoutPromise]);
       return res.json({
@@ -193,7 +234,7 @@ async function startServer() {
       const pool = getPool();
       const savePromise = saveFullStateToPostgres(pool, req.body);
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Cloud DB push timed out after 6 seconds.')), 6000)
+        setTimeout(() => reject(new Error('Cloud DB push timed out after 12 seconds.')), 12000)
       );
       await Promise.race([savePromise, timeoutPromise]);
       return res.json({
