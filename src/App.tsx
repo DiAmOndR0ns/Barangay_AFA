@@ -363,7 +363,7 @@ export default function App() {
       });
 
       const result = await res.json();
-      if (result?.success) {
+      if (result?.success && !result?.offlineMode) {
         // Clear all locally stored pending contributions and mutations to protect confidentiality
         setSyncQueue([]);
         localStorage.removeItem('bafa_sync_queue');

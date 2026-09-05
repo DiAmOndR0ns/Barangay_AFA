@@ -183,9 +183,9 @@ async function startServer() {
   app.post("/api/sync/push", async (req, res) => {
     if (!isDatabaseConfigured()) {
       return res.json({
-        success: true,
+        success: false,
         offlineMode: true,
-        message: "Saved to local offline storage (DATABASE_URL not configured).",
+        message: "DATABASE_URL is not configured. Saved in local offline browser storage.",
       });
     }
 
@@ -198,12 +198,13 @@ async function startServer() {
       await Promise.race([savePromise, timeoutPromise]);
       return res.json({
         success: true,
+        offlineMode: false,
         message: "State successfully synced to PostgreSQL Cloud DB!",
       });
     } catch (error: any) {
       console.warn("[Cloud DB Push Warning]:", error?.message || error);
       return res.status(200).json({
-        success: true,
+        success: false,
         offlineMode: true,
         message: `Saved locally. Cloud sync pending reconnection: ${error?.message || 'Database unavailable'}`,
       });
