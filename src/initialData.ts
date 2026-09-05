@@ -2,7 +2,7 @@ import { Member, Meeting, Resolution, FinancialTransaction, Announcement, System
 
 // The 6 official officer accounts of Alegria Farmers Association (Tuburan, Cebu)
 // Allows designated officers to log in securely.
-export const SEED_USERS: User[] = [
+export const OFFICIAL_OFFICERS: User[] = [
   {
     id: 'user-pres',
     username: 'president',

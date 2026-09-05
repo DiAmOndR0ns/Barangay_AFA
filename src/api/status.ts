@@ -1,5 +1,88 @@
-import { isDatabaseConfigured, getPool, ensureDatabaseSchema, getTableStats } from './db';
+import pg from 'pg';
 import { sendResponse } from './helper';
+
+// Bulletproof Pool resolution across CJS, ESM, and bundled Vercel serverless environments
+const PgPool = (pg as any)?.Pool || (pg as any)?.default?.Pool || (pg as any)?.default || pg;
+
+let poolInstance: pg.Pool | null = null;
+let lastUsedConnectionString: string | null = null;
+
+function cleanDatabaseUrl(rawUrl: string): { connectionString: string; isSsl: boolean; hostInfo: string } {
+  const urlStr = rawUrl.trim().replace(/^["']|["']$/g, '');
+  let hostInfo = 'PostgreSQL';
+
+  try {
+    const parsed = new URL(urlStr);
+    hostInfo = `${parsed.hostname}${parsed.port ? ':' + parsed.port : ''}${parsed.pathname}`;
+    parsed.searchParams.delete('sslmode');
+    parsed.searchParams.delete('ssl');
+    return {
+      connectionString: parsed.toString(),
+      isSsl: true,
+      hostInfo,
+    };
+  } catch {
+    const cleaned = urlStr.replace(/[\?&]sslmode=[^&]*/g, '').replace(/[\?&]ssl=[^&]*/g, '').replace(/\?$/, '');
+    return { connectionString: cleaned, isSsl: true, hostInfo };
+  }
+}
+
+function getStatusPool(): pg.Pool {
+  const rawDbUrl = process.env.DATABASE_URL;
+  if (!rawDbUrl) throw new Error('DATABASE_URL environment variable is not configured');
+  const { connectionString } = cleanDatabaseUrl(rawDbUrl);
+  if (!poolInstance || lastUsedConnectionString !== connectionString) {
+    if (poolInstance) {
+      poolInstance.end().catch(() => {});
+    }
+    poolInstance = new PgPool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 5000,
+      max: 5,
+    });
+    lastUsedConnectionString = connectionString;
+  }
+  return poolInstance;
+}
+
+const APP_TABLES = [
+  'users',
+  'members',
+  'meetings',
+  'resolutions',
+  'financial_transactions',
+  'announcements',
+  'system_logs',
+  'hog_raising',
+  'products',
+  'activities',
+  'organization_funds',
+  'auditor_reports',
+  'delegation_requests'
+];
+
+async function getLiveTableStats(pool: pg.Pool) {
+  const client = await pool.connect();
+  const tableCounts: Record<string, number> = {};
+  let totalRecords = 0;
+
+  try {
+    for (const table of APP_TABLES) {
+      try {
+        const res = await client.query(`SELECT count(*) as count FROM ${table}`);
+        const count = Number(res.rows[0]?.count || 0);
+        tableCounts[table] = count;
+        totalRecords += count;
+      } catch {
+        tableCounts[table] = 0;
+      }
+    }
+    return { tableCounts, totalRecords };
+  } finally {
+    client.release();
+  }
+}
 
 export default async function handler(req: any, res: any) {
   try {
@@ -51,11 +134,9 @@ export default async function handler(req: any, res: any) {
     const isDirectPort = rawUrl.includes(':5432') && rawUrl.includes('db.');
     const provider = isSupabase ? 'Supabase' : 'PostgreSQL';
 
-    // Guard against hanging direct IPv6 connection to Supabase on Vercel
-    const pool = getPool();
-    await ensureDatabaseSchema(pool);
+    const pool = getStatusPool();
     const queryPromise = pool.query('SELECT NOW() as current_time, current_database() as db_name');
-    const statsPromise = getTableStats(pool);
+    const statsPromise = getLiveTableStats(pool);
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => {
         reject(new Error(

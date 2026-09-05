@@ -10,9 +10,9 @@ import {
   fetchAllDataFromPostgres, 
   saveFullStateToPostgres,
   ensureDatabaseSchema,
-  migrateSeedData,
   purgeAllDummyData,
-  getTableStats 
+  getTableStats,
+  updateDatabaseCapitalGrant
 } from "./src/api/db";
 
 dotenv.config();
@@ -116,51 +116,6 @@ async function startServer() {
     }
   });
 
-  // API to Seed, Populate, or Purge Supabase / PostgreSQL Tables
-  app.post("/api/db/seed", async (req, res) => {
-    if (!isDatabaseConfigured()) {
-      return res.status(400).json({
-        success: false,
-        message: "DATABASE_URL is not configured.",
-      });
-    }
-
-    try {
-      const pool = getPool();
-      await ensureDatabaseSchema(pool);
-
-      if (req.body?.action === 'purge' || req.body?.purge === true) {
-        const purgeRes = await purgeAllDummyData(pool);
-        const stats = await getTableStats(pool);
-        return res.json({
-          success: true,
-          message: purgeRes.message,
-          tableCounts: stats.tableCounts,
-          totalRecords: stats.totalRecords,
-        });
-      }
-
-      if (req.body && Object.keys(req.body).length > 0) {
-        await saveFullStateToPostgres(pool, req.body);
-      } else {
-        await ensureDatabaseSchema(pool);
-      }
-      const stats = await getTableStats(pool);
-      return res.json({
-        success: true,
-        message: `Supabase database synchronized! (${stats.totalRecords} records across tables)`,
-        tableCounts: stats.tableCounts,
-        totalRecords: stats.totalRecords,
-      });
-    } catch (err: any) {
-      console.error("[Cloud DB Seed Error]:", err);
-      return res.status(500).json({
-        success: false,
-        message: `Failed to populate database: ${err?.message || err}`,
-      });
-    }
-  });
-
   // Dedicated API to Purge All Seed and Dummy Data from Supabase
   app.post("/api/db/purge", async (req, res) => {
     if (!isDatabaseConfigured()) {
@@ -186,6 +141,36 @@ async function startServer() {
         success: false,
         message: `Failed to purge dummy data: ${err?.message || err}`,
       });
+    }
+  });
+
+  // Dedicated API to Get and Update Capital Grant directly in Cloud DB
+  app.get("/api/db/capital-grant", async (req, res) => {
+    if (!isDatabaseConfigured()) {
+      return res.json({ success: false, offlineMode: true, capitalGrant: 0 });
+    }
+    try {
+      const pool = getPool();
+      const queryRes = await pool.query("SELECT capital_grant FROM hog_raising WHERE id IN ('main_state', 'hog_raising_main') ORDER BY (id = 'main_state') DESC LIMIT 1");
+      const capitalGrant = Number(queryRes.rows[0]?.capital_grant || 0);
+      return res.json({ success: true, capitalGrant });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err?.message || err });
+    }
+  });
+
+  app.post("/api/db/capital-grant", async (req, res) => {
+    if (!isDatabaseConfigured()) {
+      return res.json({ success: false, offlineMode: true, message: "Database not configured" });
+    }
+    try {
+      const { amount } = req.body;
+      const numAmount = typeof amount === 'number' ? amount : (parseFloat(amount) || 0);
+      const pool = getPool();
+      const updatedAmount = await updateDatabaseCapitalGrant(pool, numAmount);
+      return res.json({ success: true, capitalGrant: updatedAmount });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err?.message || err });
     }
   });
 

@@ -7,7 +7,7 @@ import {
 import { 
   INITIAL_MEMBERS, INITIAL_MEETINGS, INITIAL_RESOLUTIONS, 
   INITIAL_TRANSACTIONS, INITIAL_ANNOUNCEMENTS, INITIAL_LOGS, INITIAL_HOG_RAISING,
-  INITIAL_PRODUCTS, INITIAL_ACTIVITIES, SEED_USERS, INITIAL_FUNDS
+  INITIAL_PRODUCTS, INITIAL_ACTIVITIES, OFFICIAL_OFFICERS, INITIAL_FUNDS
 } from './initialData';
 import OfflineIndicator from './components/OfflineIndicator';
 import SecretaryView from './components/SecretaryView';
@@ -72,25 +72,6 @@ export default function App() {
         totalRecords: data.totalRecords,
         checking: false,
       });
-
-      // If connected but tables are completely empty, auto-populate initial data
-      if (data.connected && typeof data.totalRecords === 'number' && data.totalRecords === 0) {
-        console.log('[Supabase]: Tables are empty. Triggering automated system data seeding...');
-        fetch('/api/db/seed', { method: 'POST' })
-          .then(seedRes => seedRes.json())
-          .then(seedData => {
-            if (seedData.success) {
-              setDbStatus(prev => ({
-                ...prev,
-                tableCounts: seedData.tableCounts,
-                totalRecords: seedData.totalRecords,
-                message: seedData.message,
-              }));
-              showToastMessage('Supabase tables were empty. Initial system data was automatically seeded!', 'success');
-            }
-          })
-          .catch(err => console.warn('[Auto-seed error]:', err));
-      }
     } catch {
       setDbStatus({
         connected: false,
@@ -175,11 +156,11 @@ export default function App() {
 
       setSyncQueue(storedQueue ? JSON.parse(storedQueue) : []);
       
-      const parsedUsers = storedUsers ? JSON.parse(storedUsers) : SEED_USERS;
+      const parsedUsers = storedUsers ? JSON.parse(storedUsers) : OFFICIAL_OFFICERS;
       // Filter out any dummy members from users, keep only real officers
       const sanitizedUsers = parsedUsers.filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'));
-      setUsers(sanitizedUsers.length > 0 ? sanitizedUsers : SEED_USERS);
-      localStorage.setItem('bafa_users', JSON.stringify(sanitizedUsers.length > 0 ? sanitizedUsers : SEED_USERS));
+      setUsers(sanitizedUsers.length > 0 ? sanitizedUsers : OFFICIAL_OFFICERS);
+      localStorage.setItem('bafa_users', JSON.stringify(sanitizedUsers.length > 0 ? sanitizedUsers : OFFICIAL_OFFICERS));
 
       const rawLogs = storedLogs ? JSON.parse(storedLogs) : INITIAL_LOGS;
       const needsChaining = rawLogs.some((l: any) => !l.hash || !l.previousHash);
@@ -215,8 +196,8 @@ export default function App() {
             if (res.data.hogRaising) { setHogRaising(res.data.hogRaising); updateStorage('bafa_hog_raising', res.data.hogRaising); }
             if (Array.isArray(res.data.users) && res.data.users.length > 0) {
               const officersOnly = res.data.users.filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'));
-              setUsers(officersOnly.length > 0 ? officersOnly : SEED_USERS);
-              updateStorage('bafa_users', officersOnly.length > 0 ? officersOnly : SEED_USERS);
+              setUsers(officersOnly.length > 0 ? officersOnly : OFFICIAL_OFFICERS);
+              updateStorage('bafa_users', officersOnly.length > 0 ? officersOnly : OFFICIAL_OFFICERS);
             }
             console.log('[Cloud DB] Successfully loaded fresh data from PostgreSQL Cloud DB');
             setDbStatus(prev => ({
@@ -276,7 +257,7 @@ export default function App() {
       setFunds(INITIAL_FUNDS);
       setSyncQueue([]);
       setLogs(INITIAL_LOGS);
-      setUsers(SEED_USERS);
+      setUsers(OFFICIAL_OFFICERS);
     }
   }, []);
 
@@ -500,10 +481,10 @@ export default function App() {
       setLogs([]);
 
       // Keep only the 6 official officer logins in users
-      setUsers(SEED_USERS);
-      localStorage.setItem('bafa_users', JSON.stringify(SEED_USERS));
+      setUsers(OFFICIAL_OFFICERS);
+      localStorage.setItem('bafa_users', JSON.stringify(OFFICIAL_OFFICERS));
 
-      showToastMessage(data?.message || 'All demo & seed data deleted! Ready for real data input.', 'success');
+      showToastMessage(data?.message || 'All demo records deleted! Ready for real data input.', 'success');
       checkDatabaseConnection();
     } catch (err: any) {
       console.error('Purge error:', err);
@@ -903,19 +884,25 @@ export default function App() {
   };
 
   const handleUpdateCapitalGrant = (amount: number) => {
+    const numAmount = typeof amount === 'number' ? amount : (parseFloat(amount as any) || 0);
     const updatedState: HogRaisingState = {
       ...hogRaising,
-      capitalGrant: amount
+      capitalGrant: numAmount
     };
     setHogRaising(updatedState);
     updateStorage('bafa_hog_raising', updatedState);
 
     if (isOnline) {
-      logAction('Updated Capital Grant', `Modified Hog Raising IGP LGU capital grant to PHP ${amount.toLocaleString()}`);
-      showToastMessage(`Successfully updated LGU Capital Grant to PHP ${amount.toLocaleString()}!`, 'success');
+      logAction('Updated Capital Grant', `Modified Hog Raising IGP LGU capital grant to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+      showToastMessage(`Successfully updated LGU Capital Grant to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}!`, 'success');
       pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
+      fetch('/api/db/capital-grant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: numAmount })
+      }).catch(e => console.warn('[Capital Grant direct DB update error]:', e));
     } else {
-      addToSyncQueue('update', 'hog_expense', { id: 'capital-grant', amount });
+      addToSyncQueue('update', 'hog_expense', { id: 'capital-grant', amount: numAmount });
     }
   };
 
@@ -1630,6 +1617,7 @@ export default function App() {
                 hogRaising={hogRaising}
                 onAddTransaction={handleAddTransaction}
                 onAuditTransaction={handleAuditTransaction}
+                onUpdateCapitalGrant={handleUpdateCapitalGrant}
                 currentRole={currentRole}
                 onOpenReportModal={() => setShowReportModal(true)}
               />

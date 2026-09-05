@@ -1,5 +1,5 @@
 import pg from 'pg';
-import { SEED_USERS } from '../initialData';
+import { OFFICIAL_OFFICERS } from '../initialData';
 import { AuditorReport, DelegationRequest } from '../types';
 
 // Bulletproof Pool resolution across CJS, ESM, and bundled Vercel serverless environments
@@ -484,7 +484,7 @@ export async function ensureDatabaseSchema(pool: pg.Pool) {
 
     if (usersCount === 0) {
       console.log('[Supabase / PostgreSQL]: No users found. Provisioning the 6 official officer accounts...');
-      for (const u of SEED_USERS) {
+      for (const u of OFFICIAL_OFFICERS) {
         await client.query(`
           INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -503,51 +503,6 @@ export async function ensureDatabaseSchema(pool: pg.Pool) {
     }
   } catch (err: any) {
     console.warn('[ensureDatabaseSchema warning]:', err?.message || err);
-  } finally {
-    client.release();
-  }
-}
-
-/**
- * Clean & Initialize Officer Accounts
- * Only ensures the 6 official officer logins exist with ON CONFLICT DO NOTHING.
- * Zero dummy members, transactions, or fake records are inserted.
- */
-export async function migrateSeedData(pool: pg.Pool) {
-  await initDatabaseSchema(pool);
-  const client = await pool.connect();
-  const summary: Record<string, number> = {};
-
-  try {
-    await client.query('BEGIN');
-    await runSchemaMigrations(client);
-
-    // Only insert official officer accounts if they do not exist
-    let usersCount = 0;
-    for (const u of SEED_USERS) {
-      await client.query(`
-        INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (id) DO NOTHING;
-      `, [
-        u.id, 
-        u.username, 
-        u.password || 'password123', 
-        u.name, 
-        u.role, 
-        true, 
-        u.joinedDate || '2024-01-01', 
-        'Active'
-      ]);
-      usersCount++;
-    }
-    summary.users = usersCount;
-
-    await client.query('COMMIT');
-    return summary;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
   } finally {
     client.release();
   }
@@ -584,22 +539,15 @@ export async function purgeAllDummyData(pool: pg.Pool) {
     } catch {}
 
     // Reset hog_raising to blank
+    await client.query('DELETE FROM hog_raising');
     await client.query(`
       INSERT INTO hog_raising (id, capital_grant, produces, expenses, sales, groups, chore_logs, closed_years)
-      VALUES ('hog_raising_main', 0, ARRAY['Hog Raising'], '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, ARRAY[]::int[])
-      ON CONFLICT (id) DO UPDATE SET
-        capital_grant = 0,
-        produces = ARRAY['Hog Raising'],
-        expenses = '[]'::jsonb,
-        sales = '[]'::jsonb,
-        groups = '[]'::jsonb,
-        chore_logs = '[]'::jsonb,
-        closed_years = ARRAY[]::int[];
+      VALUES ('main_state', 0, ARRAY['Hog Raising'], '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, ARRAY[]::int[]);
     `);
 
-    // Remove dummy members from users, keep only officers
-    await client.query(`DELETE FROM users WHERE role = 'Member'`);
-    for (const u of SEED_USERS) {
+    // Remove all users except official 6 officers
+    await client.query(`DELETE FROM users WHERE id NOT IN ('user-pres', 'user-vp', 'user-sec', 'user-tres', 'user-aud', 'user-pio')`);
+    for (const u of OFFICIAL_OFFICERS) {
       await client.query(`
         INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -610,7 +558,7 @@ export async function purgeAllDummyData(pool: pg.Pool) {
     await client.query('COMMIT');
     return {
       success: true,
-      message: 'All dummy and seed records successfully purged from Supabase! Database is now empty and ready for real data.',
+      message: 'All dummy and demo records successfully purged from Supabase! Database is now empty and ready for real data.',
     };
   } catch (err) {
     await client.query('ROLLBACK');
@@ -631,7 +579,8 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
     const transactionsRes = await client.query('SELECT * FROM financial_transactions ORDER BY date DESC');
     const announcementsRes = await client.query('SELECT * FROM announcements ORDER BY date_posted DESC');
     const logsRes = await client.query('SELECT * FROM system_logs ORDER BY timestamp DESC');
-    const hogRes = await client.query('SELECT * FROM hog_raising WHERE id = $1', ['hog_raising_main']);
+    const hogQuery = await client.query("SELECT * FROM hog_raising WHERE id IN ('main_state', 'hog_raising_main') ORDER BY (id = 'main_state') DESC LIMIT 1");
+    const hogRes = hogQuery.rows.length > 0 ? hogQuery : await client.query('SELECT * FROM hog_raising LIMIT 1');
     const productsRes = await client.query('SELECT * FROM products ORDER BY name ASC');
     const activitiesRes = await client.query('SELECT * FROM activities ORDER BY scheduled_date DESC');
     const fundsRes = await client.query('SELECT * FROM organization_funds ORDER BY name ASC');
@@ -1037,6 +986,10 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
 
     // 5. Hog Raising IGP State
     if (state.hogRaising) {
+      const grantAmount = typeof state.hogRaising.capitalGrant === 'number'
+        ? state.hogRaising.capitalGrant
+        : (Number(state.hogRaising.capitalGrant) || 0);
+
       await client.query(`
         INSERT INTO hog_raising (id, capital_grant, produces, expenses, sales, groups, chore_logs, closed_years)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -1049,8 +1002,8 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           chore_logs = EXCLUDED.chore_logs,
           closed_years = EXCLUDED.closed_years;
       `, [
-        'hog_raising_main',
-        state.hogRaising.capitalGrant || 0,
+        'main_state',
+        grantAmount,
         state.hogRaising.produces || ['Hog Raising'],
         JSON.stringify(state.hogRaising.expenses || []),
         JSON.stringify(state.hogRaising.sales || []),
@@ -1058,6 +1011,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
         JSON.stringify(state.hogRaising.choreLogs || []),
         state.hogRaising.closedYears || []
       ]);
+      await client.query("DELETE FROM hog_raising WHERE id != 'main_state'");
     }
 
     // 6. System Logs
@@ -1275,3 +1229,25 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
     client.release();
   }
 }
+
+/**
+ * Directly and atomically updates the Capital Grant in PostgreSQL / Supabase
+ */
+export async function updateDatabaseCapitalGrant(pool: pg.Pool, amount: number): Promise<number> {
+  await ensureDatabaseSchema(pool);
+  const client = await pool.connect();
+  try {
+    const numAmount = typeof amount === 'number' ? amount : (parseFloat(amount as any) || 0);
+    const res = await client.query(`
+      INSERT INTO hog_raising (id, capital_grant, produces, expenses, sales, groups, chore_logs, closed_years)
+      VALUES ('main_state', $1, ARRAY['Hog Raising'], '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, ARRAY[]::int[])
+      ON CONFLICT (id) DO UPDATE SET capital_grant = EXCLUDED.capital_grant
+      RETURNING capital_grant;
+    `, [numAmount]);
+    await client.query("DELETE FROM hog_raising WHERE id != 'main_state'");
+    return Number(res.rows[0]?.capital_grant || 0);
+  } finally {
+    client.release();
+  }
+}
+

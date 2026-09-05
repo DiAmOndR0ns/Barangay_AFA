@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   HogRaisingState, IgpExpense, IgpSale, IgpChoreLog, IgpGroup, Member, User, Meeting 
 } from '../types';
@@ -202,7 +202,7 @@ export default function HogRaisingIgpTracker({
           </div>
 
           <div style="background: #e6f4ea; border: 1px solid #a3cfbb; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11px; color: #0f5132;">
-            <strong>BUDGET & CAPITAL SOURCE (WHERE BUDGET WAS TAKEN FROM):</strong> Funded under the <strong>DOLE Integrated Livelihood Program (DILP) Capital Grant (₱1,000,000.00)</strong> & Municipal Agriculture Assistance. All operating expenditures (feeds, piglets, vaccines) are disbursed directly from this approved livelihood allocation.
+            <strong>BUDGET & CAPITAL SOURCE (WHERE BUDGET WAS TAKEN FROM):</strong> Funded under the <strong>DOLE Integrated Livelihood Program (DILP) Capital Grant (₱${(typeof state.capitalGrant === 'number' ? state.capitalGrant : (Number(state.capitalGrant) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })})</strong> & Municipal Agriculture Assistance. All operating expenditures (feeds, piglets, vaccines) are disbursed directly from this approved livelihood allocation.
           </div>
 
           <p style="font-size: 12px; margin-bottom: 20px;">
@@ -268,12 +268,19 @@ export default function HogRaisingIgpTracker({
     printWindow.document.close();
   };
 
-  // Calculations
-  const capitalGrant = state.capitalGrant || 1000000;
+  // Calculations - directly reflect live database value without falling back to static 1M
+  const capitalGrant = typeof state.capitalGrant === 'number'
+    ? state.capitalGrant
+    : (Number(state.capitalGrant) || 0);
   
   // Grant editing state
   const [isEditingGrant, setIsEditingGrant] = useState(false);
   const [newGrantAmount, setNewGrantAmount] = useState(capitalGrant.toString());
+  
+  // Keep input field strictly synchronized whenever data arrives from PostgreSQL Cloud DB
+  useEffect(() => {
+    setNewGrantAmount(capitalGrant.toString());
+  }, [capitalGrant]);
   
   // Calculations filtered by selected produce
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
@@ -291,8 +298,8 @@ export default function HogRaisingIgpTracker({
   const activeCount = activeMembers.length || 1;
   const individualDividend = netProfit > 0 ? netProfit / activeCount : 0;
 
-  // Visual percentages of total grant used across ALL projects
-  const percentUsed = Math.min((overallExpensesTotal / capitalGrant) * 100, 100);
+  // Visual percentages of total grant used across ALL projects (safe against 0 division)
+  const percentUsed = capitalGrant > 0 ? Math.min((overallExpensesTotal / capitalGrant) * 100, 100) : 0;
 
   // Dynamic categories list based on produce
   const getDynamicExpenseCategories = (produce: string) => {
@@ -735,7 +742,7 @@ export default function HogRaisingIgpTracker({
             ) : (
               <div className="flex items-center justify-between mt-1 gap-2">
                 <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 block font-mono">
-                  PHP {capitalGrant.toLocaleString()}
+                  PHP {capitalGrant.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 {isTreasurerOrOfficer && (
                   <button
@@ -752,8 +759,11 @@ export default function HogRaisingIgpTracker({
             )}
           </div>
           <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between text-xs font-bold text-slate-700 dark:text-slate-350">
-            <span>Sumpay nga pundo:</span>
-            <span className="font-extrabold text-emerald-700 dark:text-emerald-400">100% Secured</span>
+            <span>Sumpay sa Database:</span>
+            <span className="font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Live Database Value</span>
+            </span>
           </div>
         </div>
 
