@@ -49,6 +49,16 @@ export default function HogRaisingIgpTracker({
   const [newProduceName, setNewProduceName] = useState('');
   const [showAddProduceModal, setShowAddProduceModal] = useState(false);
 
+  const getProduceLocalName = (produce: string) => {
+    if (produce === 'Hog Raising') return 'Baboyan';
+    if (produce === 'Poultry Raising') return 'Manokan';
+    if (produce === 'Tilapia Breeding') return 'Pangisdaan';
+    return produce;
+  };
+
+  const selectedProduceLocalName = getProduceLocalName(selectedProduce);
+  const getProduceProjectName = (produce: string) => `${produce} Project IGP`;
+
   // Filter lists by selected produce
   const filteredExpenses = state.expenses.filter(e => (e.produce || 'Hog Raising') === selectedProduce);
   const filteredSales = state.sales.filter(s => (s.produce || 'Hog Raising') === selectedProduce);
@@ -86,7 +96,7 @@ export default function HogRaisingIgpTracker({
     setExpDate(val);
     const yr = parseInt(val.substring(0, 4));
     if (closedYears.includes(yr)) {
-      setExpenseDateError(`🔒 Sirado ang Libro: Ang financial book sa ${yr} gisirado na niadtong Disyembre.`);
+      setExpenseDateError(`Sirado ang Libro: Ang financial book sa ${yr} gisirado na niadtong Disyembre.`);
     } else {
       setExpenseDateError('');
     }
@@ -96,7 +106,7 @@ export default function HogRaisingIgpTracker({
     setSaleDate(val);
     const yr = parseInt(val.substring(0, 4));
     if (closedYears.includes(yr)) {
-      setSaleDateError(`🔒 Sirado ang Libro: Ang financial book sa ${yr} gisirado na niadtong Disyembre.`);
+      setSaleDateError(`Sirado ang Libro: Ang financial book sa ${yr} gisirado na niadtong Disyembre.`);
     } else {
       setSaleDateError('');
     }
@@ -188,7 +198,7 @@ export default function HogRaisingIgpTracker({
           <div class="title">OFFICIAL QUARTERLY PROCEEDS & EXPENDITURES REPORT - YEAR ${year}</div>
 
           <div class="status-badge">
-            <span>${isClosed ? '🔒 December Financial Books: CLOSED & CERTIFIED' : '🔓 December Financial Books: OPEN & ACTIVE'}</span>
+            <span>{isClosed ? 'December Financial Books: CLOSED & CERTIFIED' : 'December Financial Books: OPEN & ACTIVE'}</span>
           </div>
 
           <div style="background: #e6f4ea; border: 1px solid #a3cfbb; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11px; color: #0f5132;">
@@ -397,7 +407,7 @@ export default function HogRaisingIgpTracker({
     if (!expAmount || parseFloat(expAmount) <= 0 || !expDesc.trim()) return;
     const yr = parseInt(expDate.substring(0, 4));
     if (closedYears.includes(yr)) {
-      setExpenseDateError(`🔒 Sirado ang Libro: Ang financial book sa ${yr} gisirado na niadtong Disyembre.`);
+      setExpenseDateError(`Sirado ang Libro: Ang financial book sa ${yr} gisirado na niadtong Disyembre.`);
       return;
     }
     onAddExpense({
@@ -418,7 +428,7 @@ export default function HogRaisingIgpTracker({
     if (!saleRevenue || parseFloat(saleRevenue) <= 0 || !saleHogsCount) return;
     const yr = parseInt(saleDate.substring(0, 4));
     if (closedYears.includes(yr)) {
-      setSaleDateError(`🔒 Sirado ang Libro: Ang financial book sa ${yr} gisirado na niadtong Disyembre.`);
+      setSaleDateError(`Sirado ang Libro: Ang financial book sa ${yr} gisirado na niadtong Disyembre.`);
       return;
     }
     onAddSale({
@@ -551,17 +561,11 @@ export default function HogRaisingIgpTracker({
           <h2 className={`text-xl font-black ${theme.headerText} flex items-center gap-2.5 font-display`}>
             <PiggyBank className={`w-6 h-6 ${isOfficerMode ? 'text-emerald-400' : 'text-[#2D6A4F]'}`} />
             <span>
-              {selectedProduce === 'Hog Raising' 
-                ? 'Baboyan sa Asosasyon (Hog Raising IGP Tracker)'
-                : selectedProduce === 'Poultry Raising'
-                ? 'Manokan sa Asosasyon (Poultry Raising IGP Tracker)'
-                : selectedProduce === 'Tilapia Breeding'
-                ? 'Isdaan sa Asosasyon (Tilapia Breeding IGP Tracker)'
-                : `${selectedProduce} - Livelihood Project Tracker`}
+              {getProduceProjectName(selectedProduce)}
             </span>
           </h2>
           <p className={`text-xs ${theme.subText} mt-1 font-medium`}>
-            Subaya ang PHP 1,000,000 pundo sa LGU, gasto sa pagkaon, log sa mga buluhaton, ug bahin sa interes para sa proyekto nga <strong>{selectedProduce}</strong>.
+            Track the PHP 1,000,000 LGU grant, expenses, activity logs, and member dividends for <strong>{selectedProduce}</strong>.
           </p>
         </div>
 
@@ -595,7 +599,7 @@ export default function HogRaisingIgpTracker({
           >
             {produces.map((prod) => (
               <option key={prod} value={prod}>
-                {prod} {prod === 'Hog Raising' ? '🐖' : prod === 'Poultry Raising' ? '🐔' : prod === 'Tilapia Breeding' ? '🐟' : '🌱'}
+                {getProduceProjectName(prod)}
               </option>
             ))}
           </select>
@@ -756,7 +760,7 @@ export default function HogRaisingIgpTracker({
         {/* Expenses (Capital Used) Card */}
         <div className={`p-4.5 rounded-2xl border ${theme.cardBg} flex flex-col justify-between space-y-2 shadow-sm relative overflow-hidden`}>
           <div>
-            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Capital Spent (Gasto sa Baboyan)</span>
+            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Capital Spent (Gasto sa {selectedProduceLocalName})</span>
             <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 block mt-1 font-mono">
               - PHP {totalExpenses.toLocaleString()}
             </span>
@@ -785,7 +789,7 @@ export default function HogRaisingIgpTracker({
             </span>
           </div>
           <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-            <span>Para sa pagkaon/vitamins</span>
+            <span>Para sa {selectedProduceLocalName} operations</span>
             <span className="font-extrabold text-blue-700 dark:text-blue-400">Balido</span>
           </div>
         </div>
@@ -905,14 +909,14 @@ export default function HogRaisingIgpTracker({
                   <span>Kondisyon sa Project (IGP Status Card)</span>
                 </h4>
 
-                <div className="grid grid-cols-2 gap-4 text-xs font-medium text-slate-400">
-                  <div className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-100 dark:border-slate-850">
+                <div className={`grid grid-cols-2 gap-4 text-xs font-medium ${isOfficerMode ? 'text-slate-400' : 'text-[#4B6259]'}`}>
+                  <div className={`p-3 rounded-xl border ${isOfficerMode ? 'bg-slate-950/40 border-slate-850' : 'bg-[#F5FAF6] border-[#E9E4D9]'}`}>
                     <span>Active Hogs in Pen</span>
-                    <strong className="block text-lg font-extrabold text-slate-700 dark:text-white mt-1">17 Baboy</strong>
+                    <strong className={`block text-lg font-extrabold mt-1 ${isOfficerMode ? 'text-white' : 'text-[#1B4332]'}`}>17 Baboy</strong>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-100 dark:border-slate-850">
+                  <div className={`p-3 rounded-xl border ${isOfficerMode ? 'bg-slate-950/40 border-slate-850' : 'bg-[#F5FAF6] border-[#E9E4D9]'}`}>
                     <span>Hogs Sold (Nahalin)</span>
-                    <strong className="block text-lg font-extrabold text-emerald-600 mt-1">8 Baboy</strong>
+                    <strong className={`block text-lg font-extrabold mt-1 ${isOfficerMode ? 'text-emerald-400' : 'text-[#2D6A4F]'}`}>8 Baboy</strong>
                   </div>
                 </div>
 
@@ -1434,7 +1438,7 @@ export default function HogRaisingIgpTracker({
                           }`}
                         >
                           <span>{yr}</span>
-                          {isYrClosed && <span className="text-[10px]">🔒</span>}
+                          {isYrClosed && <span className="text-[10px]">Closed</span>}
                         </button>
                       );
                     })}
@@ -1449,7 +1453,7 @@ export default function HogRaisingIgpTracker({
                         <ShieldCheck className="w-6 h-6 animate-pulse" />
                       </div>
                       <div className="text-left space-y-0.5">
-                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block font-mono">🔒 LIBRO SA PINANSYAL GISIRADO NA (DECEMBER BOOKS CLOSED)</span>
+                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block font-mono">LIBRO SA PINANSYAL GISIRADO NA (DECEMBER BOOKS CLOSED)</span>
                         <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">
                           Ang financial books sa {reportYear} opisyal nang gisirado, gi-audit ug gipirmahan niadtong Disyembre 31. Dili na mahimong usbon.
                         </p>
@@ -1458,7 +1462,7 @@ export default function HogRaisingIgpTracker({
                   ) : (
                     <div className="p-4 bg-amber-500/5 border border-amber-500/25 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="text-left space-y-0.5 flex-1">
-                        <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block font-mono">🔓 KASAMTANGANG ABLI (ACTIVE & UNLOCKED)</span>
+                        <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block font-mono">KASAMTANGANG ABLI (ACTIVE & UNLOCKED)</span>
                         <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                           Ang financial books sa {reportYear} kasamtangang abli ug aktibo. Mahimo pang magtala og mga gasto ug halin sa baboy.
                         </p>
@@ -1473,7 +1477,7 @@ export default function HogRaisingIgpTracker({
                           }}
                           className="px-3.5 py-2 rounded-xl text-xs font-black bg-rose-650 hover:bg-rose-700 text-white shadow-md flex items-center gap-1.5 cursor-pointer shrink-0 transition-all self-start sm:self-center"
                         >
-                          <span>🔒 Sirad-an ang Libro (Close Books)</span>
+                          <span>Sirad-an ang Libro (Close Books)</span>
                         </button>
                       )}
                     </div>

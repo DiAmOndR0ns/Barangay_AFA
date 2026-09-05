@@ -20,6 +20,7 @@ import SyncQueuePanel from './components/SyncQueuePanel';
 import AuthScreen from './components/AuthScreen';
 import MemberDashboard from './components/MemberDashboard';
 import GuestPortal from './components/GuestPortal';
+import PrivacyPolicy from './components/PrivacyPolicy';
 import OfficerReportModal from './components/OfficerReportModal';
 import ProductManagementModal from './components/ProductManagementModal';
 import { buildAuditChain } from './utils/audit';
@@ -136,7 +137,6 @@ export default function App() {
       const storedQueue = localStorage.getItem('bafa_sync_queue');
       const storedLogs = localStorage.getItem('bafa_logs');
       const storedUsers = localStorage.getItem('bafa_users');
-      const storedCurrentUser = localStorage.getItem('bafa_current_user');
 
       setMembers(storedMembers ? JSON.parse(storedMembers) : INITIAL_MEMBERS);
       setMeetings(storedMeetings ? JSON.parse(storedMeetings) : INITIAL_MEETINGS);
@@ -153,19 +153,6 @@ export default function App() {
       setUsers(parsedUsers);
       if (!storedUsers) {
         localStorage.setItem('bafa_users', JSON.stringify(SEED_USERS));
-      }
-
-      if (storedCurrentUser) {
-        try {
-          const parsedCurrentUser = JSON.parse(storedCurrentUser);
-          // Protect confidential credentials: remove plaintext password
-          delete parsedCurrentUser.password;
-          setCurrentUser(parsedCurrentUser);
-          updateStorage('bafa_current_user', parsedCurrentUser);
-          if (parsedCurrentUser.role !== 'Member') {
-            setCurrentRole(parsedCurrentUser.role as OfficerRole);
-          }
-        } catch {}
       }
 
       const rawLogs = storedLogs ? JSON.parse(storedLogs) : INITIAL_LOGS;
@@ -1066,29 +1053,51 @@ export default function App() {
   };
 
   const handleUpdateProfile = (updatedUser: User) => {
-    const updatedUsers = users.map(u => u.id === updatedUser.id ? updatedUser : u);
+    const owner = currentUser && users.find(u => u.id === currentUser.id);
+    if (!owner || updatedUser.id !== owner.id) {
+      showToastMessage('Profile update denied: this account does not own the requested data.', 'error');
+      return;
+    }
+
+    // Only allow profile fields to change; identity, role, approval, and credentials stay authoritative.
+    const ownedProfile: User = {
+      ...owner,
+      name: updatedUser.name,
+      avatarUrl: updatedUser.avatarUrl,
+      memberIdNumber: updatedUser.memberIdNumber,
+      rsbsaNumber: updatedUser.rsbsaNumber,
+      isRsbsaRegistered: updatedUser.isRsbsaRegistered,
+      farmLocation: updatedUser.farmLocation,
+      farmSize: updatedUser.farmSize,
+      primaryCrops: updatedUser.primaryCrops,
+      contactNumber: updatedUser.contactNumber,
+      status: updatedUser.status,
+      joinedDate: updatedUser.joinedDate
+    };
+
+    const updatedUsers = users.map(u => u.id === owner.id ? ownedProfile : u);
     setUsers(updatedUsers);
     updateStorage('bafa_users', updatedUsers);
 
-    setCurrentUser(updatedUser);
-    updateStorage('bafa_current_user', updatedUser);
+    setCurrentUser(ownedProfile);
+    updateStorage('bafa_current_user', ownedProfile);
 
     // Sync member list details if they are a member
-    if (updatedUser.role === 'Member') {
-      const updatedMembers = members.map(m => m.id === updatedUser.id ? {
+    if (ownedProfile.role === 'Member') {
+      const updatedMembers = members.map(m => m.id === ownedProfile.id ? {
         ...m,
-        name: updatedUser.name,
-        farmLocation: updatedUser.farmLocation || m.farmLocation,
-        farmSize: updatedUser.farmSize || m.farmSize,
-        primaryCrops: updatedUser.primaryCrops || m.primaryCrops,
-        contactNumber: updatedUser.contactNumber || m.contactNumber,
-        avatarUrl: updatedUser.avatarUrl
+        name: ownedProfile.name,
+        farmLocation: ownedProfile.farmLocation || m.farmLocation,
+        farmSize: ownedProfile.farmSize || m.farmSize,
+        primaryCrops: ownedProfile.primaryCrops || m.primaryCrops,
+        contactNumber: ownedProfile.contactNumber || m.contactNumber,
+        avatarUrl: ownedProfile.avatarUrl
       } : m);
       setMembers(updatedMembers);
       updateStorage('bafa_members', updatedMembers);
     }
 
-    logAction('Updated Profile', `${updatedUser.name} modified their profile details`);
+    logAction('Updated Profile', `${ownedProfile.name} modified their profile details`);
     showToastMessage('Profile details updated successfully!', 'success');
   };
 
@@ -1186,6 +1195,10 @@ export default function App() {
 
     showToastMessage('System Backup downloaded successfully as a formatted JSON file!', 'success');
   };
+
+  if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy/') {
+    return <PrivacyPolicy />;
+  }
 
   if (!currentUser) {
     if (guestMode) {
@@ -1432,7 +1445,7 @@ export default function App() {
                   }`}
                 >
                   <PiggyBank className="w-4 h-4 text-[#1B4332]" />
-                  <span>Hog Raising IGP Portal</span>
+                  <span>IGP Tracker</span>
                   <span className="bg-[#1B4332]/10 text-[#1B4332] border border-[#1B4332]/20 text-[9px] px-2 py-0.5 rounded-full font-black ml-1">
                     Active
                   </span>

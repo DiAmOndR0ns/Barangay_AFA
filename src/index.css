@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", "Inter", sans-serif;
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   --color-bafa-50: #f5faf6;
@@ -61,13 +61,11 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background:
-      radial-gradient(circle at top left, rgba(126, 199, 159, 0.12), transparent 25%),
-      linear-gradient(180deg, #f7fbf8 0%, var(--bafa-bg) 100%);
+    background: var(--bafa-bg);
     color: var(--bafa-text);
     font-family: var(--font-sans);
     line-height: 1.6;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     overflow-x: hidden;
     overflow-wrap: break-word;
     word-break: normal;
@@ -101,6 +99,29 @@
     background: rgba(45, 106, 79, 0.2);
     color: var(--bafa-text);
   }
+}
+
+/* Keep the member IGP surface aligned with the light member dashboard. */
+#member-screen-wrapper #hog-raising-igp-container {
+  color-scheme: light;
+}
+
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:bg-slate-950"],
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:bg-slate-900"],
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:bg-slate-800"] {
+  background-color: #faf8f5;
+}
+
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:text-white"],
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:text-slate-100"],
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:text-slate-200"],
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:text-slate-300"] {
+  color: #1b4332;
+}
+
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:border-slate-800"],
+#member-screen-wrapper #hog-raising-igp-container [class~="dark:border-slate-850"] {
+  border-color: #e9e4d9;
 }
 
 @media print {

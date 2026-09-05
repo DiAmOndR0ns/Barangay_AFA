@@ -365,7 +365,7 @@ export default function TreasurerView({
               </div>
               <div>
                 <h3 className="text-base font-black text-white flex items-center gap-2">
-                  <span>Hog Raising IGP — Monthly Expenses vs. Income Trends</span>
+                  <span>Hog Raising IGP - Monthly Expenses vs. Income Trends</span>
                   <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     Interactive Recharts
                   </span>
