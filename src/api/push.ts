@@ -71,7 +71,7 @@ export default async function handler(req: any, res: any) {
     console.log('[PUSH DEBUG] Calling saveFullStateToPostgres...');
     const savePromise = saveFullStateToPostgres(pool, body);
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Cloud DB push timed out after 10 seconds.')), 10000)
+      setTimeout(() => reject(new Error('Cloud DB push timed out after 30 seconds.')), 30000)
     );
 
     const result = await Promise.race([savePromise, timeoutPromise]);
