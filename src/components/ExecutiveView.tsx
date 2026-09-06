@@ -65,7 +65,7 @@ export default function ExecutiveView({
   const [turnoverDate, setTurnoverDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [turnoverOutgoingRole, setTurnoverOutgoingRole] = useState<'Member' | 'Vice_President' | 'Secretary' | 'Treasurer' | 'Auditor' | 'PIO' | 'None'>('Member');
   const [turnoverNotes, setTurnoverNotes] = useState<string>(
-    '1. Formal turnover of the BAFA general registry and resolutions book.\n2. Turned over bank accounts and the PHP balance.\n3. Turned over community keys and the hog-raising IGP ledger.'
+    '1. Formal turnover of the AFA general registry and resolutions book.\n2. Turned over bank accounts and the PHP balance.\n3. Turned over community keys and the hog-raising IGP ledger.'
   );
   const [showTurnoverConfirm, setShowTurnoverConfirm] = useState<boolean>(false);
   const [turnoverConfirmationWord, setTurnoverConfirmationWord] = useState<string>('');
@@ -145,7 +145,7 @@ export default function ExecutiveView({
     const newLog: SystemLog = {
       id: `log-seal-${Date.now()}`,
       timestamp: new Date().toISOString(),
-      user: currentRole === 'President' ? 'Zenaida A. Elbiña' : 'BAFA Executive Officer',
+      user: currentRole === 'President' ? 'Zenaida A. Elbiña' : 'AFA Executive Officer',
       role: currentRole,
       action: 'Sealed Digital Trail',
       details: `OFFICIAL YEAR-END SEALING: Ang general digital system audit trail alang sa tuig ${yearToSeal} opisyal nga gisirado ug gi-seal ni Presidente Zenaida A. Elbiña. Wala nay retroactive nga pagbag-o nga gitugot alang niini nga tuig. (Officially sealed and cryptographically locked the digital trail for the year ${yearToSeal}. No retroactive modifications permitted.)`,
@@ -346,14 +346,10 @@ export default function ExecutiveView({
                     </div>
 
                     {user.role === 'Member' && (
-                      <div className="bg-white p-3 rounded-xl border border-[#E9E4D9] grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      <div className="bg-white p-3 rounded-xl border border-[#E9E4D9] grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                         <div>
                           <span className="text-[#85947E] block text-[9px] uppercase font-bold tracking-wider">Sitio / Dapit</span>
                           <span className="text-[#1B4332] font-bold">{user.farmLocation}</span>
-                        </div>
-                        <div>
-                          <span className="text-[#85947E] block text-[9px] uppercase font-bold tracking-wider">Gidak-on sa Uma</span>
-                          <span className="text-[#1B4332] font-mono font-black">{user.farmSize} ha</span>
                         </div>
                         <div>
                           <span className="text-[#85947E] block text-[9px] uppercase font-bold tracking-wider">Gipananom / Buhi</span>
@@ -764,7 +760,7 @@ export default function ExecutiveView({
                 </h4>
                 
                 <p className="text-[11px] text-slate-700 leading-relaxed font-semibold">
-                  Ang pag-turn over sa opisina sa Presidente usa ka pormal nga proseso. Subay sa balaod sa BAFA, siguroha nga ang mosunod natuman sa dili pa i-klik ang turnover:
+                  Ang pag-turn over sa opisina sa Presidente usa ka pormal nga proseso. Subay sa balaod sa AFA, siguroha nga ang mosunod natuman sa dili pa i-klik ang turnover:
                 </p>
 
                 <ul className="text-[11px] text-slate-600 space-y-2 pl-4 list-disc font-medium">
@@ -798,7 +794,7 @@ export default function ExecutiveView({
 
             <div className="p-6 space-y-4">
               <p className="text-xs text-slate-700 leading-relaxed font-semibold">
-                Sigurado ka ba nga i-turnover ang pagka-Presidente sa BAFA ngadto kang <strong className="text-[#BF360C] text-sm font-display">{selectedNewPresName}</strong> sugod karong adlawa ({turnoverDate})?
+                Sigurado ka ba nga i-turnover ang pagka-Presidente sa AFA ngadto kang <strong className="text-[#BF360C] text-sm font-display">{selectedNewPresName}</strong> sugod karong adlawa ({turnoverDate})?
               </p>
 
               <div className="bg-[#FAF8F5] p-3.5 rounded-xl border border-[#D5CFC1] text-[10px] text-slate-600 space-y-1.5 font-medium">

@@ -134,7 +134,7 @@ export default function AnnouncementDashboard({
     printWindow.document.write(`
       <html>
         <head>
-          <title>BAFA Bulletin - ${ann.title}</title>
+          <title>AFA Bulletin - ${ann.title}</title>
           <style>
             body { font-family: 'Inter', system-ui, sans-serif; padding: 40px; color: #2d3748; line-height: 1.6; }
             .header { border-bottom: 3px double #1b4332; padding-bottom: 20px; margin-bottom: 30px; text-align: center; }
@@ -151,7 +151,7 @@ export default function AnnouncementDashboard({
         </head>
         <body>
           <div class="header">
-            <h3 style="margin:0; font-size:12px; letter-spacing:1.5px; color:#555;">BARANGAY ALEGRIA FARMERS ASSOCIATION (BAFA)</h3>
+            <h3 style="margin:0; font-size:12px; letter-spacing:1.5px; color:#555;">ALEGRIA FARMERS ASSOCIATION (AFA)</h3>
             <div style="font-size:11px; color:#666;">Tuburan, Cebu Province, Philippines</div>
             <div class="title">${ann.title}</div>
           </div>
@@ -173,7 +173,7 @@ export default function AnnouncementDashboard({
 
           <div class="footer">
             <p>This is an official broadcast from the Alegria Farmers Association Bulletin Board Portal.</p>
-            <p>© 2026 Barangay Alegria Farmers Association • Tuburan, Cebu</p>
+            <p>© 2026 Alegria Farmers Association • Tuburan, Cebu</p>
           </div>
           <script>
             window.onload = function() { window.print(); }
@@ -443,7 +443,7 @@ export default function AnnouncementDashboard({
                 </div>
                 <div>
                   <h4 className={`font-black text-sm ${isOfficerMode ? 'text-white' : 'text-[#1B4332]'}`}>Ida S Manera</h4>
-                  <p className={`text-[10px] ${isOfficerMode ? 'text-slate-300' : 'text-slate-500'}`}>Public Information Officer (PIO), BAFA</p>
+                  <p className={`text-[10px] ${isOfficerMode ? 'text-slate-300' : 'text-slate-500'}`}>Public Information Officer (PIO), AFA</p>
                 </div>
               </div>
 
@@ -506,7 +506,7 @@ export default function AnnouncementDashboard({
               <div className="flex gap-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-600 font-black text-[10px] flex items-center justify-center shrink-0">3</div>
                 <p>
-                  <strong>Paminaw sa Anunsyo:</strong> Ang balita gikan sa LGU o BAFA officers i-update diri kada semana para dili ka masaypan sa apod-apod.
+                  <strong>Paminaw sa Anunsyo:</strong> Ang balita gikan sa LGU o AFA officers i-update diri kada semana para dili ka masaypan sa apod-apod.
                 </p>
               </div>
             </div>

@@ -92,7 +92,7 @@ export default function ProductManagementModal({
     e.preventDefault();
     if (!name.trim() || !description.trim()) return;
 
-    const contactStr = `${farmerName || 'BAFA Member Farmer'} ${farmerSitio ? `• ${farmerSitio}` : ''} (${farmerPhone || 'Contact BAFA Officer'})`;
+    const contactStr = `${farmerName || 'AFA Member Farmer'} ${farmerSitio ? `• ${farmerSitio}` : ''} (${farmerPhone || 'Contact AFA Officer'})`;
 
     if (editingProduct) {
       onUpdateProduct({
@@ -168,7 +168,7 @@ export default function ProductManagementModal({
             </div>
             <div>
               <h2 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                <span>BAFA Product Management Module</span>
+                <span>AFA Product Management Module</span>
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full">
                   Pres., Treas. & Auditor Access
                 </span>
@@ -308,7 +308,7 @@ export default function ProductManagementModal({
                       )}
                       <div className="flex items-center gap-1.5 text-amber-300 font-semibold">
                         <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span><strong>Mag-uuma (Selling Farmer):</strong> {product.farmerName || product.contactPerson || 'BAFA Member'}</span>
+                        <span><strong>Mag-uuma (Selling Farmer):</strong> {product.farmerName || product.contactPerson || 'AFA Member'}</span>
                       </div>
                       {(product.farmerSitio || product.farmerPhone) && (
                         <div className="flex items-center gap-3 text-[11px] text-slate-400 pl-5">
@@ -356,7 +356,7 @@ export default function ProductManagementModal({
 
         {/* MODAL FOOTER */}
         <div className="p-4 bg-slate-950 border-t border-slate-800 text-[10px] text-slate-500 text-center font-mono">
-          Barangay Alegria Farmers Association (BAFA) • Product Registry System
+          Alegria Farmers Association (AFA) • Product Registry System
         </div>
       </div>
 

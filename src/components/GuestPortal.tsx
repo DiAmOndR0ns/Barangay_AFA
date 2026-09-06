@@ -29,7 +29,7 @@ export default function GuestPortal({
   // Dynamically calculate stats to accurately reflect the registered roster
   const registeredMembersCount = members.length;
   const activeMembersCount = members.filter(m => m.status === 'Active').length;
-  const currentPigsCount = 18; // BAFA Standard Piglet Batch size
+  const currentPigsCount = 18; // AFA Standard Piglet Batch size
 
   // Theme styling tailored for senior citizens (high contrast, warm, large readable text)
   const theme = {
@@ -79,7 +79,7 @@ export default function GuestPortal({
       specs: 'LGU Supported Healthy Feeding Standard',
       price: 'PHP 230 - 250 matag kilo',
       quantityAvailable: '8 ka ulo (approx 85-90kg/head)',
-      farmerName: 'BAFA Hog Raising Committee (Led by Anselna Arnado)',
+      farmerName: 'AFA Hog Raising Committee (Led by Anselna Arnado)',
       farmerSitio: 'Sitio Upper Alegria',
       farmerPhone: '0922-987-6543',
       icon: TrendingUp,
@@ -108,7 +108,7 @@ export default function GuestPortal({
       year: '2026',
       title: 'Hog Raising IGP Upgrade & LGU Grant',
       cebTitle: 'PHP 1 Milyon nga Kapital gikan sa LGU',
-      desc: 'Nadawat sa BAFA ang pundo alang sa modernong baboyan aron matabangan ang mga miyembro nga adunay sumpay nga kita.',
+      desc: 'Nadawat sa AFA ang pundo alang sa modernong baboyan aron matabangan ang mga miyembro nga adunay sumpay nga kita.',
       icon: Trophy
     },
     {
@@ -127,7 +127,7 @@ export default function GuestPortal({
     },
     {
       year: '2022',
-      title: 'BAFA Official Incorporation',
+      title: 'AFA Official Incorporation',
       cebTitle: 'Opisyal nga Pagkatukod sa Atong Asosasyon',
       desc: 'Naghiusa ang mga mag-uuma gikan sa unom ka Sitio sa Alegria aron magtinabangay ug mapanalipdan ang presyo sa uma.',
       icon: BookOpen
@@ -175,7 +175,7 @@ export default function GuestPortal({
             Magkauban sa Pag-uma ug Pagpalambo sa Atong Yutang Natawhan
           </h2>
           <p className="text-xs sm:text-sm md:text-base text-[#D8F3DC] max-w-2xl mx-auto font-medium leading-relaxed break-words px-2">
-            Kini ang public portal sa Barangay Alegria Farmers Association (BAFA). 
+            Kini ang public portal sa Alegria Farmers Association (AFA). 
             Gidisenyo kini aron sayon ug daling matan-aw ang atong kasaysayan, mga kalamposan, ug ang lab-as nga mga produkto.
           </p>
         </div>
@@ -274,10 +274,10 @@ export default function GuestPortal({
             <div className="bg-white rounded-3xl p-4 sm:p-6 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center shadow-md min-w-0">
               <div className="md:col-span-8 space-y-3 sm:space-y-4 min-w-0">
                 <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B4332] font-display break-words">
-                  Mahitungod sa Barangay Alegria Farmers Association
+                  Mahitungod sa Alegria Farmers Association
                 </h3>
                 <p className="text-xs sm:text-sm md:text-base text-slate-700 leading-relaxed font-semibold break-words">
-                  Ang BAFA gilusad aron tagaan og gahum, modernong tabang, ug dugang kita ang atong mga lokal nga mag-uuma. 
+                  Ang AFA gilusad aron tagaan og gahum, modernong tabang, ug dugang kita ang atong mga lokal nga mag-uuma. 
                   Gikan sa atong iladong <strong className="text-[#BF360C]">Kape sa Tuburan</strong>, saging, mais, hangtod sa gisuportahan nga <strong className="text-[#1B4332]">Hog Raising Project</strong>, 
                   atong paningkamotan nga mapalambo ang agrikultura pinaagi sa kooperasyon.
                 </p>
@@ -405,7 +405,7 @@ export default function GuestPortal({
               <div className="space-y-1 min-w-0">
                 <h4 className="text-base sm:text-lg font-black text-[#5D4037] flex items-center gap-2 flex-wrap break-words">
                   <Milestone className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFB300] shrink-0" />
-                  <span>Are you a Registered BAFA Member or Officer?</span>
+                  <span>Are you a Registered AFA Member or Officer?</span>
                 </h4>
                 <p className="text-xs sm:text-sm text-[#7D5C4F] font-semibold break-words">
                   Sign in to access your personal dashboard, log caretaker chores, view dividends, and print certified credentials.
@@ -434,7 +434,7 @@ export default function GuestPortal({
                 </h3>
               </div>
               <p className="text-xs sm:text-sm md:text-base text-slate-700 font-semibold leading-relaxed break-words">
-                Kini ang opisyal nga mga pahibalo nga gipagawas sa Public Information Officer (PIO) ug mga Opisyales sa BAFA alang sa tanang miyembro ug komunidad sa Barangay Alegria.
+                Kini ang opisyal nga mga pahibalo nga gipagawas sa Public Information Officer (PIO) ug mga Opisyales sa AFA alang sa tanang miyembro ug komunidad sa Barangay Alegria.
               </p>
             </div>
 
@@ -554,7 +554,7 @@ export default function GuestPortal({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pt-2 min-w-0">
               <div className="lg:col-span-8 space-y-4 sm:space-y-6 text-xs sm:text-sm md:text-base text-slate-700 leading-relaxed font-semibold min-w-0 break-words">
                 <p>
-                  Ang <strong className="text-[#1B4332]">Barangay Alegria Farmers Association (BAFA)</strong> nagsugod isip usa ka gamay nga grupo sa mga mag-uuma sa Barangay Alegria, Tuburan, Cebu. 
+                  Ang <strong className="text-[#1B4332]">Alegria Farmers Association (AFA)</strong> nagsugod isip usa ka gamay nga grupo sa mga mag-uuma sa Barangay Alegria, Tuburan, Cebu. 
                   Sa wala pa matukod ang opisayl nga asosasyon, ang mga mag-uuma nag-atubang ug dakong kalisod sa pagbaligya sa ilang abot tungod sa kalayo sa merkado ug sa ubos kaayo nga presyo nga gitanyag sa mga middlemen.
                 </p>
                 <p>
@@ -570,7 +570,7 @@ export default function GuestPortal({
                 </div>
 
                 <p>
-                  Karon, ang BAFA nagserbisyo na sa daghang aktibong pamilya sa mag-uuma. Mapasigarbohon kami nga nakatukod og mga programa sama sa collective selling sa <strong className="text-[#BF360C]">Kape sa Tuburan</strong>, 
+                  Karon, ang AFA nagserbisyo na sa daghang aktibong pamilya sa mag-uuma. Mapasigarbohon kami nga nakatukod og mga programa sama sa collective selling sa <strong className="text-[#BF360C]">Kape sa Tuburan</strong>, 
                   fertilizer distribution sessions, ug ang modernong <strong className="text-[#1B4332]">Hog Raising Income Generating Project (IGP)</strong> nga nakadawat og dako nga pagtagad ug grant gikan sa LGU sa Tuburan.
                 </p>
               </div>
@@ -600,7 +600,7 @@ export default function GuestPortal({
                 <div className="bg-[#EAF4EC] border-2 border-[#1B4332]/30 p-4 sm:p-6 rounded-2xl space-y-3.5 text-left min-w-0">
                   <h4 className="font-black text-[#1B4332] text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 border-b border-emerald-950/15 pb-2 font-display break-words">
                     <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332] shrink-0" />
-                    <span>Mga Opisyales sa BAFA (2026)</span>
+                    <span>Mga Opisyales sa AFA (2026)</span>
                   </h4>
                   <div className="space-y-2 text-xs text-slate-700 font-medium min-w-0">
                     {[
@@ -767,7 +767,7 @@ export default function GuestPortal({
                           Nalambigit nga Mag-uuma / Nagbaligya (Selling Farmer):
                         </span>
                         <div className="text-xs font-black text-[#1B4332] flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0">
-                          <span className="break-words min-w-0">{prod.farmerName || prod.contactPerson || 'Miyembro nga Mag-uuma sa BAFA'}</span>
+                          <span className="break-words min-w-0">{prod.farmerName || prod.contactPerson || 'Miyembro nga Mag-uuma sa AFA'}</span>
                           {prod.farmerSitio && <span className="text-[11px] text-slate-600 font-bold shrink-0">📍 {prod.farmerSitio}</span>}
                         </div>
                         {(prod.farmerPhone || prod.contactPerson) && (
@@ -788,7 +788,7 @@ export default function GuestPortal({
               <h4 className="text-base sm:text-lg md:text-xl font-black text-[#1B4332] font-display break-words">Gusto ba ka mopalit o mo-order?</h4>
               <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words">
                 Ang tanang halin niini direkta nga moadto sa atong mga kaubang mag-uuma sa unom ka Sitio sa Alegria, Tuburan, Cebu. 
-                Aron pagpalit, palihug kontaka o bisitaha si Presidente Zenaida A. Elbiña o bisan kinsa nga Opisyales sa BAFA sa personal.
+                Aron pagpalit, palihug kontaka o bisitaha si Presidente Zenaida A. Elbiña o bisan kinsa nga Opisyales sa AFA sa personal.
               </p>
               <div className="font-bold text-[#BF360C] text-xs sm:text-sm break-words">
                 Salamat sa inyong padayong pagsuporta sa lokal nga mga mag-uuma sa Alegria!
@@ -803,7 +803,7 @@ export default function GuestPortal({
       <footer className="bg-[#1B4332] border-t-2 border-[#143326] py-6 sm:py-8 px-4 sm:px-6 text-center text-xs text-[#B7E4C7] shrink-0 mt-8 sm:mt-12">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start gap-4 text-center md:text-left min-w-0">
           <div className="space-y-1 min-w-0">
-            <span className="font-black block text-sm text-white break-words">Barangay Alegria Farmers Association (BAFA)</span>
+            <span className="font-black block text-sm text-white break-words">Alegria Farmers Association (AFA)</span>
             <span className="break-words">Tuburan, Cebu Province, Central Visayas, Philippines</span>
           </div>
           <div className="flex flex-col items-center md:items-end gap-1.5 shrink-0">
@@ -812,7 +812,7 @@ export default function GuestPortal({
               <span className="font-black text-[10px] tracking-wider uppercase">LGU & DA REGISTERED PORTAL</span>
             </span>
             <a href="/privacy" className="text-[11px] font-bold text-[#D8F3DC] hover:text-white hover:underline">Privacy Policy</a>
-            <span className="text-[10px] text-[#85947E] break-words">© 2026 BAFA • Design Optimized for Senior Citizen Accessibility</span>
+            <span className="text-[10px] text-[#85947E] break-words">© 2026 AFA • Design Optimized for Senior Citizen Accessibility</span>
           </div>
         </div>
       </footer>

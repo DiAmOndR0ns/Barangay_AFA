@@ -60,7 +60,6 @@ export default function AuthScreen({
   const [regName, setRegName] = useState('');
   const [regContact, setRegContact] = useState('');
   const [regSitio, setRegSitio] = useState(SITIOS[0]);
-  const [regSize, setRegSize] = useState('1.5');
   const [regSelectedCrops, setRegSelectedCrops] = useState<string[]>([]);
 
   const handleCropToggle = (cropName: string) => {
@@ -124,7 +123,6 @@ export default function AuthScreen({
       role: registerRole,
       contactNumber: regContact.trim(),
       farmLocation: registerRole === 'Member' ? regSitio : undefined,
-      farmSize: registerRole === 'Member' ? parseFloat(regSize) || 0 : undefined,
       primaryCrops: registerRole === 'Member' ? regSelectedCrops : undefined,
     });
 
@@ -171,7 +169,7 @@ export default function AuthScreen({
                 <Sprout className="w-8 h-8" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-[2rem] font-black font-display tracking-tight text-white uppercase leading-none">BAFA</h1>
+                <h1 className="text-2xl sm:text-[2rem] font-black font-display tracking-tight text-white uppercase leading-none">AFA</h1>
                 <p className="text-[10px] text-[#D9F5E3] font-bold tracking-[0.18em] uppercase mt-1">Alegria, Tuburan, Cebu</p>
               </div>
             </div>
@@ -541,7 +539,7 @@ export default function AuthScreen({
           </div>
 
           <div className="text-center text-[10px] text-[#85947E] mt-6 border-t border-[#F0EBE1] pt-3">
-            Sistemang BAFA v1.1 • Gidisenyo alang sa kasayon sa matag mag-uuma.
+            Sistemang AFA v1.1 • Gidisenyo alang sa kasayon sa matag mag-uuma.
           </div>
         </div>
 

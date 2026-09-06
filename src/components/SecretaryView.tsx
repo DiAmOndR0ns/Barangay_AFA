@@ -93,7 +93,6 @@ export default function SecretaryView({
   const [memberName, setMemberName] = useState('');
   const [memberContact, setMemberContact] = useState('');
   const [memberSitio, setMemberSitio] = useState('Sitio Proper (Centro)');
-  const [memberSize, setMemberSize] = useState('1.0');
   const [memberIdNum, setMemberIdNum] = useState(`BAFA-2026-0${members.length + 1}`);
   const [memberRsbsa, setMemberRsbsa] = useState('');
   const [isRsbsaRegistered, setIsRsbsaRegistered] = useState(true);
@@ -166,7 +165,6 @@ export default function SecretaryView({
       isRsbsaRegistered: isRsbsaRegistered,
       contactNumber: memberContact || 'None',
       farmLocation: memberSitio,
-      farmSize: parseFloat(memberSize) || 1.0,
       primaryCrops: selectedCrops.length > 0 ? selectedCrops : ['Vegetables (Utanon)'],
       gender: memberGender,
       birthDate: memberBirthDate || undefined,
@@ -190,7 +188,6 @@ export default function SecretaryView({
     setMemberName('');
     setMemberContact('');
     setMemberSitio('Sitio Proper (Centro)');
-    setMemberSize('1.0');
     setMemberIdNum(`BAFA-2026-0${members.length + 2}`);
     setMemberRsbsa('');
     setIsRsbsaRegistered(true);
@@ -398,7 +395,6 @@ export default function SecretaryView({
                     <th className="px-5 py-3">Farmer Name & ID</th>
                     <th className="px-5 py-3">RSBSA Status</th>
                     <th className="px-5 py-3">Sitio / Location</th>
-                    <th className="px-5 py-3">Farm Area</th>
                     <th className="px-5 py-3">Crops & Livestock</th>
                     <th className="px-5 py-3">Portal Login</th>
                     <th className="px-5 py-3">Status</th>
@@ -443,9 +439,6 @@ export default function SecretaryView({
                             <MapPin className="w-3.5 h-3.5 text-slate-500" />
                             <span>{member.farmLocation}</span>
                           </div>
-                        </td>
-                        <td className="px-5 py-4 text-emerald-400 font-mono font-medium">
-                          {member.farmSize.toFixed(1)} ha
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex flex-wrap gap-1">
@@ -531,7 +524,7 @@ export default function SecretaryView({
                     })
                   ) : (
                     <tr>
-                      <td colSpan={8} className="px-5 py-8 text-center text-slate-500">
+                      <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
                         No farmers found matching search criteria.
                       </td>
                     </tr>
@@ -793,30 +786,15 @@ export default function SecretaryView({
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Farm Area (Hectares)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    required
-                    placeholder="e.g. 1.5"
-                    value={memberSize}
-                    onChange={(e) => setMemberSize(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Contact Number</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 0917-000-0000"
-                    value={memberContact}
-                    onChange={(e) => setMemberContact(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Contact Number</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 0917-000-0000"
+                  value={memberContact}
+                  onChange={(e) => setMemberContact(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

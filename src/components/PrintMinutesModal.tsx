@@ -37,7 +37,7 @@ export default function PrintMinutesModal({ meeting, onClose }: PrintMinutesModa
     // Briefly change tab title for print filename and restore it
     const originalTitle = document.title;
     const dateStr = meeting.date.replace(/-/g, '');
-    document.title = `BAFA_Meeting_Minutes_${dateStr}`;
+    document.title = `AFA_Meeting_Minutes_${dateStr}`;
     
     window.print();
     
@@ -56,7 +56,7 @@ PROVINCE OF CEBU
 MUNICIPALITY OF TUBURAN
 BARANGAY ALEGRIA
 
-ALEGRIA FARMERS ASSOCIATION (BAFA)
+ALEGRIA FARMERS ASSOCIATION (AFA)
 ${divider}
 ${documentType.toUpperCase()}
 ${divider}
@@ -87,11 +87,11 @@ ${divider}
 
 Prepared by:
    ${secretaryName.split('(')[0].trim()}
-   Secretary, BAFA
+   Secretary, AFA
 
 Attested by:
    ${presidingOfficer.split('(')[0].trim()}
-   President, BAFA
+   President, AFA
 `;
 
     navigator.clipboard.writeText(textContent.trim()).then(() => {
@@ -109,7 +109,7 @@ PROVINCE OF CEBU
 MUNICIPALITY OF TUBURAN
 BARANGAY ALEGRIA
 
-ALEGRIA FARMERS ASSOCIATION (BAFA)
+ALEGRIA FARMERS ASSOCIATION (AFA)
 ${divider}
 ${documentType.toUpperCase()}
 ${divider}
@@ -140,17 +140,17 @@ ${divider}
 
 Prepared by:
    ${secretaryName.split('(')[0].trim()}
-   Secretary, BAFA
+   Secretary, AFA
 
 Attested by:
    ${presidingOfficer.split('(')[0].trim()}
-   President, BAFA
+   President, AFA
 `;
 
     const element = document.createElement("a");
     const file = new Blob([textContent.trim()], { type: 'text/plain;charset=utf-8' });
     element.href = URL.createObjectURL(file);
-    element.download = `BAFA_Minutes_${meeting.date}.txt`;
+    element.download = `AFA_Minutes_${meeting.date}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -364,10 +364,10 @@ Attested by:
                       <p className="text-[11px] tracking-[0.08em] font-sans font-bold text-slate-700 uppercase leading-normal">Barangay Alegria Portal</p>
                       
                       <h4 className="text-base font-bold font-sans tracking-wide text-emerald-800 uppercase mt-1 leading-none">
-                        Alegria Farmers Association (BAFA)
+                        Alegria Farmers Association (AFA)
                       </h4>
                       <p className="text-[9px] font-sans text-slate-400 mt-1 italic">
-                        Established 2024 • Email: bafa.alegria@gmail.com • Contact: +63 917 123 4567
+                        Established 2024 • Email: afa.alegria@gmail.com • Contact: +63 917 123 4567
                       </p>
                     </div>
 

@@ -24,11 +24,11 @@ export interface User {
 export interface Member {
   id: string;
   name: string;
-  memberIdNumber?: string; // e.g. BAFA-2026-001
+  memberIdNumber?: string; // e.g. AFA-2026-001
   rsbsaNumber?: string; // Registry System for Basic Sectors in Agriculture (e.g. 07-22-51-001-000123)
   isRsbsaRegistered?: boolean;
   farmLocation: string; // e.g. Sitio Alegria Centro, Sitio Fatima, Sitio Tuburan, Sitio Ylaya
-  farmSize: number; // in hectares
+  farmSize?: number; // in hectares (optional/not requested by AFA)
   primaryCrops: string[]; // e.g. Corn, Coconut, Banana, Cacao, Vegetables
   contactNumber: string;
   status: 'Active' | 'Inactive';
@@ -93,7 +93,7 @@ export interface AssociationActivity {
   status: 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled' | 'Postponed';
   documentedNotes?: string;
   organizer: string; // e.g. PIO (Ida S. Manera)
-  targetAudience?: string; // e.g. "All BAFA Members"
+  targetAudience?: string; // e.g. "All AFA Members"
   attendeesCount?: number;
   imageUrl?: string;
 }
@@ -160,7 +160,7 @@ export interface IgpExpense {
   amount: number;
   date: string;
   recordedBy: string;
-  fundSource?: string; // Where budget was taken from, e.g. "DOLE-DILP Capital Grant (₱1M)", "5% Livestock Insurance Pool", "BAFA General Fund"
+  fundSource?: string; // Where budget was taken from, e.g. "DOLE-DILP Capital Grant (₱1M)", "5% Livestock Insurance Pool", "AFA General Fund"
 }
 
 export interface IgpSale {

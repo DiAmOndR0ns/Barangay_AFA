@@ -32,7 +32,7 @@ export default function PrintAttendanceModal({ isOpen, onClose, members }: Print
   // Helper to trigger standard printing
   const handlePrint = () => {
     const originalTitle = document.title;
-    document.title = `BAFA_Attendance_Sheet_${meetingDate.replace(/-/g, '')}`;
+    document.title = `AFA_Attendance_Sheet_${meetingDate.replace(/-/g, '')}`;
     window.print();
     setTimeout(() => {
       document.title = originalTitle;
@@ -60,7 +60,7 @@ PROVINCE OF CEBU
 MUNICIPALITY OF TUBURAN
 BARANGAY ALEGRIA
 
-ALEGRIA FARMERS ASSOCIATION (BAFA)
+ALEGRIA FARMERS ASSOCIATION (AFA)
 ${divider}
 ${documentType.toUpperCase()}
 ${divider}
@@ -81,11 +81,11 @@ CERTIFIED TRUE AND CORRECT BY:
 
 Prepared by:
    Jennylyn S Lumactao
-   Secretary, BAFA
+   Secretary, AFA
 
 Attested by:
    ${presidingOfficer.split('(')[0].trim() || 'Zenaida A. Elbiña'}
-   President, BAFA
+   President, AFA
 `;
 
     navigator.clipboard.writeText(textContent.trim()).then(() => {
@@ -115,7 +115,7 @@ PROVINCE OF CEBU
 MUNICIPALITY OF TUBURAN
 BARANGAY ALEGRIA
 
-ALEGRIA FARMERS ASSOCIATION (BAFA)
+ALEGRIA FARMERS ASSOCIATION (AFA)
 ${divider}
 ${documentType.toUpperCase()}
 ${divider}
@@ -136,17 +136,17 @@ CERTIFIED TRUE AND CORRECT BY:
 
 Prepared by:
    Jennylyn S Lumactao
-   Secretary, BAFA
+   Secretary, AFA
 
 Attested by:
    ${presidingOfficer.split('(')[0].trim() || 'Zenaida A. Elbiña'}
-   President, BAFA
+   President, AFA
 `;
 
     const element = document.createElement("a");
     const file = new Blob([textContent.trim()], { type: 'text/plain;charset=utf-8' });
     element.href = URL.createObjectURL(file);
-    element.download = `BAFA_Blank_Attendance_Sheet.txt`;
+    element.download = `AFA_Blank_Attendance_Sheet.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -399,7 +399,7 @@ Attested by:
                       <p className="text-[11px] tracking-[0.08em] font-sans font-bold text-slate-700 uppercase leading-normal">Barangay Alegria Portal</p>
                       
                       <h4 className="text-base font-bold font-sans tracking-wide text-emerald-800 uppercase mt-1 leading-none">
-                        Alegria Farmers Association (BAFA)
+                        Alegria Farmers Association (AFA)
                       </h4>
                       <p className="text-[9px] font-sans text-slate-400 mt-1 italic">
                         Established 2024 • Registered NGO • Tuburan, Cebu, Philippines
@@ -522,7 +522,7 @@ Attested by:
                     <div>
                       <div className="w-full border-b border-slate-400 h-1" />
                       <p className="font-bold text-slate-800 uppercase mt-1">Jennylyn S Lumactao</p>
-                      <p className="text-[9px] text-slate-500">Secretary, Alegria Farmers Association (BAFA)</p>
+                      <p className="text-[9px] text-slate-500">Secretary, Alegria Farmers Association (AFA)</p>
                     </div>
                   </div>
 
@@ -533,7 +533,7 @@ Attested by:
                       <p className="font-bold text-slate-800 uppercase mt-1">
                         {presidingOfficer.split('(')[0].trim() || 'Zenaida A. Elbiña'}
                       </p>
-                      <p className="text-[9px] text-slate-500 font-sans">President, Alegria Farmers Association (BAFA)</p>
+                      <p className="text-[9px] text-slate-500 font-sans">President, Alegria Farmers Association (AFA)</p>
                     </div>
                   </div>
                 </div>

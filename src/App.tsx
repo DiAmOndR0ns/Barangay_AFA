@@ -325,7 +325,7 @@ export default function App() {
       case 'Treasurer': return 'Gracelyn P Asendiente';
       case 'Auditor': return 'Lorena B Pinote';
       case 'PIO': return 'Ida S Manera';
-      default: return 'BAFA Officer';
+      default: return 'AFA Officer';
     }
   };
 
@@ -649,7 +649,6 @@ export default function App() {
         rsbsaNumber: newMember.rsbsaNumber,
         isRsbsaRegistered: newMember.isRsbsaRegistered,
         farmLocation: newMember.farmLocation,
-        farmSize: newMember.farmSize,
         primaryCrops: newMember.primaryCrops,
         contactNumber: newMember.contactNumber,
         joinedDate: newMember.joinedDate,
@@ -715,7 +714,6 @@ export default function App() {
         rsbsaNumber: member.rsbsaNumber,
         isRsbsaRegistered: member.isRsbsaRegistered,
         farmLocation: member.farmLocation,
-        farmSize: member.farmSize,
         primaryCrops: member.primaryCrops,
         contactNumber: member.contactNumber,
         joinedDate: member.joinedDate,
@@ -1262,7 +1260,6 @@ export default function App() {
           id: targetUser.id,
           name: targetUser.name,
           farmLocation: targetUser.farmLocation || 'Sitio Proper (Centro)',
-          farmSize: targetUser.farmSize || 1.2,
           primaryCrops: targetUser.primaryCrops || ['Crops'],
           contactNumber: targetUser.contactNumber || '',
           status: 'Active',
@@ -1323,7 +1320,6 @@ export default function App() {
       rsbsaNumber: updatedUser.rsbsaNumber,
       isRsbsaRegistered: updatedUser.isRsbsaRegistered,
       farmLocation: updatedUser.farmLocation,
-      farmSize: updatedUser.farmSize,
       primaryCrops: updatedUser.primaryCrops,
       contactNumber: updatedUser.contactNumber,
       status: updatedUser.status,
@@ -1343,7 +1339,6 @@ export default function App() {
         ...m,
         name: ownedProfile.name,
         farmLocation: ownedProfile.farmLocation || m.farmLocation,
-        farmSize: ownedProfile.farmSize || m.farmSize,
         primaryCrops: ownedProfile.primaryCrops || m.primaryCrops,
         contactNumber: ownedProfile.contactNumber || m.contactNumber,
         avatarUrl: ownedProfile.avatarUrl
@@ -1409,7 +1404,7 @@ export default function App() {
       updateStorage('bafa_current_user', updatedCurrentUser);
     }
 
-    const turnoverDetails = `FORMAL OFFICERS TURNOVER: Following the election on ${electionDate}, ${currentPresident.name} has formally turned over the presidency and all BAFA files, keys, and assets to the newly-elected President, ${newPresidentUser.name}. Memo/Notes: ${turnoverNotes}`;
+    const turnoverDetails = `FORMAL OFFICERS TURNOVER: Following the election on ${electionDate}, ${currentPresident.name} has formally turned over the presidency and all AFA files, keys, and assets to the newly-elected President, ${newPresidentUser.name}. Memo/Notes: ${turnoverNotes}`;
     
     logAction('Presidential Turnover', turnoverDetails);
     showToastMessage(`Turnover completed! The new President is ${newPresidentUser.name}!`, 'success');
@@ -1442,7 +1437,7 @@ export default function App() {
     const a = document.createElement('a');
     const dateStr = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `BAFA_System_Backup_${dateStr}.json`;
+    a.download = `AFA_System_Backup_${dateStr}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1868,7 +1863,7 @@ export default function App() {
                   <div>
                     <h2 className="text-base font-black text-[#1B4332]">My Member Dashboard & ID (Officer as Member)</h2>
                     <p className="text-xs text-slate-600 font-bold">
-                      View and manage your personal BAFA member credentials, digital ID badge, and benefits ({currentUser?.role.replace('_', ' ')}).
+                      View and manage your personal AFA member credentials, digital ID badge, and benefits ({currentUser?.role.replace('_', ' ')}).
                     </p>
                   </div>
                 </div>
@@ -1918,7 +1913,7 @@ export default function App() {
       {/* LOWER FOOTER */}
       <footer className="bg-slate-900 border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 shrink-0">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-          <span>© 2026 Barangay Alegria Farmers Association (BAFA) • Tuburan, Cebu</span>
+          <span>© 2026 Alegria Farmers Association (AFA) • Tuburan, Cebu</span>
           <span className="flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Offline-First Progressive Web App (PWA) Standard Certified

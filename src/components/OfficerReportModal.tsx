@@ -95,7 +95,7 @@ export default function OfficerReportModal({
       case 'Treasurer': return 'Gracelyn P. Asendiente';
       case 'Auditor': return 'Lorena B. Pinote';
       case 'PIO': return 'Ida S. Manera';
-      default: return 'BAFA Officer';
+      default: return 'AFA Officer';
     }
   };
 
@@ -116,7 +116,7 @@ export default function OfficerReportModal({
       PIO: "PUBLIC INFORMATION OFFICER (PIO) COMMUNITY COMMUNICATIONS REPORT"
     };
 
-    const docTitle = titleMap[activeReportRole] || 'BAFA OFFICIAL OFFICER REPORT';
+    const docTitle = titleMap[activeReportRole] || 'AFA OFFICIAL OFFICER REPORT';
 
     let contentHtml = '';
 
@@ -150,7 +150,7 @@ export default function OfficerReportModal({
               <tr>
                 <td><strong>${f.code}</strong></td>
                 <td><strong>${f.name}</strong><br/><span style="font-size: 8.5px; color:#64748b;">${f.description}</span></td>
-                <td>${f.code.includes('DOLE') ? 'DOLE Region VII' : f.code.includes('SLP') ? 'DSWD-SLP / LGU' : f.code.includes('ATI') ? 'ATI-RTC VII' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank' : f.code.includes('DISP') ? '5% Statutory Reserve Pool' : 'BAFA Member Equity'}</td>
+                <td>${f.code.includes('DOLE') ? 'DOLE Region VII' : f.code.includes('SLP') ? 'DSWD-SLP / LGU' : f.code.includes('ATI') ? 'ATI-RTC VII' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank' : f.code.includes('DISP') ? '5% Statutory Reserve Pool' : 'AFA Member Equity'}</td>
                 <td>PHP ${f.allocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style="color: #065f46; font-weight: bold;">PHP ${f.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td>${f.custodian}</td>
@@ -262,7 +262,7 @@ export default function OfficerReportModal({
             ${funds.map(f => `
               <tr>
                 <td><strong>${f.name} (${f.code})</strong></td>
-                <td>${f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program' : f.code.includes('SLP') ? 'DSWD Sustainable Livelihood Program' : f.code.includes('ATI') ? 'Agricultural Training Institute' : f.code.includes('DISP') ? 'BAFA Statutory 5% Reserve' : 'Cooperative Capital'}</td>
+                <td>${f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program' : f.code.includes('SLP') ? 'DSWD Sustainable Livelihood Program' : f.code.includes('ATI') ? 'Agricultural Training Institute' : f.code.includes('DISP') ? 'AFA Statutory 5% Reserve' : 'Cooperative Capital'}</td>
                 <td>${f.description}</td>
                 <td style="color: green; font-weight: bold;">✓ VERIFIED & IN COMPLIANCE</td>
               </tr>
@@ -531,7 +531,7 @@ export default function OfficerReportModal({
         <body>
           <div class="header-container">
             <div class="republic">Republic of the Philippines • Province of Cebu • Municipality of Tuburan</div>
-            <div class="assoc-name">ALEGRIA FARMERS ASSOCIATION (BAFA)</div>
+            <div class="assoc-name">ALEGRIA FARMERS ASSOCIATION (AFA)</div>
             <div class="location">Barangay Alegria, Tuburan, Cebu • Official LGU & Cooperative Administration Registry</div>
           </div>
 
@@ -568,7 +568,7 @@ export default function OfficerReportModal({
           </div>
 
           <div class="seal-stamp">
-            *** Certified Official Report of the Alegria Farmers Association (BAFA) - Barangay Alegria, Tuburan, Cebu ***
+            *** Certified Official Report of the Alegria Farmers Association (AFA) - Barangay Alegria, Tuburan, Cebu ***
           </div>
 
           <script>
@@ -587,7 +587,7 @@ export default function OfficerReportModal({
     const csvRows: string[] = [];
 
     if (activeReportRole === 'Treasurer') {
-      csvRows.push('BAFA OFFICIAL TREASURER FINANCIAL REPORT');
+      csvRows.push('AFA OFFICIAL TREASURER FINANCIAL REPORT');
       csvRows.push(`Date Generated,${reportDate}`);
       csvRows.push(`Prepared By,${getOfficerNameByRole('Treasurer')}`);
       csvRows.push('');
@@ -635,7 +635,7 @@ export default function OfficerReportModal({
         ].join(','));
       });
     } else if (activeReportRole === 'Auditor') {
-      csvRows.push('BAFA OFFICIAL AUDITOR INSPECTION REPORT');
+      csvRows.push('AFA OFFICIAL AUDITOR INSPECTION REPORT');
       csvRows.push(`Date Generated,${reportDate}`);
       csvRows.push(`Auditor,${getOfficerNameByRole('Auditor')}`);
       csvRows.push('');
@@ -670,12 +670,12 @@ export default function OfficerReportModal({
         ].join(','));
       });
     } else if (activeReportRole === 'Secretary') {
-      csvRows.push('BAFA OFFICIAL SECRETARY ROSTER & LEGISLATIVE REPORT');
+      csvRows.push('AFA OFFICIAL SECRETARY ROSTER & LEGISLATIVE REPORT');
       csvRows.push(`Date Generated,${reportDate}`);
       csvRows.push(`Secretary,${getOfficerNameByRole('Secretary')}`);
       csvRows.push('');
       csvRows.push('MEMBERSHIP ROSTER');
-      csvRows.push('ID,Name,Member ID,RSBSA Number,Sitio Location,Farm Size (ha),Primary Crops,Status,Joined Date');
+      csvRows.push('ID,Name,Member ID,RSBSA Number,Sitio Location,Primary Crops,Status,Joined Date');
       members.forEach(m => {
         csvRows.push([
           m.id,
@@ -683,7 +683,6 @@ export default function OfficerReportModal({
           `"${m.memberIdNumber || 'Pending'}"`,
           `"${m.rsbsaNumber || 'Pending'}"`,
           `"${m.farmLocation.replace(/"/g, '""')}"`,
-          m.farmSize.toString(),
           `"${m.primaryCrops.join('; ').replace(/"/g, '""')}"`,
           m.status,
           m.joinedDate
@@ -705,7 +704,7 @@ export default function OfficerReportModal({
         ].join(','));
       });
     } else if (activeReportRole === 'PIO') {
-      csvRows.push('BAFA OFFICIAL PIO COMMUNITY COMMUNICATIONS REPORT');
+      csvRows.push('AFA OFFICIAL PIO COMMUNITY COMMUNICATIONS REPORT');
       csvRows.push(`Date Generated,${reportDate}`);
       csvRows.push(`PIO,${getOfficerNameByRole('PIO')}`);
       csvRows.push('');
@@ -722,7 +721,7 @@ export default function OfficerReportModal({
         ].join(','));
       });
     } else if (activeReportRole === 'Vice_President') {
-      csvRows.push('BAFA OFFICIAL VICE PRESIDENT ADMINISTRATION REPORT');
+      csvRows.push('AFA OFFICIAL VICE PRESIDENT ADMINISTRATION REPORT');
       csvRows.push(`Date Generated,${reportDate}`);
       csvRows.push(`Vice President,${getOfficerNameByRole('Vice_President')}`);
       csvRows.push('');
@@ -733,7 +732,7 @@ export default function OfficerReportModal({
       csvRows.push(`Approved Resolutions,${resolutions.filter(r => r.status === 'Approved').length}`);
     } else {
       // PRESIDENT'S CONSOLIDATED EXECUTIVE CSV REPORT
-      csvRows.push('BAFA PRESIDENT CONSOLIDATED EXECUTIVE SUMMARY OF ALL OFFICERS REPORTS');
+      csvRows.push('AFA PRESIDENT CONSOLIDATED EXECUTIVE SUMMARY OF ALL OFFICERS REPORTS');
       csvRows.push(`Date Generated,${reportDate}`);
       csvRows.push(`President,${getOfficerNameByRole('President')}`);
       csvRows.push('');
@@ -794,7 +793,7 @@ export default function OfficerReportModal({
     const csvContent = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvRows.join('\n'));
     const link = document.createElement('a');
     link.setAttribute('href', csvContent);
-    link.setAttribute('download', `BAFA_Report_${activeReportRole}_${reportDate}.csv`);
+    link.setAttribute('download', `AFA_Report_${activeReportRole}_${reportDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -813,7 +812,7 @@ export default function OfficerReportModal({
               <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex flex-wrap items-center gap-2">
                 <span className="truncate">{isPresident ? "President's Executive Summary & Export Center" : `${currentRole.replace('_', ' ')} Official Report Center`}</span>
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full shrink-0 font-mono">
-                  BAFA Tuburan
+                  AFA Tuburan
                 </span>
               </h2>
               <p className="text-xs text-slate-400 font-medium truncate">
@@ -1055,7 +1054,7 @@ export default function OfficerReportModal({
                 rows={2}
                 value={customRemarks}
                 onChange={(e) => setCustomRemarks(e.target.value)}
-                placeholder="e.g., Reports compiled for Tuburan LGU Municipal Agriculture Audit & Annual BAFA General Assembly."
+                placeholder="e.g., Reports compiled for Tuburan LGU Municipal Agriculture Audit & Annual AFA General Assembly."
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500 font-sans"
               />
             </div>

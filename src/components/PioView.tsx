@@ -47,7 +47,7 @@ export default function PioView({
   const [actTime, setActTime] = useState('09:00 AM');
   const [actLocation, setActLocation] = useState('Barangay Alegria Covered Court');
   const [actDesc, setActDesc] = useState('');
-  const [actAudience, setActAudience] = useState('All BAFA Farmer Members');
+  const [actAudience, setActAudience] = useState('All AFA Farmer Members');
   const [actStatus, setActStatus] = useState<AssociationActivity['status']>('Scheduled');
   const [actNotes, setActNotes] = useState('');
   const [actAttendees, setActAttendees] = useState(0);
@@ -88,7 +88,7 @@ export default function PioView({
     setActTime('09:00 AM');
     setActLocation('Barangay Alegria Covered Court');
     setActDesc('');
-    setActAudience('All BAFA Farmer Members');
+    setActAudience('All AFA Farmer Members');
     setActStatus('Scheduled');
     setActNotes('');
     setActAttendees(0);
@@ -104,7 +104,7 @@ export default function PioView({
     setActTime(act.scheduledTime);
     setActLocation(act.location);
     setActDesc(act.description);
-    setActAudience(act.targetAudience || 'All BAFA Farmer Members');
+    setActAudience(act.targetAudience || 'All AFA Farmer Members');
     setActStatus(act.status);
     setActNotes(act.documentedNotes || '');
     setActAttendees(act.attendeesCount || 0);
@@ -400,7 +400,7 @@ export default function PioView({
 
                   <div className="pt-2 border-t border-slate-750 flex justify-between items-center text-[11px] text-slate-500">
                     <span>Organizer: {act.organizer}</span>
-                    <span>Audience: {act.targetAudience || 'BAFA Members'}</span>
+                    <span>Audience: {act.targetAudience || 'AFA Members'}</span>
                   </div>
                 </div>
               ))}

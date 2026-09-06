@@ -36,7 +36,7 @@ export default function SecretaryTemplatesModal({
   // Form states for Board Resolution
   const [resNumber, setResNumber] = useState(`Res. No. 2026-00${resolutions.length + 1}`);
   const [resTitle, setResTitle] = useState('A RESOLUTION REQUESTING FINANCIAL AND LIVELIHOOD ASSISTANCE UNDER THE SUSTAINABLE LIVELIHOOD PROGRAM (SLP)');
-  const [resWhereas1, setResWhereas1] = useState('WHEREAS, the Barangay Alegria Farmers Association (BAFA) is a duly registered rural workers organization composed of smallholder farmers residing in Barangay Alegria, Tuburan, Cebu;');
+  const [resWhereas1, setResWhereas1] = useState('WHEREAS, the Alegria Farmers Association (AFA) is a duly registered rural workers organization composed of smallholder farmers residing in Barangay Alegria, Tuburan, Cebu;');
   const [resWhereas2, setResWhereas2] = useState('WHEREAS, the association actively engages in agriculture, livestock rearing, and communal hog raising to uplift the socio-economic condition of its members;');
   const [resWhereas3, setResWhereas3] = useState('WHEREAS, there is an urgent need to augment the revolving working capital for organic feeds, livestock dispersal, and post-harvest facilities;');
   const [resResolved, setResResolved] = useState('NOW THEREFORE, on motion of Hon. Anselna B. Arnado, duly seconded by Hon. Maria Alcoser, BE IT RESOLVED, as it is hereby resolved, to formally submit this request and authorize the Association President to sign all necessary documents.');
@@ -75,7 +75,7 @@ export default function SecretaryTemplatesModal({
         voteAgainst: parseInt(resVoteAgainst) || 0,
         voteAbstain: parseInt(resVoteAbstain) || 0
       });
-      alert(`Resolution ${resNumber} has been recorded into the official BAFA Legislative Archive!`);
+      alert(`Resolution ${resNumber} has been recorded into the official AFA Legislative Archive!`);
     }
   };
 
@@ -89,8 +89,8 @@ export default function SecretaryTemplatesModal({
       contentHtml = `
         <div class="header">
           <p style="margin:0; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#555;">Republic of the Philippines • Province of Cebu • Municipality of Tuburan</p>
-          <h2 style="margin:4px 0; color:#1B4332; font-size:18px; font-weight:900;">BARANGAY ALEGRIA FARMERS ASSOCIATION (BAFA)</h2>
-          <p style="margin:0; font-size:11px; color:#666;">SEC Reg. No. CN2021-0812 • Barangay Alegria, Tuburan, Cebu 6043</p>
+          <h2 style="margin:4px 0; color:#1B4332; font-size:18px; font-weight:900;">ALEGRIA FARMERS ASSOCIATION (AFA)</h2>
+          <p style="margin:0; font-size:11px; color:#666;">DOLE Registered Rural Workers Association • Barangay Alegria, Tuburan, Cebu 6043</p>
           <p style="margin:2px 0 0; font-size:11px; font-weight:bold; color:#1B4332;">OFFICE OF THE SECRETARY & BOARD OF DIRECTORS</p>
           <hr style="border:0; border-top:2px solid #1B4332; margin-top:12px;"/>
         </div>
@@ -113,7 +113,7 @@ export default function SecretaryTemplatesModal({
           <p>Dear ${loiOfficerName.split(' ')[0] || 'Sir/Madam'},</p>
           <p>Greetings of Peace and Solidarity in Agricultural Development!</p>
           <p>
-            The <strong>Barangay Alegria Farmers Association (BAFA)</strong>, a duly registered and active community-based rural farmers organization situated in Barangay Alegria, Tuburan, Cebu, respectfully submits this <strong>LETTER OF INTENT</strong> to formally apply for technical and livelihood grant assistance under your esteemed agency for the implementation of:
+            The <strong>Alegria Farmers Association (AFA)</strong>, a duly registered and active community-based rural farmers organization situated in Barangay Alegria, Tuburan, Cebu, respectfully submits this <strong>LETTER OF INTENT</strong> to formally apply for technical and livelihood grant assistance under your esteemed agency for the implementation of:
           </p>
           <div style="background:#f4f6f4; border-left:4px solid #1B4332; padding:12px 16px; margin:16px 0; font-weight:bold; font-size:13px;">
             Project Title: ${loiProjectTitle}<br/>
@@ -134,11 +134,11 @@ export default function SecretaryTemplatesModal({
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px;">
             <div>
               <div style="border-bottom:1px solid #000; width:220px; padding-bottom:4px; font-weight:bold;">JENNYLYN S. LUMACTAO</div>
-              <div style="font-size:11px; color:#555;">Secretary, BAFA</div>
+              <div style="font-size:11px; color:#555;">Secretary, AFA</div>
             </div>
             <div>
               <div style="border-bottom:1px solid #000; width:220px; padding-bottom:4px; font-weight:bold;">ZENAIDA A. ELBIÑA</div>
-              <div style="font-size:11px; color:#555;">President, BAFA</div>
+              <div style="font-size:11px; color:#555;">President, AFA</div>
             </div>
           </div>
         </div>
@@ -147,8 +147,8 @@ export default function SecretaryTemplatesModal({
       contentHtml = `
         <div class="header">
           <p style="margin:0; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#555;">Republic of the Philippines • Province of Cebu • Municipality of Tuburan</p>
-          <h2 style="margin:4px 0; color:#1B4332; font-size:18px; font-weight:900;">BARANGAY ALEGRIA FARMERS ASSOCIATION (BAFA)</h2>
-          <p style="margin:0; font-size:11px; color:#666;">SEC Reg. No. CN2021-0812 • Barangay Alegria, Tuburan, Cebu 6043</p>
+          <h2 style="margin:4px 0; color:#1B4332; font-size:18px; font-weight:900;">ALEGRIA FARMERS ASSOCIATION (AFA)</h2>
+          <p style="margin:0; font-size:11px; color:#666;">DOLE Registered Rural Workers Association • Barangay Alegria, Tuburan, Cebu 6043</p>
           <hr style="border:0; border-top:2px solid #1B4332; margin-top:12px;"/>
         </div>
 
@@ -182,18 +182,18 @@ export default function SecretaryTemplatesModal({
         <div style="margin-top:35px; font-size:12px;">
           <p style="margin-bottom:25px;">I HEREBY CERTIFY to the correctness of the foregoing resolution:</p>
           <div style="border-bottom:1px solid #000; width:220px; padding-bottom:4px; font-weight:bold;">JENNYLYN S. LUMACTAO</div>
-          <div style="font-size:11px; color:#555;">Secretary, BAFA</div>
+          <div style="font-size:11px; color:#555;">Secretary, AFA</div>
 
           <div style="margin-top:30px; display:grid; grid-template-columns:1fr 1fr; gap:40px;">
             <div>
               <p style="font-size:11px; margin-bottom:25px;">Attested & Approved by:</p>
               <div style="border-bottom:1px solid #000; width:220px; padding-bottom:4px; font-weight:bold;">ZENAIDA A. ELBIÑA</div>
-              <div style="font-size:11px; color:#555;">President, BAFA</div>
+              <div style="font-size:11px; color:#555;">President, AFA</div>
             </div>
             <div>
               <p style="font-size:11px; margin-bottom:25px;">Audited & Verified by:</p>
               <div style="border-bottom:1px solid #000; width:220px; padding-bottom:4px; font-weight:bold;">LORENA B. PINOTE</div>
-              <div style="font-size:11px; color:#555;">Auditor, BAFA</div>
+              <div style="font-size:11px; color:#555;">Auditor, AFA</div>
             </div>
           </div>
         </div>
@@ -202,8 +202,8 @@ export default function SecretaryTemplatesModal({
       contentHtml = `
         <div class="header">
           <p style="margin:0; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#555;">Republic of the Philippines • Province of Cebu • Municipality of Tuburan</p>
-          <h2 style="margin:4px 0; color:#1B4332; font-size:18px; font-weight:900;">BARANGAY ALEGRIA FARMERS ASSOCIATION (BAFA)</h2>
-          <p style="margin:0; font-size:11px; color:#666;">SEC Reg. No. CN2021-0812 • Barangay Alegria, Tuburan, Cebu 6043</p>
+          <h2 style="margin:4px 0; color:#1B4332; font-size:18px; font-weight:900;">ALEGRIA FARMERS ASSOCIATION (AFA)</h2>
+          <p style="margin:0; font-size:11px; color:#666;">DOLE Registered Rural Workers Association • Barangay Alegria, Tuburan, Cebu 6043</p>
           <hr style="border:0; border-top:2px solid #1B4332; margin-top:12px;"/>
         </div>
 
@@ -223,7 +223,7 @@ export default function SecretaryTemplatesModal({
 
         <div style="font-size:12px; line-height:1.8; text-align:justify; margin-bottom:20px;">
           <p>Dear ${reqRecipient.split(',')[0] || 'Honorable Mayor'},</p>
-          <p>Warm agricultural greetings from Barangay Alegria Farmers Association!</p>
+          <p>Warm agricultural greetings from Alegria Farmers Association!</p>
           <p>${reqJustification}</p>
           <p>In this regard, we most respectfully request your benevolent assistance for the provision of the following essential agricultural inputs and equipment:</p>
           
@@ -232,7 +232,7 @@ export default function SecretaryTemplatesModal({
           </div>
 
           <p>
-            These inputs will be placed under the stewardship of the BAFA Executive Committee and distributed systematically according to the verified RSBSA farmer roster. We are deeply grateful for the unwavering support your administration extends to the farming sector of Tuburan.
+            These inputs will be placed under the stewardship of the AFA Executive Committee and distributed systematically according to the verified RSBSA farmer roster. We are deeply grateful for the unwavering support your administration extends to the farming sector of Tuburan.
           </p>
           <p>Thank you very much and more power to your leadership!</p>
         </div>
@@ -242,11 +242,11 @@ export default function SecretaryTemplatesModal({
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px;">
             <div>
               <div style="border-bottom:1px solid #000; width:220px; padding-bottom:4px; font-weight:bold;">JENNYLYN S. LUMACTAO</div>
-              <div style="font-size:11px; color:#555;">Secretary, BAFA</div>
+              <div style="font-size:11px; color:#555;">Secretary, AFA</div>
             </div>
             <div>
               <div style="border-bottom:1px solid #000; width:220px; padding-bottom:4px; font-weight:bold;">ZENAIDA A. ELBIÑA</div>
-              <div style="font-size:11px; color:#555;">President, BAFA</div>
+              <div style="font-size:11px; color:#555;">President, AFA</div>
             </div>
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function SecretaryTemplatesModal({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>BAFA Official Document - ${selectedTemplate.toUpperCase()}</title>
+          <title>AFA Official Document - ${selectedTemplate.toUpperCase()}</title>
           <style>
             @page { size: portrait; margin: 20mm; }
             body { font-family: 'Times New Roman', Times, serif; color: #111; line-height: 1.5; padding: 15px; }
@@ -579,7 +579,7 @@ export default function SecretaryTemplatesModal({
         {/* MODAL FOOTER */}
         <div className="p-4 sm:p-5 bg-[#FAF8F5] border-t border-[#D5CFC1] flex flex-wrap justify-between items-center gap-3 shrink-0">
           <span className="text-xs text-slate-500 font-bold">
-            Official Secretary Document Template System • BAFA 2026
+            Official Secretary Document Template System • AFA 2026
           </span>
 
           <div className="flex items-center gap-2">

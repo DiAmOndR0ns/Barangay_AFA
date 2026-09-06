@@ -33,7 +33,7 @@ export default function MemberIdBadgeModal({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>BAFA Official Member Registration ID Cards</title>
+          <title>AFA Official Member Registration ID Cards</title>
           <style>
             @page { size: portrait; margin: 15mm; }
             body { font-family: 'Inter', system-ui, sans-serif; background: #fff; color: #111; padding: 10px; margin: 0; }
@@ -110,18 +110,18 @@ export default function MemberIdBadgeModal({
             ${membersToPrint.map(m => `
               <div class="id-card">
                 <div class="id-header">
-                  <h3>Barangay Alegria Farmers Association</h3>
-                  <p>Tuburan, Cebu • SEC Reg. No. CN2021-0812 • RSBSA Accredited</p>
+                  <h3>Alegria Farmers Association</h3>
+                  <p>Tuburan, Cebu • DOLE Registered Rural Workers Association • RSBSA Accredited</p>
                 </div>
                 <div class="id-body">
                   <div class="photo-box">
-                    ${m.avatarUrl ? `<img src="${m.avatarUrl}" alt="Photo" />` : `<span>2x2 ID PHOTO</span><span style="font-size:7px; color:#666; margin-top:2px;">BAFA SEAL</span>`}
+                    ${m.avatarUrl ? `<img src="${m.avatarUrl}" alt="Photo" />` : `<span>2x2 ID PHOTO</span><span style="font-size:7px; color:#666; margin-top:2px;">AFA SEAL</span>`}
                   </div>
                   <div class="info-fields">
                     <div class="member-name">${m.name}</div>
                     <div class="field-row">
                       <span class="field-label">Member ID:</span> 
-                      <span class="field-val" style="font-family:monospace; color:#1B4332;">${m.memberIdNumber || 'BAFA-2026-000'}</span>
+                      <span class="field-val" style="font-family:monospace; color:#1B4332;">${m.memberIdNumber || 'AFA-2026-000'}</span>
                     </div>
                     <div class="field-row">
                       <span class="field-label">Sitio Address:</span> 
@@ -173,7 +173,7 @@ export default function MemberIdBadgeModal({
                 Official Farmer Registration Badge
               </h3>
               <p className="text-[11px] text-emerald-200">
-                BAFA Member ID & RSBSA Basic Sector Credentials
+                AFA Member ID & RSBSA Basic Sector Credentials
               </p>
             </div>
           </div>
@@ -196,9 +196,9 @@ export default function MemberIdBadgeModal({
                 Republic of the Philippines • Tuburan, Cebu
               </span>
               <h4 className="text-xs sm:text-sm font-black uppercase tracking-wide mt-0.5">
-                Barangay Alegria Farmers Association
+                Alegria Farmers Association
               </h4>
-              <span className="text-[9px] text-slate-200 block">SEC Reg. No. CN2021-0812</span>
+              <span className="text-[9px] text-slate-200 block">DOLE Registered Rural Workers Association</span>
             </div>
 
             {/* Badge Details Grid */}
@@ -228,7 +228,7 @@ export default function MemberIdBadgeModal({
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 block uppercase">Member ID:</span>
                     <span className="font-mono font-black text-emerald-800 text-[11px]">
-                      {member.memberIdNumber || 'BAFA-2026-000'}
+                      {member.memberIdNumber || 'AFA-2026-000'}
                     </span>
                   </div>
                   <div>

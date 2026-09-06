@@ -132,7 +132,7 @@ export default function AttendanceDividendCalculatorModal({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>BAFA - Official Net Income & Attendance Dividend Distribution Sheet</title>
+          <title>AFA - Official Net Income & Attendance Dividend Distribution Sheet</title>
           <style>
             @page { size: landscape; margin: 15mm; }
             body { font-family: 'Inter', system-ui, sans-serif; color: #111; line-height: 1.4; padding: 10px; margin: 0; font-size: 11px; }
@@ -156,8 +156,8 @@ export default function AttendanceDividendCalculatorModal({
         </head>
         <body>
           <div class="header">
-            <h2>Barangay Alegria Farmers Association (BAFA)</h2>
-            <p>Tuburan, Cebu Province • SEC Reg. No. CN2021-0812 • RSBSA Accredited Cooperative</p>
+            <h2>Alegria Farmers Association (AFA)</h2>
+            <p>Tuburan, Cebu Province • DOLE Registered Rural Workers Association • RSBSA Accredited</p>
             <p style="font-weight:bold; color:#1B4332; margin-top:4px;">OFFICIAL DECEMBER PATRONAGE DIVIDEND PAYROLL (ATTENDANCE-WEIGHTED)</p>
           </div>
 
@@ -219,13 +219,13 @@ export default function AttendanceDividendCalculatorModal({
 
           <div class="signatures">
             <div>
-              <div class="sign-line">GRACELYN P. ASENDIENTE<br/><span style="font-size:9px; font-weight:normal;">Treasurer, BAFA</span></div>
+              <div class="sign-line">GRACELYN P. ASENDIENTE<br/><span style="font-size:9px; font-weight:normal;">Treasurer, AFA</span></div>
             </div>
             <div>
-              <div class="sign-line">LORENA B. PINOTE<br/><span style="font-size:9px; font-weight:normal;">Auditor, BAFA</span></div>
+              <div class="sign-line">LORENA B. PINOTE<br/><span style="font-size:9px; font-weight:normal;">Auditor, AFA</span></div>
             </div>
             <div>
-              <div class="sign-line">ZENAIDA A. ELBIÑA<br/><span style="font-size:9px; font-weight:normal;">President, BAFA</span></div>
+              <div class="sign-line">ZENAIDA A. ELBIÑA<br/><span style="font-size:9px; font-weight:normal;">President, AFA</span></div>
             </div>
           </div>
 

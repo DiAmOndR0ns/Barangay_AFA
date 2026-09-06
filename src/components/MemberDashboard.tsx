@@ -67,7 +67,6 @@ export default function MemberDashboard({
   const [name, setName] = useState(currentUser.name);
   const [contact, setContact] = useState(currentUser.contactNumber || '');
   const [sitio, setSitio] = useState(currentUser.farmLocation || SITIOS[0]);
-  const [farmSize, setFarmSize] = useState(currentUser.farmSize?.toString() || '1.5');
   const [selectedCrops, setSelectedCrops] = useState<string[]>(currentUser.primaryCrops || []);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -110,7 +109,6 @@ export default function MemberDashboard({
       name: name.trim(),
       contactNumber: contact.trim(),
       farmLocation: sitio,
-      farmSize: parseFloat(farmSize) || 0,
       primaryCrops: selectedCrops
     });
 
@@ -417,7 +415,6 @@ export default function MemberDashboard({
                     setName(currentUser.name);
                     setContact(currentUser.contactNumber || '');
                     setSitio(currentUser.farmLocation || SITIOS[0]);
-                    setFarmSize(currentUser.farmSize?.toString() || '1.5');
                     setSelectedCrops(currentUser.primaryCrops || []);
                     setIsEditing(true);
                   }}
@@ -441,27 +438,15 @@ export default function MemberDashboard({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-[#4F5E46] uppercase">Telepono (Contact)</label>
-                    <input
-                      type="text"
-                      value={contact}
-                      onChange={(e) => setContact(e.target.value)}
-                      className="w-full px-3 py-2 text-xs bg-[#FAF8F5] border border-[#D5CFC1] rounded-xl text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-[#4F5E46] uppercase">Ektarya (Farm Size)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={farmSize}
-                      onChange={(e) => setFarmSize(e.target.value)}
-                      className="w-full px-3 py-2 text-xs bg-[#FAF8F5] border border-[#D5CFC1] rounded-xl text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold font-mono"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-[#4F5E46] uppercase">Telepono (Contact Number)</label>
+                  <input
+                    type="text"
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                    placeholder="e.g. 0917-000-0000"
+                    className="w-full px-3 py-2 text-xs bg-[#FAF8F5] border border-[#D5CFC1] rounded-xl text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold"
+                  />
                 </div>
 
                 <div className="space-y-1">
@@ -527,16 +512,18 @@ export default function MemberDashboard({
                   <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#D5CFC1]">
                     <span className="block text-xs text-[#2D3A22] uppercase font-black tracking-wider flex items-center gap-1 mb-1">
                       <MapPin className="w-3.5 h-3.5 text-[#1B4332]" />
-                      Sitio
+                      Sitio / Dapit
                     </span>
                     <span className="font-bold text-slate-900 text-sm">{currentUser.farmLocation}</span>
                   </div>
                   <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#D5CFC1]">
                     <span className="block text-xs text-[#2D3A22] uppercase font-black tracking-wider flex items-center gap-1 mb-1">
-                      <Layers className="w-3.5 h-3.5 text-[#1B4332]" />
-                      Gidak-on sa Yuta
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#1B4332]" />
+                      RSBSA Status
                     </span>
-                    <span className="font-mono font-black text-[#1B4332] text-base">{currentUser.farmSize || 0} ektarya</span>
+                    <span className="font-mono font-bold text-[#1B4332] text-sm truncate block" title={currentUser.rsbsaNumber || 'Enrolled'}>
+                      {currentUser.rsbsaNumber || (currentUser.isRsbsaRegistered ? 'RSBSA Enrolled' : 'Pending RSBSA')}
+                    </span>
                   </div>
                 </div>
 
@@ -869,7 +856,7 @@ export default function MemberDashboard({
                     <h5 className="text-[9px] uppercase font-bold text-[#E65100] underline font-sans leading-none pt-1">Certificate of Good Standing</h5>
                     
                     <p className="text-[8px] px-2 leading-relaxed">
-                      Kini nagpamatuod nga si <strong className="text-black uppercase font-sans font-black">{currentUser.name}</strong> usa ka aktibong miyembro sa **Alegria Farmers Association (BAFA)**, nga nag-uma sa **{currentUser.farmLocation}** nga adunay gidak-on nga **{currentUser.farmSize || 1.5} ka ektarya**.
+                      Kini nagpamatuod nga si <strong className="text-black uppercase font-sans font-black">{currentUser.name}</strong> usa ka aktibong miyembro sa **Alegria Farmers Association (BAFA)**, nga nag-uma sa **{currentUser.farmLocation}**.
                     </p>
 
                     <div className="grid grid-cols-2 gap-4 mt-3 pt-2 border-t border-[#F0EBE1] text-[6px] font-sans">
@@ -1109,7 +1096,7 @@ export default function MemberDashboard({
           </p>
 
           <p className="text-sm text-slate-800 leading-loose text-justify indent-10 font-serif">
-            Records indicate that the certified member actively cultivates a total land area of <strong className="text-black font-sans font-bold">{currentUser.farmSize || 1.5} Hectares</strong>, with primary focus on producing crops and livestock commodities including: <strong className="text-slate-800 font-sans font-semibold italic">{currentUser.primaryCrops?.join(', ') || 'Vegetables, Coffee, Baboyan'}</strong>.
+            Records indicate that the certified member actively engages in agricultural production in <strong className="text-black font-sans font-bold">{currentUser.farmLocation}</strong>, with primary focus on producing crops and livestock commodities including: <strong className="text-slate-800 font-sans font-semibold italic">{currentUser.primaryCrops?.join(', ') || 'Vegetables, Coffee, Baboyan'}</strong>.
           </p>
 
           <p className="text-sm text-slate-800 leading-loose text-justify indent-10 font-serif">
@@ -1187,7 +1174,7 @@ export default function MemberDashboard({
                   Crops: {currentUser.primaryCrops?.join(', ') || 'Vegetables'}
                 </p>
                 <p className="text-[7px] text-slate-500">
-                  Area size: {currentUser.farmSize || 1.5} ha
+                  Status: {currentUser.status || 'Active Member'}
                 </p>
               </div>
             </div>
