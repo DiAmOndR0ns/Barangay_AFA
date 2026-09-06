@@ -16,7 +16,6 @@ export function isDatabaseConfigured(): boolean {
     !dbUrl.includes('[YOUR-PASSWORD]') && 
     !dbUrl.includes('<password>') &&
     !dbUrl.includes('YOUR_PASSWORD') && 
-    !dbUrl.includes('your_aiven_connection_string') && 
     !dbUrl.includes('your_supabase_connection_string') &&
     (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'))
   );
@@ -164,7 +163,7 @@ export async function runSchemaMigrations(client: pg.PoolClient) {
     try {
       await client.query(stmt);
     } catch (e: any) {
-      // Safe non-blocking execution for schema adjustments
+      console.warn('[Schema Migration Warning]:', e?.message || e);
     }
   }
 }
@@ -404,8 +403,10 @@ export async function initDatabaseSchema(pool: pg.Pool) {
     `);
 
     await client.query('COMMIT');
-  } catch (err) {
+    console.log('[DB DEBUG] Database schema initialized successfully');
+  } catch (err: any) {
     await client.query('ROLLBACK');
+    console.error('[DB DEBUG] Schema initialization failed:', err?.message || err);
     throw err;
   } finally {
     client.release();
@@ -452,7 +453,8 @@ export async function getTableStats(pool: pg.Pool): Promise<{
     };
     const totalRecords = Object.values(tableCounts).reduce((a, b) => a + b, 0);
     return { tableCounts, totalRecords };
-  } catch {
+  } catch (err: any) {
+    console.error('[DB DEBUG] getTableStats failed:', err?.message || err);
     return {
       tableCounts: {},
       totalRecords: 0,
@@ -471,19 +473,25 @@ export async function getTableStats(pool: pg.Pool): Promise<{
 export async function ensureDatabaseSchema(pool: pg.Pool) {
   const client = await pool.connect();
   try {
+    console.log('[DB DEBUG] ensureDatabaseSchema: Checking tables...');
     const check = await client.query(`SELECT to_regclass('public.members') as members_table`);
+    console.log('[DB DEBUG] members table exists:', check.rows[0]?.members_table);
+    
     if (!check.rows[0]?.members_table) {
+      console.log('[DB DEBUG] Creating database schema...');
       await initDatabaseSchema(pool);
     } else {
+      console.log('[DB DEBUG] Running schema migrations...');
       await runSchemaMigrations(client);
     }
 
     // Only provision the 6 official officer logins if users table is empty
     const counts = await client.query(`SELECT count(*) as count FROM users`);
     const usersCount = Number(counts.rows[0]?.count || 0);
+    console.log('[DB DEBUG] Current users count:', usersCount);
 
     if (usersCount === 0) {
-      console.log('[Supabase / PostgreSQL]: No users found. Provisioning the 6 official officer accounts...');
+      console.log('[DB DEBUG] No users found. Provisioning the 6 official officer accounts...');
       for (const u of OFFICIAL_OFFICERS) {
         await client.query(`
           INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
@@ -500,9 +508,17 @@ export async function ensureDatabaseSchema(pool: pg.Pool) {
           'Active'
         ]);
       }
+      console.log('[DB DEBUG] Officer accounts provisioned');
     }
   } catch (err: any) {
-    console.warn('[ensureDatabaseSchema warning]:', err?.message || err);
+    console.error('[DB DEBUG] ensureDatabaseSchema failed:', {
+      message: err?.message,
+      code: err?.code,
+      detail: err?.detail,
+      hint: err?.hint
+    });
+    // Don't swallow the error - rethrow it
+    throw err;
   } finally {
     client.release();
   }
@@ -819,10 +835,14 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
 }
 
 export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
+  console.log('[DB DEBUG] saveFullStateToPostgres called');
+  console.log('[DB DEBUG] State keys:', Object.keys(state || {}));
+  
   await ensureDatabaseSchema(pool);
   const client = await pool.connect();
 
   try {
+    console.log('[DB DEBUG] Starting transaction...');
     await client.query('BEGIN');
     await runSchemaMigrations(client);
 
@@ -874,6 +894,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
 
     // 1. Users
     if (state.users && Array.isArray(state.users)) {
+      console.log('[DB DEBUG] Saving', state.users.length, 'users...');
       for (const u of state.users) {
         await client.query(`
           INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status, avatar_url, member_id_number, rsbsa_number, is_rsbsa_registered)
@@ -902,10 +923,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           Boolean(u.isRsbsaRegistered)
         ]);
       }
+      console.log('[DB DEBUG] Users saved');
     }
 
     // 2. Members
     if (state.members && Array.isArray(state.members)) {
+      console.log('[DB DEBUG] Saving', state.members.length, 'members...');
       for (const m of state.members) {
         await client.query(`
           INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date, member_id_number, rsbsa_number, is_rsbsa_registered, avatar_url, gender, birth_date)
@@ -932,11 +955,13 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           m.birthDate || null
         ]);
       }
+      console.log('[DB DEBUG] Members saved');
     }
 
     // 3. Transactions
     const txList = state.financialTransactions || state.transactions;
     if (txList && Array.isArray(txList)) {
+      console.log('[DB DEBUG] Saving', txList.length, 'transactions...');
       for (const tx of txList) {
         await client.query(`
           INSERT INTO financial_transactions (id, type, category, amount, date, description, recorded_by, fund_source, audited_status, audited_by, audited_date, audit_notes)
@@ -959,10 +984,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           tx.auditedDate || null, tx.auditNotes || null
         ]);
       }
+      console.log('[DB DEBUG] Transactions saved');
     }
 
     // 4. Meetings
     if (state.meetings && Array.isArray(state.meetings)) {
+      console.log('[DB DEBUG] Saving', state.meetings.length, 'meetings...');
       for (const mt of state.meetings) {
         await client.query(`
           INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge, attendance_record)
@@ -982,10 +1009,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           JSON.stringify(mt.attendanceRecord || {})
         ]);
       }
+      console.log('[DB DEBUG] Meetings saved');
     }
 
     // 5. Hog Raising IGP State
     if (state.hogRaising) {
+      console.log('[DB DEBUG] Saving hog raising state...');
       const grantAmount = typeof state.hogRaising.capitalGrant === 'number'
         ? state.hogRaising.capitalGrant
         : (Number(state.hogRaising.capitalGrant) || 0);
@@ -1012,11 +1041,13 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
         state.hogRaising.closedYears || []
       ]);
       await client.query("DELETE FROM hog_raising WHERE id != 'main_state'");
+      console.log('[DB DEBUG] Hog raising state saved');
     }
 
     // 6. System Logs
     const logList = state.systemLogs || state.logs;
     if (logList && Array.isArray(logList)) {
+      console.log('[DB DEBUG] Saving', logList.length, 'system logs...');
       for (const lg of logList) {
         await client.query(`
           INSERT INTO system_logs (id, timestamp, user_name, role, action, details, sync_status, hash, previous_hash)
@@ -1035,10 +1066,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           lg.syncStatus || 'synced', lg.hash || null, lg.previousHash || null
         ]);
       }
+      console.log('[DB DEBUG] System logs saved');
     }
 
     // 7. Products
     if (state.products && Array.isArray(state.products)) {
+      console.log('[DB DEBUG] Saving', state.products.length, 'products...');
       for (const p of state.products) {
         await client.query(`
           INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, image_url, is_published, updated_by, managed_by, date_updated)
@@ -1069,10 +1102,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           p.managedBy || null, p.dateUpdated || null
         ]);
       }
+      console.log('[DB DEBUG] Products saved');
     }
 
     // 8. Resolutions
     if (state.resolutions && Array.isArray(state.resolutions)) {
+      console.log('[DB DEBUG] Saving', state.resolutions.length, 'resolutions...');
       for (const r of state.resolutions) {
         await client.query(`
           INSERT INTO resolutions (id, resolution_number, title, description, date_agreed, moved_by, seconded_by, vote_in_favor, vote_against, vote_abstain, status)
@@ -1093,10 +1128,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           r.movedBy, r.secondedBy, r.voteInFavor, r.voteAgainst, r.voteAbstain, r.status
         ]);
       }
+      console.log('[DB DEBUG] Resolutions saved');
     }
 
     // 9. Announcements
     if (state.announcements && Array.isArray(state.announcements)) {
+      console.log('[DB DEBUG] Saving', state.announcements.length, 'announcements...');
       for (const a of state.announcements) {
         await client.query(`
           INSERT INTO announcements (id, title, category, content, date_posted, priority, posted_by)
@@ -1110,10 +1147,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
             posted_by = EXCLUDED.posted_by;
         `, [a.id, a.title, a.category, a.content, a.datePosted, a.priority, a.postedBy]);
       }
+      console.log('[DB DEBUG] Announcements saved');
     }
 
     // 10. Activities
     if (state.activities && Array.isArray(state.activities)) {
+      console.log('[DB DEBUG] Saving', state.activities.length, 'activities...');
       for (const act of state.activities) {
         await client.query(`
           INSERT INTO activities (id, title, ceb_title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count, target_audience, image_url)
@@ -1145,11 +1184,13 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           act.targetAudience || null, act.imageUrl || null
         ]);
       }
+      console.log('[DB DEBUG] Activities saved');
     }
 
     // 11. Organization Funds
     const fundList = state.organizationFunds || state.funds;
     if (fundList && Array.isArray(fundList)) {
+      console.log('[DB DEBUG] Saving', fundList.length, 'organization funds...');
       for (const f of fundList) {
         await client.query(`
           INSERT INTO organization_funds (id, name, code, allocated_amount, current_balance, description, custodian, last_updated)
@@ -1167,10 +1208,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           f.description || '', f.custodian || '', f.lastUpdated || new Date().toISOString().split('T')[0]
         ]);
       }
+      console.log('[DB DEBUG] Organization funds saved');
     }
 
     // 12. Auditor Reports
     if (state.auditorReports && Array.isArray(state.auditorReports)) {
+      console.log('[DB DEBUG] Saving', state.auditorReports.length, 'auditor reports...');
       for (const ar of state.auditorReports) {
         await client.query(`
           INSERT INTO auditor_reports (id, report_period, report_type, total_income, total_expenses, net_surplus, findings, recommendations, prepared_by, certified_by, status, date_submitted, date_certified)
@@ -1194,10 +1237,12 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           ar.certifiedBy || null, ar.status || 'Submitted', ar.dateSubmitted, ar.dateCertified || null
         ]);
       }
+      console.log('[DB DEBUG] Auditor reports saved');
     }
 
     // 13. Delegation Requests
     if (state.delegationRequests && Array.isArray(state.delegationRequests)) {
+      console.log('[DB DEBUG] Saving', state.delegationRequests.length, 'delegation requests...');
       for (const dr of state.delegationRequests) {
         await client.query(`
           INSERT INTO delegation_requests (id, requested_by, reason, requested_date, effective_start, effective_end, status, reviewed_by, reviewed_date, remarks)
@@ -1218,11 +1263,21 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
           dr.reviewedDate || null, dr.remarks || null
         ]);
       }
+      console.log('[DB DEBUG] Delegation requests saved');
     }
 
+    console.log('[DB DEBUG] Committing transaction...');
     await client.query('COMMIT');
+    console.log('[DB DEBUG] Transaction committed successfully');
     return { success: true };
-  } catch (err) {
+  } catch (err: any) {
+    console.error('[DB DEBUG] Transaction failed:', {
+      message: err?.message,
+      code: err?.code,
+      detail: err?.detail,
+      hint: err?.hint,
+      where: err?.where
+    });
     await client.query('ROLLBACK');
     throw err;
   } finally {
@@ -1250,4 +1305,3 @@ export async function updateDatabaseCapitalGrant(pool: pg.Pool, amount: number):
     client.release();
   }
 }
-
