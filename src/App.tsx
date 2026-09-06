@@ -23,7 +23,7 @@ import GuestPortal from './components/GuestPortal';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import OfficerReportModal from './components/OfficerReportModal';
 import ProductManagementModal from './components/ProductManagementModal';
-import { buildAuditChain } from './utils/audit';
+import { buildAuditChain, hashPassword, sanitizeUserForStorage } from './utils/audit';
 import { 
   Building, ShieldCheck, Megaphone, Users, Coins, 
   Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, PiggyBank, FileText, ShoppingBag,
@@ -157,10 +157,33 @@ export default function App() {
       setSyncQueue(storedQueue ? JSON.parse(storedQueue) : []);
       
       const parsedUsers = storedUsers ? JSON.parse(storedUsers) : OFFICIAL_OFFICERS;
-      // Filter out any dummy members from users, keep only real officers
-      const sanitizedUsers = parsedUsers.filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'));
+      // Filter out any dummy members from users and strip any plain-text passwords
+      const sanitizedUsers = (Array.isArray(parsedUsers) ? parsedUsers : OFFICIAL_OFFICERS)
+        .filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'))
+        .map((u: any) => {
+          const copy = { ...u };
+          if (copy.password) {
+            if (!copy.passwordHash) {
+              copy.passwordHash = hashPassword(copy.password);
+            }
+            delete copy.password;
+          }
+          return copy;
+        });
       setUsers(sanitizedUsers.length > 0 ? sanitizedUsers : OFFICIAL_OFFICERS);
       localStorage.setItem('bafa_users', JSON.stringify(sanitizedUsers.length > 0 ? sanitizedUsers : OFFICIAL_OFFICERS));
+
+      // Also clean bafa_current_user in localStorage if it contains plaintext password
+      const storedCurr = localStorage.getItem('bafa_current_user');
+      if (storedCurr) {
+        try {
+          const parsedCurr = JSON.parse(storedCurr);
+          if (parsedCurr && typeof parsedCurr === 'object' && parsedCurr.password) {
+            delete parsedCurr.password;
+            localStorage.setItem('bafa_current_user', JSON.stringify(parsedCurr));
+          }
+        } catch {}
+      }
 
       const rawLogs = storedLogs ? JSON.parse(storedLogs) : INITIAL_LOGS;
       const needsChaining = rawLogs.some((l: any) => !l.hash || !l.previousHash);
@@ -261,8 +284,28 @@ export default function App() {
     }
   }, []);
 
-  // Save changes helper
+  // Save changes helper with automatic security sanitization
   const updateStorage = (key: string, data: any) => {
+    if (key === 'bafa_users' && Array.isArray(data)) {
+      const sanitized = data.map((u: any) => {
+        const copy = { ...u };
+        if (copy.password) {
+          if (!copy.passwordHash) {
+            copy.passwordHash = hashPassword(copy.password);
+          }
+          delete copy.password;
+        }
+        return copy;
+      });
+      localStorage.setItem(key, JSON.stringify(sanitized));
+      return;
+    }
+    if (key === 'bafa_current_user' && data && typeof data === 'object') {
+      const copy = { ...data };
+      delete copy.password;
+      localStorage.setItem(key, JSON.stringify(copy));
+      return;
+    }
     localStorage.setItem(key, JSON.stringify(data));
   };
 
@@ -494,6 +537,28 @@ export default function App() {
     }
   };
 
+  // Enforce Zero Residual Storage by clearing local browser cache once cloud database is active
+  const handleClearLocalCache = () => {
+    if (!dbStatus.connected) {
+      showToastMessage('Cannot purge local browser cache while database is disconnected! Connect to Supabase first to prevent data loss.', 'error');
+      return;
+    }
+    if (window.confirm('Clear all local browser table caches? All association records are safely stored in your live Supabase database. Clearing local cache enforces Zero-Residual confidential storage on this computer.')) {
+      localStorage.removeItem('bafa_members');
+      localStorage.removeItem('bafa_meetings');
+      localStorage.removeItem('bafa_resolutions');
+      localStorage.removeItem('bafa_transactions');
+      localStorage.removeItem('bafa_announcements');
+      localStorage.removeItem('bafa_products');
+      localStorage.removeItem('bafa_activities');
+      localStorage.removeItem('bafa_funds');
+      localStorage.removeItem('bafa_hog_raising');
+      localStorage.removeItem('bafa_logs');
+      localStorage.removeItem('bafa_sync_queue');
+      showToastMessage('Local browser cache cleared! Operating in Zero-Residual Cloud Database mode.', 'success');
+    }
+  };
+
   const handleClearQueue = () => {
     setSyncQueue([]);
     localStorage.removeItem('bafa_sync_queue');
@@ -550,22 +615,121 @@ export default function App() {
   }, [syncQueue.length, logs, members, meetings, resolutions, transactions, announcements, products, activities, hogRaising, funds, users]);
 
   // SECRETARY ACTION HANDLERS
-  const handleAddMember = (memberData: Omit<Member, 'id' | 'joinedDate'>) => {
+  const handleAddMember = (
+    memberData: Omit<Member, 'id' | 'joinedDate'>,
+    loginCredentials?: { username: string; initialPassword?: string }
+  ) => {
+    const newId = `member-${Date.now()}`;
     const newMember: Member = {
       ...memberData,
-      id: `member-${Date.now()}`,
+      id: newId,
       joinedDate: new Date().toISOString().split('T')[0]
     };
     const updated = [newMember, ...members];
     setMembers(updated);
     updateStorage('bafa_members', updated);
 
+    let updatedUsers = users;
+    let accountCreated = false;
+
+    // If login credentials provided by the Secretary, create authenticated User account
+    if (loginCredentials && loginCredentials.username.trim()) {
+      const cleanUsername = loginCredentials.username.trim().toLowerCase();
+      const initialPassword = loginCredentials.initialPassword?.trim() || 'password123';
+      const cleanHash = hashPassword(initialPassword);
+
+      const newMemberUser: User = {
+        id: newId,
+        username: cleanUsername,
+        passwordHash: cleanHash,
+        name: newMember.name,
+        role: 'Member',
+        isApproved: true,
+        memberIdNumber: newMember.memberIdNumber,
+        rsbsaNumber: newMember.rsbsaNumber,
+        isRsbsaRegistered: newMember.isRsbsaRegistered,
+        farmLocation: newMember.farmLocation,
+        farmSize: newMember.farmSize,
+        primaryCrops: newMember.primaryCrops,
+        contactNumber: newMember.contactNumber,
+        joinedDate: newMember.joinedDate,
+        status: newMember.status
+      };
+
+      updatedUsers = [newMemberUser, ...users.filter(u => u.username.toLowerCase() !== cleanUsername && u.id !== newId)];
+      setUsers(updatedUsers);
+      updateStorage('bafa_users', updatedUsers);
+      accountCreated = true;
+      logAction('Created Member Portal Login', `Secretary enrolled ${newMember.name} and issued portal login: ${cleanUsername}`);
+    }
+
     if (isOnline) {
       logAction('Registered Farmer', `Registered new member: ${newMember.name} from ${newMember.farmLocation}`);
-      showToastMessage(`Registered ${newMember.name} successfully!`);
-      pushAllDataToCloud({ members: updated }, { silent: true });
+      showToastMessage(
+        accountCreated 
+          ? `Registered ${newMember.name} & created portal login (${loginCredentials?.username})!` 
+          : `Registered ${newMember.name} successfully!`
+      );
+      pushAllDataToCloud({ members: updated, users: updatedUsers }, { silent: true });
     } else {
       addToSyncQueue('create', 'member', newMember);
+      showToastMessage(`Registered ${newMember.name} offline. Ready to sync when connected.`);
+    }
+  };
+
+  // Secretary sets or resets portal credentials for an enrolled member
+  const handleManageMemberLogin = (memberId: string, username: string, initialPassword: string) => {
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+
+    const cleanUsername = username.trim().toLowerCase();
+    const cleanPassword = initialPassword.trim();
+    const newHash = hashPassword(cleanPassword);
+
+    const existingIndex = users.findIndex(u => u.id === memberId || u.memberIdNumber === member.memberIdNumber);
+
+    let updatedUsers: User[];
+    if (existingIndex >= 0) {
+      updatedUsers = users.map((u, idx) => {
+        if (idx === existingIndex) {
+          const { password, ...rest } = u;
+          return {
+            ...rest,
+            username: cleanUsername,
+            passwordHash: newHash,
+            name: member.name,
+            resetRequested: false
+          };
+        }
+        return u;
+      });
+    } else {
+      const newMemberUser: User = {
+        id: member.id,
+        username: cleanUsername,
+        passwordHash: newHash,
+        name: member.name,
+        role: 'Member',
+        isApproved: true,
+        memberIdNumber: member.memberIdNumber,
+        rsbsaNumber: member.rsbsaNumber,
+        isRsbsaRegistered: member.isRsbsaRegistered,
+        farmLocation: member.farmLocation,
+        farmSize: member.farmSize,
+        primaryCrops: member.primaryCrops,
+        contactNumber: member.contactNumber,
+        joinedDate: member.joinedDate,
+        status: member.status
+      };
+      updatedUsers = [newMemberUser, ...users];
+    }
+
+    setUsers(updatedUsers);
+    updateStorage('bafa_users', updatedUsers);
+    logAction('Managed Member Login', `Secretary set portal login for ${member.name} (Username: ${cleanUsername})`);
+    showToastMessage(`Portal login for ${member.name} set! Username: ${cleanUsername}`, 'success');
+    if (isOnline) {
+      pushAllDataToCloud({ users: updatedUsers }, { silent: true });
     }
   };
 
@@ -594,10 +758,17 @@ export default function App() {
     setMembers(updated);
     updateStorage('bafa_members', updated);
 
+    // Also remove their portal user account so no orphan login accounts remain
+    const updatedUsers = users.filter(u => u.id !== id && u.memberIdNumber !== targetMember?.memberIdNumber);
+    if (updatedUsers.length !== users.length) {
+      setUsers(updatedUsers);
+      updateStorage('bafa_users', updatedUsers);
+    }
+
     if (isOnline) {
       logAction('Deleted Farmer Registration', `Removed member registration for: ${mName}`);
       showToastMessage(`Removed ${mName} from roster.`, 'warning');
-      pushAllDataToCloud({ members: updated }, { silent: true });
+      pushAllDataToCloud({ members: updated, users: updatedUsers }, { silent: true });
     } else {
       addToSyncQueue('delete', 'member', { id, name: mName });
     }
@@ -1018,8 +1189,15 @@ export default function App() {
   };
 
   const handleRegister = (userData: Omit<User, 'id' | 'isApproved'>) => {
+    const copy = { ...userData };
+    if (copy.password) {
+      if (!copy.passwordHash) {
+        copy.passwordHash = hashPassword(copy.password);
+      }
+      delete copy.password;
+    }
     const newUser: User = {
-      ...userData,
+      ...copy,
       id: `user-${Date.now()}`,
       isApproved: false,
       joinedDate: new Date().toISOString().split('T')[0]
@@ -1052,7 +1230,14 @@ export default function App() {
   const handleResetPassword = (userId: string, newPass: string) => {
     const targetUser = users.find(u => u.id === userId);
     if (!targetUser) return;
-    const updated = users.map(u => u.id === userId ? { ...u, password: newPass, resetRequested: false } : u);
+    const newHash = hashPassword(newPass.trim());
+    const updated = users.map(u => {
+      if (u.id === userId) {
+        const { password, ...rest } = u;
+        return { ...rest, passwordHash: newHash, resetRequested: false };
+      }
+      return u;
+    });
     setUsers(updated);
     updateStorage('bafa_users', updated);
     
@@ -1467,6 +1652,7 @@ export default function App() {
               isPopulating={isPopulating}
               onPurgeDb={handlePurgeAllDummyData}
               isPurging={isPurging}
+              onClearLocalCache={handleClearLocalCache}
             />
           </div>
         </div>
@@ -1596,9 +1782,12 @@ export default function App() {
             {currentRole === 'Secretary' && (
               <SecretaryView 
                 members={members}
+                users={users}
                 onAddMember={handleAddMember}
                 onUpdateMemberStatus={handleUpdateMemberStatus}
                 onDeleteMember={handleDeleteMember}
+                onManageMemberLogin={handleManageMemberLogin}
+                onResetMemberPassword={handleResetPassword}
                 meetings={meetings}
                 onAddMeeting={handleAddMeeting}
                 onUpdateMeeting={handleUpdateMeeting}

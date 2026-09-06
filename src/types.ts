@@ -3,7 +3,8 @@ export type OfficerRole = 'President' | 'Vice_President' | 'Secretary' | 'Treasu
 export interface User {
   id: string;
   username: string;
-  password?: string;
+  password?: string; // Kept optional for in-memory handling; NEVER saved in plain text to localStorage
+  passwordHash?: string; // Cryptographic SHA-256 hash
   name: string;
   role: OfficerRole | 'Member';
   isApproved: boolean;

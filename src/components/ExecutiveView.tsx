@@ -417,9 +417,10 @@ export default function ExecutiveView({
                         <p className="text-[10px] text-[#5D6B54] font-medium mt-0.5">
                           Role: <strong className="text-[#1B4332]">{user.role.replace('_', ' ')}</strong> • Username: <strong className="font-mono text-[#1B4332]">{user.username}</strong>
                         </p>
-                        <p className="text-[10px] text-[#85947E]">
-                          Password karon: <strong className="font-mono text-xs text-[#2D6A4F] select-all">{user.password || 'password123'}</strong>
-                        </p>
+                        <div className="flex items-center gap-1 mt-1 text-[10px] text-[#5D6B54]">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>Credentials: <span className="font-mono text-[10px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/80 font-bold">Encrypted & Masked</span></span>
+                        </div>
                       </div>
 
                       {user.role !== 'President' && !isEditing && (

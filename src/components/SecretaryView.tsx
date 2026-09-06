@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Member, Meeting, Resolution } from '../types';
+import { Member, Meeting, Resolution, User } from '../types';
 import { 
   Users, BookOpen, FileText, Plus, Search, 
   MapPin, CheckCircle, FilePlus, Calendar, 
   Trash2, UserPlus, Info, Tag, Printer, UserCheck,
-  CheckCircle2, AlertCircle, XCircle, Award, Sparkles, ShieldCheck
+  CheckCircle2, AlertCircle, XCircle, Award, Sparkles, ShieldCheck,
+  Key, KeyRound, Copy, Check, Eye, EyeOff, RefreshCw
 } from 'lucide-react';
 import PrintMinutesModal from './PrintMinutesModal';
 import PrintAttendanceModal from './PrintAttendanceModal';
@@ -14,9 +15,12 @@ import MemberIdBadgeModal from './MemberIdBadgeModal';
 
 interface SecretaryViewProps {
   members: Member[];
-  onAddMember: (member: Omit<Member, 'id' | 'joinedDate'>) => void;
+  users?: User[];
+  onAddMember: (member: Omit<Member, 'id' | 'joinedDate'>, loginCredentials?: { username: string; initialPassword?: string }) => void;
   onUpdateMemberStatus: (id: string, status: 'Active' | 'Inactive') => void;
   onDeleteMember: (id: string) => void;
+  onManageMemberLogin?: (memberId: string, username: string, initialPassword: string) => void;
+  onResetMemberPassword?: (userId: string, newPass: string) => void;
   
   meetings: Meeting[];
   onAddMeeting: (meeting: Omit<Meeting, 'id'>) => void;
@@ -31,9 +35,12 @@ interface SecretaryViewProps {
 
 export default function SecretaryView({
   members,
+  users = [],
   onAddMember,
   onUpdateMemberStatus,
   onDeleteMember,
+  onManageMemberLogin,
+  onResetMemberPassword,
   meetings,
   onAddMeeting,
   onUpdateMeeting,
@@ -56,6 +63,30 @@ export default function SecretaryView({
   const [meetingAttendanceRecord, setMeetingAttendanceRecord] = useState<Record<string, 'Present' | 'Absent' | 'Excused'>>({});
   const [rollCallMeeting, setRollCallMeeting] = useState<Meeting | null>(null);
   const [showCreateRollCall, setShowCreateRollCall] = useState(false);
+
+  // Portal Account Setup States for Member Registration
+  const [createLoginAccount, setCreateLoginAccount] = useState(true);
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('password123');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [hasEditedUsernameManually, setHasEditedUsernameManually] = useState(false);
+
+  // Credential Handout Modal (after member registration)
+  const [createdCredentials, setCreatedCredentials] = useState<{
+    name: string;
+    memberId: string;
+    username: string;
+    initialPassword: string;
+    sitio: string;
+  } | null>(null);
+  const [copiedCredentials, setCopiedCredentials] = useState(false);
+
+  // Manage / Reset Portal Login Modal (for existing members)
+  const [loginManageMember, setLoginManageMember] = useState<Member | null>(null);
+  const [manageUsername, setManageUsername] = useState('');
+  const [managePassword, setManagePassword] = useState('password123');
+  const [showManagePassword, setShowManagePassword] = useState(false);
+  const [copiedManageCreds, setCopiedManageCreds] = useState(false);
   
   // Member Form State
   const [showMemberModal, setShowMemberModal] = useState(false);
@@ -123,9 +154,14 @@ export default function SecretaryView({
   const handleMemberSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!memberName.trim()) return;
+
+    const finalMemberId = memberIdNum || `BAFA-2026-0${members.length + 1}`;
+    const cleanUsername = (loginUsername.trim() || memberName.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '.')).toLowerCase();
+    const cleanPassword = loginPassword.trim() || 'password123';
+
     onAddMember({
       name: memberName,
-      memberIdNumber: memberIdNum || `BAFA-2026-0${members.length + 1}`,
+      memberIdNumber: finalMemberId,
       rsbsaNumber: memberRsbsa || undefined,
       isRsbsaRegistered: isRsbsaRegistered,
       contactNumber: memberContact || 'None',
@@ -135,7 +171,21 @@ export default function SecretaryView({
       gender: memberGender,
       birthDate: memberBirthDate || undefined,
       status: 'Active'
-    });
+    }, createLoginAccount ? {
+      username: cleanUsername,
+      initialPassword: cleanPassword
+    } : undefined);
+
+    if (createLoginAccount) {
+      setCreatedCredentials({
+        name: memberName,
+        memberId: finalMemberId,
+        username: cleanUsername,
+        initialPassword: cleanPassword,
+        sitio: memberSitio
+      });
+    }
+
     // Reset Form
     setMemberName('');
     setMemberContact('');
@@ -147,6 +197,9 @@ export default function SecretaryView({
     setMemberGender('Male');
     setMemberBirthDate('');
     setSelectedCrops([]);
+    setLoginUsername('');
+    setLoginPassword('password123');
+    setHasEditedUsernameManually(false);
     setShowMemberModal(false);
   };
 
@@ -347,14 +400,21 @@ export default function SecretaryView({
                     <th className="px-5 py-3">Sitio / Location</th>
                     <th className="px-5 py-3">Farm Area</th>
                     <th className="px-5 py-3">Crops & Livestock</th>
-                    <th className="px-5 py-3">Contact</th>
+                    <th className="px-5 py-3">Portal Login</th>
                     <th className="px-5 py-3">Status</th>
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-750 text-slate-200 text-sm">
                   {filteredMembers.length > 0 ? (
-                    filteredMembers.map((member) => (
+                    filteredMembers.map((member) => {
+                      const linkedUser = users.find(u => 
+                        u.id === member.id || 
+                        (member.memberIdNumber && u.memberIdNumber === member.memberIdNumber) ||
+                        u.name.toLowerCase() === member.name.toLowerCase()
+                      );
+
+                      return (
                       <tr key={member.id} className="hover:bg-slate-750/30 transition-colors">
                         <td className="px-5 py-4 font-semibold text-white">
                           <div className="flex items-center gap-2">
@@ -396,8 +456,42 @@ export default function SecretaryView({
                             ))}
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-slate-400 font-mono text-xs">
-                          {member.contactNumber}
+                        <td className="px-5 py-4">
+                          {linkedUser ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 bg-[#081C15] text-[#52B788] border border-[#2D6A4F] px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold" title={`Account: @${linkedUser.username}`}>
+                                <Key className="w-3 h-3 text-[#52B788]" />
+                                <span>@{linkedUser.username}</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setLoginManageMember(member);
+                                  setManageUsername(linkedUser.username);
+                                  setManagePassword('password123');
+                                }}
+                                className="p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition-colors"
+                                title="Reset / Manage Password"
+                              >
+                                <KeyRound className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLoginManageMember(member);
+                                const gen = member.name.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '.');
+                                setManageUsername(gen);
+                                setManagePassword('password123');
+                              }}
+                              className="inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-750 text-slate-300 hover:text-white border border-slate-700 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                              title="Issue portal login for this member"
+                            >
+                              <UserPlus className="w-3 h-3 text-emerald-400" />
+                              <span>+ Create Login</span>
+                            </button>
+                          )}
                         </td>
                         <td className="px-5 py-4">
                           <button
@@ -433,7 +527,8 @@ export default function SecretaryView({
                           </div>
                         </td>
                       </tr>
-                    ))
+                    );
+                    })
                   ) : (
                     <tr>
                       <td colSpan={8} className="px-5 py-8 text-center text-slate-500">
@@ -646,7 +741,14 @@ export default function SecretaryView({
                     required
                     placeholder="e.g. Juan De la Cruz"
                     value={memberName}
-                    onChange={(e) => setMemberName(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setMemberName(val);
+                      if (!hasEditedUsernameManually) {
+                        const generated = val.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '.');
+                        setLoginUsername(generated);
+                      }
+                    }}
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -770,6 +872,88 @@ export default function SecretaryView({
                     </label>
                   ))}
                 </div>
+              </div>
+
+              {/* Portal Login Credentials Section */}
+              <div className="p-4 bg-slate-900/90 rounded-2xl border border-slate-750 space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-emerald-400" />
+                    <div>
+                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">Member Portal Account</h4>
+                      <p className="text-[11px] text-slate-400">Direct login credentials issued by the Secretary</p>
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-emerald-400">
+                    <input 
+                      type="checkbox"
+                      checked={createLoginAccount}
+                      onChange={(e) => setCreateLoginAccount(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0"
+                    />
+                    <span>Create Login</span>
+                  </label>
+                </div>
+
+                {createLoginAccount && (
+                  <div className="space-y-3 pt-2 border-t border-slate-800 animate-fade-in">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                          Portal Username
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-mono">@</span>
+                          <input
+                            type="text"
+                            required={createLoginAccount}
+                            placeholder="e.g. juan.delacruz"
+                            value={loginUsername}
+                            onChange={(e) => {
+                              setLoginUsername(e.target.value);
+                              setHasEditedUsernameManually(true);
+                            }}
+                            className="w-full pl-7 pr-3 py-2 text-xs bg-slate-950 border border-slate-700 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-xs font-bold text-slate-300 uppercase">
+                            Initial Password
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setLoginPassword(`Bafa@${Math.floor(100 + Math.random() * 900)}`)}
+                            className="text-[10px] text-emerald-400 hover:underline font-bold cursor-pointer"
+                          >
+                            Generate
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <input
+                            type={showLoginPassword ? 'text' : 'password'}
+                            required={createLoginAccount}
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                            className="w-full pl-3 pr-9 py-2 text-xs bg-slate-950 border border-slate-700 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowLoginPassword(!showLoginPassword)}
+                            className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-200"
+                          >
+                            {showLoginPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-slate-400 italic">
+                      *Ang miyembro makagamit niini aron makasulod sa Member Portal ug makakita sa iyang tinigom, attendance, ug dividend share.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 flex gap-3">
@@ -1134,6 +1318,187 @@ export default function SecretaryView({
         member={selectedMemberForBadge}
         allMembers={members}
       />
+
+      {/* CREDENTIAL HANDOUT SLIP MODAL (Issued after member enrollment) */}
+      {createdCredentials && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-slate-850 border-2 border-emerald-500/60 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden p-5 text-left space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-750 pb-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-white text-base">Farmer Enrolled & Login Created!</h3>
+                <p className="text-xs text-slate-400">Official Portal Credentials issued by Secretary</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-750 rounded-xl p-4 space-y-2.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase">Farmer Name:</span>
+                <span className="text-white font-extrabold text-sm">{createdCredentials.name}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase">Member ID:</span>
+                <span className="text-emerald-400 font-mono font-bold">{createdCredentials.memberId}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase">Sitio:</span>
+                <span className="text-slate-300 font-medium">{createdCredentials.sitio}</span>
+              </div>
+
+              <div className="border-t border-slate-800 pt-2.5 flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase flex items-center gap-1">
+                  <Key className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Portal Username:</span>
+                </span>
+                <code className="bg-slate-950 px-2.5 py-1 rounded-lg text-amber-300 font-mono font-bold text-xs border border-slate-800">
+                  {createdCredentials.username}
+                </code>
+              </div>
+
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase flex items-center gap-1">
+                  <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Initial Password:</span>
+                </span>
+                <code className="bg-slate-950 px-2.5 py-1 rounded-lg text-emerald-300 font-mono font-bold text-xs border border-slate-800">
+                  {createdCredentials.initialPassword}
+                </code>
+              </div>
+            </div>
+
+            <div className="text-[11px] text-slate-300 leading-relaxed bg-emerald-950/30 p-3 rounded-xl border border-emerald-900/40 flex items-start gap-2">
+              <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                Ihatag kini nga Username ug Password ngadto kang <strong>{createdCredentials.name}</strong>. Makasulod dayon siya sa iyang personal nga Member Portal.
+              </span>
+            </div>
+
+            <div className="flex gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `BAFA FARMER PORTAL LOGIN\nMember: ${createdCredentials.name}\nMember ID: ${createdCredentials.memberId}\nUsername: ${createdCredentials.username}\nPassword: ${createdCredentials.initialPassword}\nPortal: Barangay Alegria Farmers Association`
+                  );
+                  setCopiedCredentials(true);
+                  setTimeout(() => setCopiedCredentials(false), 2500);
+                }}
+                className="flex-1 py-2.5 bg-slate-750 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {copiedCredentials ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedCredentials ? 'Koda Nakopya!' : 'Kopyaha ang Koda'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreatedCredentials(null)}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition-all cursor-pointer text-center shadow-md"
+              >
+                Nahuman (Done)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MANAGE / RESET PORTAL CREDENTIALS MODAL */}
+      {loginManageMember && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-slate-850 border border-slate-750 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden p-5 text-left space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-750 pb-3">
+              <div>
+                <h3 className="font-bold text-white text-base flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-emerald-400" />
+                  <span>Manage Portal Credentials</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">Farmer: <strong className="text-white">{loginManageMember.name}</strong> ({loginManageMember.memberIdNumber})</p>
+              </div>
+              <button 
+                onClick={() => setLoginManageMember(null)}
+                className="text-slate-400 hover:text-white text-lg font-bold p-1 cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!manageUsername.trim() || !managePassword.trim()) return;
+                if (onManageMemberLogin) {
+                  onManageMemberLogin(loginManageMember.id, manageUsername.trim(), managePassword.trim());
+                }
+                setLoginManageMember(null);
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-slate-300 uppercase">Portal Username</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-mono">@</span>
+                  <input
+                    type="text"
+                    required
+                    value={manageUsername}
+                    onChange={(e) => setManageUsername(e.target.value)}
+                    className="w-full pl-7 pr-3 py-2 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="block text-xs font-bold text-slate-300 uppercase">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => setManagePassword(`Bafa@${Math.floor(100 + Math.random() * 900)}`)}
+                    className="text-[10px] text-emerald-400 hover:underline font-bold cursor-pointer"
+                  >
+                    Generate Random
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showManagePassword ? "text" : "password"}
+                    required
+                    value={managePassword}
+                    onChange={(e) => setManagePassword(e.target.value)}
+                    className="w-full px-3.5 py-2 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white font-mono pr-10 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowManagePassword(!showManagePassword)}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200"
+                  >
+                    {showManagePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-400 italic bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                Ang pag-save niini mag-update o maghimo dayon sa account credentials niining maong miyembro.
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setLoginManageMember(null)}
+                  className="flex-1 py-2.5 bg-slate-750 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer"
+                >
+                  Save Credentials
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

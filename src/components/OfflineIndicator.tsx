@@ -25,6 +25,7 @@ interface OfflineIndicatorProps {
   isPopulating?: boolean;
   onPurgeDb?: () => void;
   isPurging?: boolean;
+  onClearLocalCache?: () => void;
 }
 
 export default function OfflineIndicator({
@@ -38,6 +39,7 @@ export default function OfflineIndicator({
   isPopulating = false,
   onPurgeDb,
   isPurging = false,
+  onClearLocalCache,
 }: OfflineIndicatorProps) {
   const [showDbModal, setShowDbModal] = useState(false);
 
@@ -283,25 +285,38 @@ export default function OfflineIndicator({
             <div className="bg-slate-800/40 border border-slate-750 p-3 rounded-xl space-y-1.5 text-xs text-slate-300">
               <span className="font-bold text-white block text-[11px] uppercase tracking-wider flex items-center gap-1">
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>How Connection Works</span>
+                <span>{isConnected ? 'Active Cloud Synchronization' : 'Why is Data Stored in Local Storage?'}</span>
               </span>
               <p className="text-[11px] leading-relaxed text-slate-400">
                 {isConnected ? (
                   <>Changes made in the portal are immediately mirrored to Supabase. When offline, contributions and changes queue up locally and automatically sync the moment connection returns.</>
                 ) : (
-                  <>To connect Supabase, configure your <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-300 font-mono text-[10px]">DATABASE_URL</code> in project settings. The tables will auto-initialize on first connection.</>
+                  <>Your application is currently running in <strong>Offline-First mode</strong> because <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-300 font-mono text-[10px]">DATABASE_URL</code> is not connected on your Vercel deployment. All records are safely preserved in this browser so your data is not lost. Once you connect your Supabase database in Vercel settings, you can push all local data to the cloud.</>
                 )}
               </p>
+              {!isConnected && (
+                <div className="mt-2 pt-2 border-t border-slate-700/60 text-[11px] text-slate-400 space-y-1">
+                  <span className="font-bold text-slate-300 block">How to connect Supabase on Vercel:</span>
+                  <ol className="list-decimal list-inside space-y-0.5 pl-1 text-[10px] text-slate-400">
+                    <li>Open your Vercel Dashboard → Project Settings → <strong>Environment Variables</strong>.</li>
+                    <li>Add key <code className="text-amber-300 font-mono">DATABASE_URL</code> with your Supabase Transaction Pooler URI (port 6543).</li>
+                    <li>Go to Deployments → Redeploy the latest build.</li>
+                  </ol>
+                </div>
+              )}
             </div>
 
             {/* Security & Confidentiality Guarantee */}
-            <div className="bg-emerald-950/25 border border-emerald-500/30 p-3 rounded-xl space-y-1 text-xs text-emerald-300">
+            <div className="bg-emerald-950/25 border border-emerald-500/30 p-3 rounded-xl space-y-1.5 text-xs text-emerald-300">
               <span className="font-bold block text-[11px] uppercase tracking-wider flex items-center gap-1.5 text-emerald-400">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Zero Residual Data Security</span>
+                <span>Zero Plaintext Passwords & Residual Storage</span>
               </span>
               <p className="text-[11px] leading-relaxed text-emerald-200/90">
-                All locally recorded contributions and queue items are atomically pushed to Supabase and immediately purged from local browser storage upon connection to protect confidential association records.
+                <strong>Credential Protection:</strong> Passwords are never stored in plain text anywhere in browser local storage. All credentials are protected with irreversible cryptographic salted SHA-256 hashes.
+              </p>
+              <p className="text-[11px] leading-relaxed text-emerald-200/80">
+                <strong>Cloud Zero-Residual Mode:</strong> When connected to Supabase, all records are safely centralized in PostgreSQL. You can use the "Clear Local Cache" button below to purge cached browser tables from this device.
               </p>
             </div>
 
@@ -320,20 +335,6 @@ export default function OfflineIndicator({
                   <span>{isChecking ? 'Checking...' : 'Test Connection'}</span>
                 </button>
 
-                {onPurgeDb && (
-                  <button
-                    id="purge-demo-db-btn"
-                    type="button"
-                    disabled={isPurging}
-                    onClick={onPurgeDb}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-xl text-xs font-bold transition-all border border-rose-500/40 cursor-pointer disabled:opacity-50"
-                    title="Permanently remove all demo and seed records"
-                  >
-                    <Trash2 className={`w-3.5 h-3.5 ${isPurging ? 'animate-spin' : 'text-rose-400'}`} />
-                    <span>{isPurging ? 'Purging Demo Data...' : 'Purge All Demo Data'}</span>
-                  </button>
-                )}
-
                 {isConnected && onPopulateDb && (
                   <button
                     id="populate-cloud-db-btn"
@@ -349,6 +350,33 @@ export default function OfflineIndicator({
                   >
                     <Server className={`w-3.5 h-3.5 ${isPopulating ? 'animate-spin' : 'text-amber-400'}`} />
                     <span>{isPopulating ? 'Pushing All Data...' : 'Sync All Data to DB'}</span>
+                  </button>
+                )}
+
+                {isConnected && onClearLocalCache && (
+                  <button
+                    id="clear-local-cache-btn"
+                    type="button"
+                    onClick={onClearLocalCache}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-700 cursor-pointer"
+                    title="Clear local browser storage cache to enforce Zero-Residual storage"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Clear Local Cache (Zero Residual)</span>
+                  </button>
+                )}
+
+                {onPurgeDb && (
+                  <button
+                    id="purge-demo-db-btn"
+                    type="button"
+                    disabled={isPurging}
+                    onClick={onPurgeDb}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-xl text-xs font-bold transition-all border border-rose-500/40 cursor-pointer disabled:opacity-50"
+                    title="Permanently remove all demo and seed records"
+                  >
+                    <Trash2 className={`w-3.5 h-3.5 ${isPurging ? 'animate-spin' : 'text-rose-400'}`} />
+                    <span>{isPurging ? 'Purging Demo Data...' : 'Purge Demo Data'}</span>
                   </button>
                 )}
               </div>

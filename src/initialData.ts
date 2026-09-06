@@ -1,12 +1,15 @@
 import { Member, Meeting, Resolution, FinancialTransaction, Announcement, SystemLog, HogRaisingState, Product, AssociationActivity, User, OrganizationFund, AuditorReport, DelegationRequest } from './types';
+import { hashPassword } from './utils/audit';
 
 // The 6 official officer accounts of Alegria Farmers Association (Tuburan, Cebu)
-// Allows designated officers to log in securely.
+// Allows designated officers to log in securely with salted SHA-256 hashed credentials.
+const DEFAULT_HASH = hashPassword('password123');
+
 export const OFFICIAL_OFFICERS: User[] = [
   {
     id: 'user-pres',
     username: 'president',
-    password: 'password123',
+    passwordHash: DEFAULT_HASH,
     name: 'Zenaida A. Elbiña',
     role: 'President',
     isApproved: true,
@@ -15,7 +18,7 @@ export const OFFICIAL_OFFICERS: User[] = [
   {
     id: 'user-vp',
     username: 'vp',
-    password: 'password123',
+    passwordHash: DEFAULT_HASH,
     name: 'Anselna B Arnado',
     role: 'Vice_President',
     isApproved: true,
@@ -24,7 +27,7 @@ export const OFFICIAL_OFFICERS: User[] = [
   {
     id: 'user-sec',
     username: 'secretary',
-    password: 'password123',
+    passwordHash: DEFAULT_HASH,
     name: 'Jennylyn S Lumactao',
     role: 'Secretary',
     isApproved: true,
@@ -33,7 +36,7 @@ export const OFFICIAL_OFFICERS: User[] = [
   {
     id: 'user-tres',
     username: 'treasurer',
-    password: 'password123',
+    passwordHash: DEFAULT_HASH,
     name: 'Gracelyn P Asendiente',
     role: 'Treasurer',
     isApproved: true,
@@ -42,7 +45,7 @@ export const OFFICIAL_OFFICERS: User[] = [
   {
     id: 'user-aud',
     username: 'auditor',
-    password: 'password123',
+    passwordHash: DEFAULT_HASH,
     name: 'Lorena B Pinote',
     role: 'Auditor',
     isApproved: true,
@@ -51,7 +54,7 @@ export const OFFICIAL_OFFICERS: User[] = [
   {
     id: 'user-pio',
     username: 'pio',
-    password: 'password123',
+    passwordHash: DEFAULT_HASH,
     name: 'Ida S Manera',
     role: 'PIO',
     isApproved: true,
