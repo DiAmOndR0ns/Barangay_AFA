@@ -1131,7 +1131,7 @@ async function handler(req, res) {
     const body = await parseRequestBody(req);
     const savePromise = saveFullStateToPostgres(pool, body);
     const timeoutPromise = new Promise(
-      (_, reject) => setTimeout(() => reject(new Error("Cloud DB push timed out after 6 seconds.")), 6e3)
+      (_, reject) => setTimeout(() => reject(new Error("Cloud DB push timed out after 30 seconds.")), 30e3)
     );
     await Promise.race([savePromise, timeoutPromise]);
     return sendResponse(res, 200, {
