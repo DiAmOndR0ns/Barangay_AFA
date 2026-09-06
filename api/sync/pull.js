@@ -869,7 +869,7 @@ async function handler(req, res) {
     const pool = getPool();
     const pullPromise = fetchAllDataFromPostgres(pool);
     const timeoutPromise = new Promise(
-      (_, reject) => setTimeout(() => reject(new Error("Cloud DB query timed out after 5 seconds.")), 5e3)
+      (_, reject) => setTimeout(() => reject(new Error("Cloud DB query timed out after 30 seconds.")), 30e3)
     );
     const data = await Promise.race([pullPromise, timeoutPromise]);
     return sendResponse(res, 200, {
