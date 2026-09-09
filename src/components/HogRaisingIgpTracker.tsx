@@ -5,7 +5,8 @@ import {
 import { 
   Briefcase, Boxes, Package, Plus, ArrowUpRight, ArrowDownRight, Calendar, Users, 
   Activity, Trash2, Printer, CheckCircle, Info, DollarSign, 
-  Tag, ShieldCheck, Heart, Sparkles, Filter, FileText, Check, Award, Calculator
+  Tag, ShieldCheck, Heart, Sparkles, Filter, FileText, Check, Award, Calculator,
+  Lock, LockOpen
 } from 'lucide-react';
 import AttendanceDividendCalculatorModal from './AttendanceDividendCalculatorModal';
 
@@ -23,6 +24,7 @@ interface HogRaisingIgpTrackerProps {
   isOfficerMode?: boolean; // Toggles styling to match Officer's dark slate or Member's warm green
   closedYears?: number[];
   onCloseDecemberBook?: (year: number) => void;
+  onReopenDecemberBook?: (year: number) => void;
 }
 
 export default function HogRaisingIgpTracker({
@@ -37,8 +39,9 @@ export default function HogRaisingIgpTracker({
   isTreasurerOrOfficer,
   currentUser,
   isOfficerMode = false,
-  closedYears = state.closedYears || [2025],
-  onCloseDecemberBook
+  closedYears = state.closedYears || [],
+  onCloseDecemberBook,
+  onReopenDecemberBook
 }: HogRaisingIgpTrackerProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'chores' | 'dividends' | 'ledger' | 'reports'>('overview');
   const [showDividendCalcModal, setShowDividendCalcModal] = useState(false);
@@ -88,6 +91,7 @@ export default function HogRaisingIgpTracker({
 
   // New Expense Form
   const [expCategory, setExpCategory] = useState<string>('Feeds');
+  const [expFundSource, setExpFundSource] = useState<string>('Association Livelihood & Livestock Fund');
   const [expDesc, setExpDesc] = useState('');
   const [expAmount, setExpAmount] = useState('');
   const [expDate, setExpDate] = useState(new Date().toISOString().split('T')[0]);
@@ -214,7 +218,7 @@ export default function HogRaisingIgpTracker({
           </div>
 
           <div style="background: #e6f4ea; border: 1px solid #a3cfbb; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11px; color: #0f5132;">
-            <strong>BUDGET & CAPITAL SOURCE (WHERE BUDGET WAS TAKEN FROM):</strong> Funded under the <strong>DOLE Integrated Livelihood Program (DILP) Capital Grant (₱${(typeof state.capitalGrant === 'number' ? state.capitalGrant : (Number(state.capitalGrant) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })})</strong> & Municipal Agriculture Assistance. All operating expenditures (feeds, piglets, vaccines) are disbursed directly from this approved livelihood allocation.
+            <strong>BUDGET & CAPITAL SOURCE (WHERE BUDGET WAS TAKEN FROM):</strong> Funded under the <strong>Association Livelihood & Livestock Project Fund (₱${(typeof state.capitalGrant === 'number' ? state.capitalGrant : (Number(state.capitalGrant) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })})</strong>. All operating expenditures (feeds, piglets, vaccines) are disbursed directly from this approved livelihood allocation.
           </div>
 
           <p style="font-size: 12px; margin-bottom: 20px;">
@@ -297,8 +301,21 @@ export default function HogRaisingIgpTracker({
   // Calculations filtered by selected produce
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
   const totalSales = filteredSales.reduce((sum, item) => sum + item.revenue, 0);
+
+  // Material acquisitions calculations (Feeds, Livestock stocks, Supplies)
+  const feedsPurchases = filteredExpenses
+    .filter(e => e.category.toLowerCase().includes('feed') || e.description.toLowerCase().includes('feed'))
+    .reduce((sum, item) => sum + item.amount, 0);
+
+  const stockPurchases = filteredExpenses
+    .filter(e => e.category.toLowerCase().includes('pig') || e.category.toLowerCase().includes('hog') || e.category.toLowerCase().includes('chick') || e.category.toLowerCase().includes('stock') || e.description.toLowerCase().includes('pig') || e.description.toLowerCase().includes('hog'))
+    .reduce((sum, item) => sum + item.amount, 0);
+
+  const suppliesPurchases = filteredExpenses
+    .filter(e => !e.category.toLowerCase().includes('feed') && !e.description.toLowerCase().includes('feed') && !e.category.toLowerCase().includes('pig') && !e.category.toLowerCase().includes('hog') && !e.category.toLowerCase().includes('chick') && !e.category.toLowerCase().includes('stock') && !e.description.toLowerCase().includes('pig') && !e.description.toLowerCase().includes('hog'))
+    .reduce((sum, item) => sum + item.amount, 0);
   
-  // Overall expenditures across ALL projects (to correctly deduct from overall capital grant)
+  // Overall expenditures across ALL projects (to correctly deduct from overall project working capital)
   const overallExpensesTotal = state.expenses.reduce((sum, item) => sum + item.amount, 0);
   const remainingGrant = capitalGrant - overallExpensesTotal;
   
@@ -448,7 +465,8 @@ export default function HogRaisingIgpTracker({
       category: expCategory,
       description: expDesc,
       amount: parseFloat(expAmount),
-      date: expDate
+      date: expDate,
+      fundSource: expFundSource
     });
     setExpDesc('');
     setExpAmount('');
@@ -531,7 +549,7 @@ export default function HogRaisingIgpTracker({
           </div>
 
           <div style="background: #e6f4ea; border: 1px solid #a3cfbb; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11px; color: #0f5132;">
-            <strong>CAPITAL & BUDGET ORIGIN (WHERE BUDGET WAS TAKEN FROM):</strong> Revolving Livelihood Capital funded by <strong>DOLE Integrated Livelihood Program (DILP) Capital Grant</strong> & Municipal Agriculture Assistance. Net dividends are distributed from livelihood and rental proceeds.
+            <strong>CAPITAL & BUDGET ORIGIN (WHERE BUDGET WAS TAKEN FROM):</strong> Revolving Livelihood Capital funded by <strong>Association Livelihood & Livestock Project Fund</strong>. Net dividends are distributed from livelihood and rental proceeds.
           </div>
 
           <p style="font-size: 12px; margin-bottom: 15px;">
@@ -602,7 +620,7 @@ export default function HogRaisingIgpTracker({
             </span>
           </h2>
           <p className={`text-xs ${theme.subText} mt-1 font-medium`}>
-            Track the capital grant, expenses, rental & sales logs, and member dividends for <strong>{selectedProduce}</strong>.
+            Track project working capital, expenses, rental & sales logs, and member dividends for <strong>{selectedProduce}</strong>.
           </p>
         </div>
 
@@ -729,10 +747,10 @@ export default function HogRaisingIgpTracker({
       {/* METRIC CARDS FOR FINANCIAL BREAKDOWN */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 text-left">
         
-        {/* Capital Grant Card */}
+        {/* Project Working Capital Card */}
         <div className={`p-4.5 rounded-2xl border ${theme.cardBg} flex flex-col justify-between space-y-2 shadow-sm relative overflow-hidden`}>
           <div>
-            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Capital Grant (Pundo gikan sa LGU)</span>
+            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Project Working Capital (Pundo sa Proyekto)</span>
             {isEditingGrant ? (
               <form onSubmit={(e) => {
                 e.preventDefault();
@@ -820,10 +838,10 @@ export default function HogRaisingIgpTracker({
           </div>
         </div>
 
-        {/* Remaining Grant Card */}
+        {/* Remaining Capital Card */}
         <div className={`p-4.5 rounded-2xl border ${theme.cardBg} flex flex-col justify-between space-y-2 shadow-sm relative overflow-hidden`}>
           <div>
-            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Sobra sa Grant (Remaining)</span>
+            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Sobra sa Pundo (Remaining Capital)</span>
             <span className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 block mt-1 font-mono">
               PHP {remainingGrant.toLocaleString()}
             </span>
@@ -895,6 +913,37 @@ export default function HogRaisingIgpTracker({
             
             {/* Breakdown graph / details */}
             <div className={`lg:col-span-7 p-6 rounded-3xl border ${theme.cardBg} space-y-6`}>
+              {/* Materials Acquisition & Fund Allocation Overview */}
+              <div className="p-4 rounded-2xl bg-slate-900/90 dark:bg-slate-950 border border-slate-750 text-white space-y-3 shadow-inner">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <Boxes className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-black uppercase tracking-wider text-emerald-300">Materials Acquired from Fund</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono font-bold">
+                    Association Livelihood Fund
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-left">
+                  <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">🌾 Feeds Purchases</span>
+                    <strong className="text-sm font-mono text-amber-300 block mt-0.5">PHP {feedsPurchases.toLocaleString()}</strong>
+                  </div>
+                  <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">🐖 Hogs / Livestock</span>
+                    <strong className="text-sm font-mono text-emerald-300 block mt-0.5">PHP {stockPurchases.toLocaleString()}</strong>
+                  </div>
+                  <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">💊 Supplies & Meds</span>
+                    <strong className="text-sm font-mono text-blue-300 block mt-0.5">PHP {suppliesPurchases.toLocaleString()}</strong>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center text-[11px] pt-1 text-slate-400 font-medium">
+                  <span>Total Materials Disbursed: <strong className="text-white font-mono">PHP {(feedsPurchases + stockPurchases + suppliesPurchases).toLocaleString()}</strong></span>
+                  <span>Fund Balance: <strong className="text-emerald-400 font-mono">PHP {remainingGrant.toLocaleString()}</strong></span>
+                </div>
+              </div>
+
               <div>
                 <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Breakdown sa Gastos sa IGP Capital</h3>
                 <p className="text-xs text-slate-400 mt-1">Giunsa paggamit ang pundo para sa {selectedProduce} sumpay sa kagamitan, supplies, ug operating budget.</p>
@@ -1488,24 +1537,45 @@ export default function HogRaisingIgpTracker({
                 {/* Closing Stamp Badge */}
                 <div className="md:col-span-7">
                   {isSelectedYearClosed ? (
-                    <div className="p-4 bg-rose-500/5 border border-rose-500/25 rounded-2xl flex items-center gap-3">
-                      <div className="bg-rose-500/10 text-rose-500 p-2.5 rounded-xl border border-rose-500/30">
-                        <ShieldCheck className="w-6 h-6 animate-pulse" />
+                    <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-rose-500/20 text-rose-500 p-2.5 rounded-xl border border-rose-500/40">
+                          <Lock className="w-6 h-6 animate-pulse" />
+                        </div>
+                        <div className="text-left space-y-0.5">
+                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block font-mono">LIBRO SA PINANSYAL GISIRADO NA (DECEMBER BOOKS CLOSED)</span>
+                          <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">
+                            Ang financial books sa {reportYear} opisyal nang gisirado ug gi-audit. Dili kini modawat og bag-ong entry samtang sirado.
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-left space-y-0.5">
-                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block font-mono">LIBRO SA PINANSYAL GISIRADO NA (DECEMBER BOOKS CLOSED)</span>
-                        <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">
-                          Ang financial books sa {reportYear} opisyal nang gisirado, gi-audit ug gipirmahan niadtong Disyembre 31. Dili na mahimong usbon.
-                        </p>
-                      </div>
+
+                      {isTreasurerOrOfficer && onReopenDecemberBook && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Gusto ba nimo ablihan pagbalik ang Libro para sa ${reportYear}? Makahimo ka na sa pagtala ug pag-usab sa mga rekord niini.`)) {
+                              onReopenDecemberBook(reportYear);
+                            }
+                          }}
+                          className="px-3.5 py-2 rounded-xl text-xs font-black bg-amber-600 hover:bg-amber-700 text-white shadow-md flex items-center gap-1.5 cursor-pointer shrink-0 transition-all self-start sm:self-center"
+                        >
+                          <LockOpen className="w-4 h-4" />
+                          <span>Ablihan ang Libro (Reopen Book)</span>
+                        </button>
+                      )}
                     </div>
                   ) : (
-                    <div className="p-4 bg-amber-500/5 border border-amber-500/25 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="text-left space-y-0.5 flex-1">
-                        <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block font-mono">KASAMTANGANG ABLI (ACTIVE & UNLOCKED)</span>
-                        <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
-                          Ang financial books sa {reportYear} kasamtangang abli ug aktibo. Mahimo pang magtala og mga gasto ug halin sa baboy.
-                        </p>
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="bg-emerald-500/20 text-emerald-500 p-2.5 rounded-xl border border-emerald-500/40">
+                          <LockOpen className="w-6 h-6" />
+                        </div>
+                        <div className="text-left space-y-0.5">
+                          <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block font-mono">KASAMTANGANG ABLI (ACTIVE & UNLOCKED)</span>
+                          <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                            Ang financial books sa {reportYear} kasamtangang abli. Mahimo kang magtala og mga gasto, feeds, ug halin sa baboy para sa {reportYear}.
+                          </p>
+                        </div>
                       </div>
                       
                       {isTreasurerOrOfficer && onCloseDecemberBook && (
@@ -1517,6 +1587,7 @@ export default function HogRaisingIgpTracker({
                           }}
                           className="px-3.5 py-2 rounded-xl text-xs font-black bg-rose-650 hover:bg-rose-700 text-white shadow-md flex items-center gap-1.5 cursor-pointer shrink-0 transition-all self-start sm:self-center"
                         >
+                          <Lock className="w-4 h-4" />
                           <span>Sirad-an ang Libro (Close Books)</span>
                         </button>
                       )}
@@ -1622,6 +1693,29 @@ export default function HogRaisingIgpTracker({
                 </select>
               </div>
 
+              {/* Fund Source Selection */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase">Tinubdan sa Pundo (Fund Source)</label>
+                  <span className="text-[10px] text-emerald-400 font-bold">Deducted from Fund Balance</span>
+                </div>
+                <select
+                  value={expFundSource}
+                  onChange={(e) => setExpFundSource(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500 font-medium"
+                >
+                  <option value="Association Livelihood & Livestock Fund">Association Livelihood & Livestock Fund (Pundo sa Proyekto)</option>
+                  <option value="General Operational Fund">General Operational Fund (Kinatibuk-ang Pundo)</option>
+                  <option value="Agricultural Production & Inputs Fund">Agricultural Production & Inputs Fund</option>
+                  <option value="DISP-5% (Dispersal & Livestock Insurance Pool)">DISP-5% (Dispersal & Livestock Insurance Pool)</option>
+                </select>
+                <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-emerald-300">
+                  {expCategory === 'Piglets' || expCategory === 'Chicks' ? '🐖 Pagpalit og Stocks / Livestock: Deducted directly from selected fund balance.' :
+                   expCategory === 'Feeds' ? '🌾 Pagpalit og Feeds: Deducted directly from selected fund balance and reflected on dashboard.' :
+                   '💊 Supplies & Materials: Charged directly to selected fund.'}
+                </div>
+              </div>
+
               {/* Amount & Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -1646,7 +1740,24 @@ export default function HogRaisingIgpTracker({
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                   />
                   {expenseDateError && (
-                    <span className="text-[10px] text-rose-500 font-bold block mt-1">{expenseDateError}</span>
+                    <div className="mt-1.5 p-2 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 flex flex-col gap-1.5">
+                      <span className="text-[10px] font-bold">{expenseDateError}</span>
+                      {isTreasurerOrOfficer && onReopenDecemberBook && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const yr = parseInt(expDate.substring(0, 4));
+                            if (yr) {
+                              onReopenDecemberBook(yr);
+                              setExpenseDateError('');
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold self-start cursor-pointer transition-all"
+                        >
+                          I-reopen ang Libro sa {expDate.substring(0, 4)}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -1735,7 +1846,24 @@ export default function HogRaisingIgpTracker({
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none"
                   />
                   {saleDateError && (
-                    <span className="text-[10px] text-rose-500 font-bold block mt-1">{saleDateError}</span>
+                    <div className="mt-1.5 p-2 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 flex flex-col gap-1.5">
+                      <span className="text-[10px] font-bold">{saleDateError}</span>
+                      {isTreasurerOrOfficer && onReopenDecemberBook && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const yr = parseInt(saleDate.substring(0, 4));
+                            if (yr) {
+                              onReopenDecemberBook(yr);
+                              setSaleDateError('');
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold self-start cursor-pointer transition-all"
+                        >
+                          I-reopen ang Libro sa {saleDate.substring(0, 4)}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

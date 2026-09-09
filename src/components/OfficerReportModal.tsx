@@ -150,7 +150,7 @@ export default function OfficerReportModal({
               <tr>
                 <td><strong>${f.code}</strong></td>
                 <td><strong>${f.name}</strong><br/><span style="font-size: 8.5px; color:#64748b;">${f.description}</span></td>
-                <td>${f.code.includes('DOLE') ? 'DOLE Region VII' : f.code.includes('SLP') ? 'DSWD-SLP / LGU' : f.code.includes('ATI') ? 'ATI-RTC VII' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank' : f.code.includes('DISP') ? '5% Statutory Reserve Pool' : 'AFA Member Equity'}</td>
+                <td>${f.code.includes('LIVESTOCK') || f.code.includes('IGP') ? 'Association Livelihood Project Fund' : f.code.includes('SLP') ? 'General Operational Buffer' : f.code.includes('ATI') ? 'ATI-RTC VII' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank' : f.code.includes('DISP') ? '5% Statutory Reserve Pool' : 'AFA Member Equity'}</td>
                 <td>PHP ${f.allocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style="color: #065f46; font-weight: bold;">PHP ${f.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td>${f.custodian}</td>
@@ -173,7 +173,7 @@ export default function OfficerReportModal({
             ${Object.entries(fundExpenseBreakdown).map(([source, amt]) => `
               <tr>
                 <td><strong>${source}</strong></td>
-                <td>${source.includes('DOLE') ? 'Livestock stock, feeds & infrastructure' : source.includes('SLP') || source.includes('GF') ? 'General association operations & meeting logistics' : source.includes('ATI') ? 'Training & farmer capacity development' : source.includes('DISP') ? 'Mortality insurance & medical replacements' : 'Operational disbursements'}</td>
+                <td>${source.includes('LIVESTOCK') || source.includes('Hog') || source.includes('DOLE') ? 'Livestock stock, feeds & infrastructure' : source.includes('SLP') || source.includes('GF') ? 'General association operations & meeting logistics' : source.includes('ATI') ? 'Training & farmer capacity development' : source.includes('DISP') ? 'Mortality insurance & medical replacements' : 'Operational disbursements'}</td>
                 <td class="expense">PHP ${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td>${totalExpense > 0 ? ((amt / totalExpense) * 100).toFixed(1) : '0.0'}%</td>
               </tr>
@@ -262,7 +262,7 @@ export default function OfficerReportModal({
             ${funds.map(f => `
               <tr>
                 <td><strong>${f.name} (${f.code})</strong></td>
-                <td>${f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program' : f.code.includes('SLP') ? 'DSWD Sustainable Livelihood Program' : f.code.includes('ATI') ? 'Agricultural Training Institute' : f.code.includes('DISP') ? 'AFA Statutory 5% Reserve' : 'Cooperative Capital'}</td>
+                <td>${f.code.includes('LIVESTOCK') || f.code.includes('IGP') || f.code.includes('DOLE') ? 'Association Livelihood Project Fund' : f.code.includes('SLP') ? 'General Operations Fund' : f.code.includes('ATI') ? 'Agricultural Training Institute' : f.code.includes('DISP') ? 'AFA Statutory 5% Reserve' : 'Cooperative Capital'}</td>
                 <td>${f.description}</td>
                 <td style="color: green; font-weight: bold;">✓ VERIFIED & IN COMPLIANCE</td>
               </tr>
@@ -358,22 +358,22 @@ export default function OfficerReportModal({
           <tr><th>Executive Key Performance Indicator</th><th>Current Status Outcome</th></tr>
           <tr><td>Total Registered Farmer Roster</td><td><strong>${members.length} Members (${activeMembers.length} Active, ${inactiveMembers.length} Inactive)</strong></td></tr>
           <tr><td>General Fund Financial Cash Balance</td><td><strong>PHP ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td></tr>
-          <tr><td>LGU Tuburan & DOLE Assistance Capital Grant</td><td><strong>PHP ${hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })} Dedicated Livelihood Capital</strong></td></tr>
+          <tr><td>Association Livelihood Project Capital</td><td><strong>PHP ${hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })} Dedicated Working Capital</strong></td></tr>
           <tr><td>Passed Legislative Resolutions</td><td>${resolutions.filter(r => r.status === 'Approved').length} Approved Resolution(s) out of ${resolutions.length} Total</td></tr>
           <tr><td>Financial Audit Integrity Rate</td><td><strong>${auditComplianceRate}% Verified Compliance (Auditor: Lorena B. Pinote)</strong></td></tr>
           <tr><td>Public Announcements Broadcasted</td><td>${announcements.length} Published Advisories (${announcements.filter(a => a.priority === 'High').length} High Priority)</td></tr>
         </table>
 
-        <div class="section-title">2. CAPITAL GRANTS & SOURCE OF BUDGET ALLOCATIONS (WHERE BUDGET WAS TAKEN FROM)</div>
+        <div class="section-title">2. PROJECT FUNDS & SOURCE OF BUDGET ALLOCATIONS (WHERE BUDGET WAS TAKEN FROM)</div>
         <p style="font-size: 10px; color: #475569; margin-bottom: 8px;">
-          Master inventory of government capital grants, cooperative deposits, and organizational funds managed by the Association:
+          Master inventory of association project funds, cooperative deposits, and operational accounts:
         </p>
         <table>
           <thead>
             <tr>
               <th>Fund Code</th>
               <th>Fund Program Name</th>
-              <th>Originating Budget / Grantor Source</th>
+              <th>Originating Budget / Allocation Source</th>
               <th>Allocated Capital (PHP)</th>
               <th>Audited Live Balance (PHP)</th>
               <th>Fund Custodian</th>
@@ -384,7 +384,7 @@ export default function OfficerReportModal({
               <tr>
                 <td><strong>${f.code}</strong></td>
                 <td><strong>${f.name}</strong></td>
-                <td>${f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program (DILP)' : f.code.includes('SLP') ? 'DSWD-SLP & LGU Tuburan Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Grant' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool'}</td>
+                <td>${f.code.includes('DOLE') || f.code.includes('IGP') ? 'Association Livelihood Project Allocation' : f.code.includes('SLP') ? 'DSWD-SLP General Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Allocation' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool'}</td>
                 <td>PHP ${f.allocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style="color: #065f46; font-weight: bold;">PHP ${f.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td>${f.custodian}</td>
@@ -427,10 +427,10 @@ export default function OfficerReportModal({
         </table>
 
         ${hogRaising ? `
-          <div class="section-title">7. HOG RAISING & LIVELIHOOD IGP PROJECT (DOLE-DILP CAPITAL GRANT)</div>
+          <div class="section-title">7. HOG RAISING & LIVELIHOOD IGP PROJECT (COMMUNAL LIVELIHOOD CAPITAL)</div>
           <table>
             <tr><th>IGP Metric</th><th>Outcome Details</th></tr>
-            <tr><td><strong>Capital Grant Budget Origin</strong></td><td><strong>DOLE Integrated Livelihood Program (DILP) Grant (PHP ${hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })})</strong></td></tr>
+            <tr><td><strong>Livelihood Capital Origin</strong></td><td><strong>Association Livelihood & Livestock Project Fund (PHP ${hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2 })})</strong></td></tr>
             <tr><td>Total Operating Expenses Recorded</td><td>PHP ${hogExpensesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} (Feeds, Piglets, Vaccines)</td></tr>
             <tr><td>Active Volunteer Chore Groups</td><td>${hogRaising.groups?.length || 0} Member Caretaker Teams</td></tr>
             <tr><td>Total Batch Sales Revenue Collected</td><td>PHP ${hogSalesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
@@ -597,9 +597,9 @@ export default function OfficerReportModal({
       csvRows.push(`Net Balance (PHP),${netBalance.toFixed(2)}`);
       csvRows.push('');
       csvRows.push('2. REGISTERED ORGANIZATION FUND ACCOUNTS & SOURCE OF BUDGET ALLOCATIONS (WHERE BUDGET WAS TAKEN FROM)');
-      csvRows.push('Fund Code,Fund Account Name,Funding Origin / Grantor,Allocated Capital (PHP),Live Audited Balance (PHP),Custodian');
+      csvRows.push('Fund Code,Fund Account Name,Funding Origin / Source,Allocated Capital (PHP),Live Audited Balance (PHP),Custodian');
       funds.forEach(f => {
-        const origin = f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program (DILP)' : f.code.includes('SLP') ? 'DSWD-SLP & LGU Tuburan Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Grant' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool';
+        const origin = f.code.includes('DOLE') || f.code.includes('IGP') ? 'Association Livelihood Project Allocation' : f.code.includes('SLP') ? 'DSWD-SLP General Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Allocation' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool';
         csvRows.push([
           `"${f.code}"`,
           `"${f.name.replace(/"/g, '""')}"`,
@@ -740,14 +740,14 @@ export default function OfficerReportModal({
       csvRows.push(`Total Registered Farmer Members,${members.length}`);
       csvRows.push(`Active Farmer Members,${activeMembers.length}`);
       csvRows.push(`Net General Cash Fund Balance (PHP),${netBalance.toFixed(2)}`);
-      csvRows.push(`DOLE-DILP Capital Grant Allocation (PHP),${hogCapital.toFixed(2)}`);
+      csvRows.push(`Association Livelihood Working Capital (PHP),${hogCapital.toFixed(2)}`);
       csvRows.push(`Approved Legislative Resolutions,${resolutions.filter(r => r.status === 'Approved').length}`);
       csvRows.push(`Financial Audit Compliance Rate (%),${auditComplianceRate}`);
       csvRows.push('');
-      csvRows.push('2. PORTFOLIO OF CAPITAL GRANTS & BUDGET SOURCES (WHERE BUDGET WAS TAKEN FROM)');
-      csvRows.push('Fund Code,Fund Account Name,Originating Grantor / Source,Allocated Capital (PHP),Audited Balance (PHP),Custodian');
+      csvRows.push('2. PORTFOLIO OF PROJECT FUNDS & BUDGET SOURCES (WHERE BUDGET WAS TAKEN FROM)');
+      csvRows.push('Fund Code,Fund Account Name,Originating Allocation / Source,Allocated Capital (PHP),Audited Balance (PHP),Custodian');
       funds.forEach(f => {
-        const origin = f.code.includes('DOLE') ? 'DOLE Integrated Livelihood Program (DILP)' : f.code.includes('SLP') ? 'DSWD-SLP & LGU Tuburan Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Grant' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool';
+        const origin = f.code.includes('DOLE') || f.code.includes('IGP') ? 'Association Livelihood Project Allocation' : f.code.includes('SLP') ? 'DSWD-SLP General Seed Fund' : f.code.includes('ATI') ? 'ATI Region VII Training Allocation' : f.code.includes('FCCT') ? 'FCCT Cooperative Bank Savings' : f.code.includes('DISP') ? '5% Gross Statutory Reserve' : 'Member Equity Pool';
         csvRows.push([
           `"${f.code}"`,
           `"${f.name.replace(/"/g, '""')}"`,
@@ -780,9 +780,9 @@ export default function OfficerReportModal({
       csvRows.push(`High Priority Advisories,${announcements.filter(a => a.priority === 'High').length}`);
       if (hogRaising) {
         csvRows.push('');
-        csvRows.push('7. HOG RAISING IGP LIVELIHOOD SUMMARY (DOLE-DILP CAPITAL GRANT)');
-        csvRows.push(`Capital Grant Origin,DOLE Integrated Livelihood Program (DILP)`);
-        csvRows.push(`Capital Grant Amount (PHP),${hogCapital.toFixed(2)}`);
+        csvRows.push('7. HOG RAISING IGP LIVELIHOOD SUMMARY (COMMUNAL LIVELIHOOD CAPITAL)');
+        csvRows.push(`Capital Budget Origin,Association Livelihood & Livestock Project Fund`);
+        csvRows.push(`Allocated Project Capital (PHP),${hogCapital.toFixed(2)}`);
         csvRows.push(`Total Operating Expenses (PHP),${hogExpensesTotal.toFixed(2)}`);
         csvRows.push(`Active Volunteer Chore Groups,${hogRaising.groups?.length || 0}`);
         csvRows.push(`Total Batch Sales Revenue (PHP),${hogSalesTotal.toFixed(2)}`);
@@ -856,7 +856,7 @@ export default function OfficerReportModal({
                 <div className="min-w-0">
                   <span className="font-extrabold text-white block">President's Executive Consolidated Access</span>
                   <p className="text-[11px] text-slate-300">
-                    Exporting consolidated executive summaries across all executive officers with full grant and capital breakdown (DOLE, DSWD-SLP, ATI, FCCT, Dispersal Pool, CBU).
+                    Exporting consolidated executive summaries across all executive officers with full fund account and capital breakdown (Livelihood Project Fund, General Fund, ATI, FCCT, Dispersal Pool, CBU).
                   </p>
                 </div>
               </div>
@@ -998,7 +998,7 @@ export default function OfficerReportModal({
                     <p className="text-sm font-mono font-bold text-emerald-400">PHP {netBalance.toLocaleString()}</p>
                   </div>
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Capital Grant</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Project Working Capital</span>
                     <p className="text-sm font-mono font-bold text-amber-400">PHP {hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">

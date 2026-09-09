@@ -82,7 +82,7 @@ export interface FinancialTransaction {
   date: string;
   description: string;
   recordedBy: string; // Treasurer
-  fundSource?: string; // Where the budget was taken from, e.g. "GF-SLP (General Fund / DSWD-SLP)", "DOLE-IGP (DOLE Livelihood Grant)", "ATI-TRG (ATI Training Fund)", "DISP-5% (Dispersal Risk Pool)", "CBU (Member Equity)"
+  fundSource?: string; // Where the budget was taken from, e.g. "GF-OPS (General Operational Fund)", "Livelihood & Livestock Project Fund", "ATI-TRG (Training Fund)", "DISP-5% (Dispersal Risk Pool)", "CBU (Member Equity)"
   auditedStatus: 'Unaudited' | 'Audited' | 'Flagged';
   auditedBy?: string; // Auditor
   auditedDate?: string;
@@ -170,7 +170,7 @@ export interface IgpExpense {
   amount: number;
   date: string;
   recordedBy: string;
-  fundSource?: string; // Where budget was taken from, e.g. "DOLE-DILP Capital Grant", "5% Livestock Insurance Pool", "AFA General Fund"
+  fundSource?: string; // Where budget was taken from, e.g. "Association Livelihood & Livestock Fund", "5% Livestock Insurance Pool", "AFA General Fund"
 }
 
 export interface IgpSale {

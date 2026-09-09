@@ -997,10 +997,12 @@ export default function App() {
 
   // HOG RAISING IGP HANDLERS
   const handleAddPigExpense = (expData: Omit<IgpExpense, 'id' | 'recordedBy'>) => {
+    const chosenFundSource = expData.fundSource || 'Association Livelihood & Livestock Fund';
     const newExp: IgpExpense = {
       ...expData,
+      fundSource: chosenFundSource,
       id: `pig-exp-${Date.now()}`,
-      recordedBy: currentUser ? `${currentUser.role} (${currentUser.name})` : 'Treasurer (Rodolfo Climaco)'
+      recordedBy: currentUser ? `${currentUser.role} (${currentUser.name})` : 'Treasurer (Gracelyn P. Asendiente)'
     };
     const updatedState: HogRaisingState = {
       ...hogRaising,
@@ -1009,19 +1011,21 @@ export default function App() {
     setHogRaising(updatedState);
     updateStorage('bafa_hog_raising', updatedState);
 
-    // Also register in general ledger for complete co-op records!
+    // Also register in general ledger for complete co-op records with material category and fund source!
+    const materialCategory = expData.category === 'Piglets' ? 'Livestock Acquisition (Hogs/Piglets)' : expData.category === 'Feeds' ? 'Feeds & Nutrition' : 'Hog Raising Project';
     handleAddTransaction({
       type: 'expense',
-      category: 'Hog Raising Project',
+      category: materialCategory,
       amount: expData.amount,
       date: expData.date,
-      description: `[Hog Raising IGP] ${expData.category}: ${expData.description}`,
-      recordedBy: currentUser ? `Treasurer (${currentUser.name})` : 'Treasurer (Rodolfo Climaco)'
+      fundSource: chosenFundSource,
+      description: `[Hog Raising IGP - ${expData.category}] ${expData.description}`,
+      recordedBy: currentUser ? `Treasurer (${currentUser.name})` : 'Treasurer (Gracelyn P. Asendiente)'
     });
 
     if (isOnline) {
-      logAction('Recorded Pig Expense', `Logged PHP ${newExp.amount.toLocaleString()} piggery expense for "${newExp.category}"`);
-      showToastMessage('Hog raising expense recorded and linked to general ledger.');
+      logAction('Recorded Material Expense', `Logged PHP ${newExp.amount.toLocaleString()} expense for "${newExp.category}" (${chosenFundSource})`);
+      showToastMessage(`Material expense recorded (PHP ${newExp.amount.toLocaleString()}) and deducted from ${chosenFundSource}.`, 'success');
     } else {
       addToSyncQueue('create', 'hog_expense', newExp);
     }
@@ -1183,8 +1187,8 @@ export default function App() {
     updateStorage('bafa_hog_raising', updatedState);
 
     if (isOnline) {
-      logAction('Updated Capital Grant', `Modified Hog Raising IGP LGU capital grant to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
-      showToastMessage(`Successfully updated LGU Capital Grant to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}!`, 'success');
+      logAction('Updated Working Capital', `Modified Hog Raising IGP project working capital to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+      showToastMessage(`Successfully updated Project Working Capital to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}!`, 'success');
       pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
       fetch('/api/db/capital-grant', {
         method: 'POST',
@@ -1212,7 +1216,7 @@ export default function App() {
   };
 
   const handleCloseDecemberBook = (year: number) => {
-    const closedList = hogRaising.closedYears || [2025];
+    const closedList = hogRaising.closedYears || [];
     if (closedList.includes(year)) return;
     const updatedState: HogRaisingState = {
       ...hogRaising,
@@ -1227,6 +1231,24 @@ export default function App() {
       pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
     } else {
       addToSyncQueue('update', 'hog_expense', { id: `close-book-${year}`, year });
+    }
+  };
+
+  const handleReopenDecemberBook = (year: number) => {
+    const closedList = hogRaising.closedYears || [];
+    const updatedState: HogRaisingState = {
+      ...hogRaising,
+      closedYears: closedList.filter(y => y !== year)
+    };
+    setHogRaising(updatedState);
+    updateStorage('bafa_hog_raising', updatedState);
+
+    if (isOnline) {
+      logAction('Reopened Financial Book', `Reopened the Hog Raising IGP financial book for ${year} for data recording.`);
+      showToastMessage(`Financial book for ${year} is now OPEN. You can record historical expenses and sales!`, 'success');
+      pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
+    } else {
+      addToSyncQueue('update', 'hog_expense', { id: `reopen-book-${year}`, year });
     }
   };
 
@@ -2022,8 +2044,9 @@ export default function App() {
                 isTreasurerOrOfficer={currentRole === 'Treasurer' || currentRole === 'Auditor' || currentRole === 'President'}
                 currentUser={currentUser!}
                 isOfficerMode={true}
-                closedYears={hogRaising.closedYears || [2025]}
+                closedYears={hogRaising.closedYears || []}
                 onCloseDecemberBook={handleCloseDecemberBook}
+                onReopenDecemberBook={handleReopenDecemberBook}
               />
             </div>
           )}
