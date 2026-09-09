@@ -3,7 +3,7 @@ import {
   HogRaisingState, IgpExpense, IgpSale, IgpChoreLog, IgpGroup, Member, User, Meeting 
 } from '../types';
 import { 
-  PiggyBank, Plus, ArrowUpRight, ArrowDownRight, Calendar, Users, 
+  Briefcase, Boxes, Package, Plus, ArrowUpRight, ArrowDownRight, Calendar, Users, 
   Activity, Trash2, Printer, CheckCircle, Info, DollarSign, 
   Tag, ShieldCheck, Heart, Sparkles, Filter, FileText, Check, Award, Calculator
 } from 'lucide-react';
@@ -43,21 +43,33 @@ export default function HogRaisingIgpTracker({
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'chores' | 'dividends' | 'ledger' | 'reports'>('overview');
   const [showDividendCalcModal, setShowDividendCalcModal] = useState(false);
   
-  // Dynamic produces
-  const produces = state.produces || ['Hog Raising', 'Poultry Raising', 'Tilapia Breeding'];
-  const [selectedProduce, setSelectedProduce] = useState<string>('Hog Raising');
+  // Dynamic produces - strictly remove any Tilapia and ensure Chairs & Sacks Rentals are available
+  const rawProduces = state.produces || ['Hog Raising', 'Chairs Rental (Abang sa Lingkoranan)', 'Sacks Rental (Abang sa Sako)', 'Poultry Raising'];
+  const filteredProduces = Array.from(new Set(rawProduces.filter(p => p !== 'Tilapia Breeding' && !p.toLowerCase().includes('tilapia'))));
+  if (!filteredProduces.includes('Chairs Rental (Abang sa Lingkoranan)')) {
+    filteredProduces.push('Chairs Rental (Abang sa Lingkoranan)');
+  }
+  if (!filteredProduces.includes('Sacks Rental (Abang sa Sako)')) {
+    filteredProduces.push('Sacks Rental (Abang sa Sako)');
+  }
+  const produces = filteredProduces;
+  const [selectedProduce, setSelectedProduce] = useState<string>(produces[0] || 'Hog Raising');
   const [newProduceName, setNewProduceName] = useState('');
   const [showAddProduceModal, setShowAddProduceModal] = useState(false);
 
   const getProduceLocalName = (produce: string) => {
     if (produce === 'Hog Raising') return 'Baboyan';
     if (produce === 'Poultry Raising') return 'Manokan';
-    if (produce === 'Tilapia Breeding') return 'Pangisdaan';
+    if (produce.includes('Chairs') || produce.includes('Lingkoranan')) return 'Abang sa Lingkoranan';
+    if (produce.includes('Sacks') || produce.includes('Sako')) return 'Abang sa Sako';
     return produce;
   };
 
   const selectedProduceLocalName = getProduceLocalName(selectedProduce);
-  const getProduceProjectName = (produce: string) => `${produce} Project IGP`;
+  const getProduceProjectName = (produce: string) => {
+    if (produce.includes('Rental')) return `${produce} (Open for All)`;
+    return `${produce} Project IGP`;
+  };
 
   // Filter lists by selected produce
   const filteredExpenses = state.expenses.filter(e => (e.produce || 'Hog Raising') === selectedProduce);
@@ -168,7 +180,7 @@ export default function HogRaisingIgpTracker({
     printWindow.document.write(`
       <html>
         <head>
-          <title>BAFA - Hog Raising IGP Quarterly Report ${year}</title>
+          <title>AFA - Hog Raising IGP Quarterly Report ${year}</title>
           <style>
             body { font-family: 'Inter', system-ui, sans-serif; padding: 40px; color: #2d3748; line-height: 1.5; }
             .header { text-align: center; border-bottom: 3px double #1b4332; padding-bottom: 20px; margin-bottom: 30px; }
@@ -190,7 +202,7 @@ export default function HogRaisingIgpTracker({
         </head>
         <body>
           <div class="header">
-            <h2>Barangay Alegria Farmers Association (BAFA)</h2>
+            <h2>Alegria Farmers Association (AFA)</h2>
             <p>Tuburan, Cebu Province, Philippines • SEC Reg. No. CN2021-0812</p>
             <p><strong>INCOME GENERATING PROJECT (IGP) - HOG RAISING PORTAL</strong></p>
           </div>
@@ -245,13 +257,13 @@ export default function HogRaisingIgpTracker({
 
           <div class="signature-grid">
             <div>
-              <div class="signature-line">RODOLFO CLIMACO<br/><span style="font-size:9px; font-weight:normal;">Treasurer, BAFA</span></div>
+              <div class="signature-line">RODOLFO CLIMACO<br/><span style="font-size:9px; font-weight:normal;">Treasurer, AFA</span></div>
             </div>
             <div>
-              <div class="signature-line">GERVACIO CABIGAS<br/><span style="font-size:9px; font-weight:normal;">Auditor, BAFA</span></div>
+              <div class="signature-line">GERVACIO CABIGAS<br/><span style="font-size:9px; font-weight:normal;">Auditor, AFA</span></div>
             </div>
             <div>
-              <div class="signature-line">JUANITO BACALSO<br/><span style="font-size:9px; font-weight:normal;">President, BAFA</span></div>
+              <div class="signature-line">JUANITO BACALSO<br/><span style="font-size:9px; font-weight:normal;">President, AFA</span></div>
             </div>
           </div>
 
@@ -317,19 +329,26 @@ export default function HogRaisingIgpTracker({
         { value: 'Vitamins/Medicines', label: 'Vitamins & Medicines (Tambal/Vaccine)' },
         { value: 'Other', label: 'Other (Coop repairs / Nesting boxes)' }
       ];
-    } else if (produce === 'Tilapia Breeding') {
+    } else if (produce.includes('Chairs') || produce.includes('Lingkoranan')) {
       return [
-        { value: 'Feeds', label: 'Feeds (Pagkaon sa Isda)' },
-        { value: 'Fingerlings', label: 'Fingerlings (Liso/Simbad sa Isda)' },
-        { value: 'Water Treatment', label: 'Pond Water Treatment' },
-        { value: 'Other', label: 'Other (Nets / Aerators / Pond repairs)' }
+        { value: 'New Chairs', label: 'Bag-ong Lingkoranan (Purchase of Plastic Chairs)' },
+        { value: 'Repairs & Maintenance', label: 'Pag-ayo ug Paglimpyo (Repairs & Maintenance)' },
+        { value: 'Transport', label: 'Kargada ug Paghatod (Transport & Hauling)' },
+        { value: 'Other', label: 'Other (Tipiganan / Ubang Gasto)' }
+      ];
+    } else if (produce.includes('Sacks') || produce.includes('Sako')) {
+      return [
+        { value: 'New Sacks', label: 'Bag-ong Sako (Purchase of Harvest Sacks)' },
+        { value: 'Washing & Drying', label: 'Paglaba ug Pagbulad (Cleaning & Maintenance)' },
+        { value: 'Repairs', label: 'Pagtahi ug Pag-ayo (Repairs & Sewing)' },
+        { value: 'Other', label: 'Other (Tipiganan / Ubang Gasto)' }
       ];
     } else {
       return [
-        { value: 'Feeds/Fertilizers', label: 'Feeds / Fertilizers / Pesticides' },
-        { value: 'Young Stock/Seeds', label: 'Seeds / Young Stock (Liso)' },
-        { value: 'Vitamins/Medicines', label: 'Vitamins / Care Medicines' },
-        { value: 'Other', label: 'Other Infrastructure / Repairs / Tools' }
+        { value: 'Supplies', label: 'Supplies & Materials' },
+        { value: 'Equipment', label: 'Tools & Equipment' },
+        { value: 'Maintenance', label: 'Maintenance & Repairs' },
+        { value: 'Other', label: 'Other Infrastructure / Tools' }
       ];
     }
   };
@@ -352,19 +371,26 @@ export default function HogRaisingIgpTracker({
         { id: 'Egg Harvesting', label: 'Egg Harvesting (Pangitlog)' },
         { id: 'Water Refill', label: 'Fresh Water Refill' },
       ];
-    } else if (produce === 'Tilapia Breeding') {
+    } else if (produce.includes('Chairs') || produce.includes('Lingkoranan')) {
       return [
-        { id: 'Feeding', label: 'Feeding Fish (Pagpakaon)' },
-        { id: 'Water Quality', label: 'Check Water Quality' },
-        { id: 'Cleaning Nets', label: 'Cleaning Ponds & Nets' },
-        { id: 'Harvesting', label: 'Sample Harvesting' },
+        { id: 'Inventory Count', label: 'Pagsusi sa Kadaghanon (Chair Count)' },
+        { id: 'Cleaning', label: 'Pagtrapo ug Paglimpyo (Sanitizing)' },
+        { id: 'Dispatch', label: 'Pagpagawas / Pag-arkila (Rental Dispatch)' },
+        { id: 'Return Inspection', label: 'Pagsusi inig Balik (Return Inspection)' },
+      ];
+    } else if (produce.includes('Sacks') || produce.includes('Sako')) {
+      return [
+        { id: 'Inventory Count', label: 'Pagsusi sa Sako (Sack Count)' },
+        { id: 'Sorting & Bundling', label: 'Pagbugkos matag 50 (Bundling)' },
+        { id: 'Dispatch', label: 'Pagpagawas para sa Ting-ani (Rental Dispatch)' },
+        { id: 'Return & Wash', label: 'Pagsusi ug Pagbulad (Return & Wash)' },
       ];
     } else {
       return [
-        { id: 'Watering', label: 'Watering Crops (Pagbisbis)' },
-        { id: 'Weeding', label: 'Weeding / Cultivation' },
-        { id: 'Fertilizing', label: 'Applying Fertilizers' },
-        { id: 'Harvesting', label: 'Harvesting Produce' },
+        { id: 'Maintenance', label: 'Maintenance & Inspection' },
+        { id: 'Cleaning', label: 'Cleaning & Organization' },
+        { id: 'Inventory', label: 'Stock & Inventory Check' },
+        { id: 'Service', label: 'Rental Service Operation' },
       ];
     }
   };
@@ -461,7 +487,7 @@ export default function HogRaisingIgpTracker({
     printWindow.document.write(`
       <html>
         <head>
-          <title>BAFA - Hog Raising IGP Interest Dividends</title>
+          <title>AFA - Hog Raising IGP Interest Dividends</title>
           <style>
             body { font-family: 'Inter', system-ui, sans-serif; padding: 40px; color: #2d3748; line-height: 1.5; }
             .header { text-align: center; border-bottom: 3px double #1b4332; padding-bottom: 20px; margin-bottom: 30px; }
@@ -482,7 +508,7 @@ export default function HogRaisingIgpTracker({
         </head>
         <body>
           <div class="header">
-            <h2>Barangay Alegria Farmers Association (BAFA)</h2>
+            <h2>Alegria Farmers Association (AFA)</h2>
             <p>Tuburan, Cebu Province, Philippines • SEC Reg. No. CN2021-0812</p>
             <p><strong>INCOME GENERATING PROJECT (IGP) - HOG RAISING PORTAL</strong></p>
           </div>
@@ -505,7 +531,7 @@ export default function HogRaisingIgpTracker({
           </div>
 
           <div style="background: #e6f4ea; border: 1px solid #a3cfbb; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11px; color: #0f5132;">
-            <strong>CAPITAL & BUDGET ORIGIN (WHERE BUDGET WAS TAKEN FROM):</strong> Revolving Livelihood Capital funded by <strong>DOLE Integrated Livelihood Program (DILP) Grant (₱1,000,000.00)</strong> & Municipal Agriculture Assistance. Net dividends are distributed from livestock market harvest proceeds.
+            <strong>CAPITAL & BUDGET ORIGIN (WHERE BUDGET WAS TAKEN FROM):</strong> Revolving Livelihood Capital funded by <strong>DOLE Integrated Livelihood Program (DILP) Capital Grant</strong> & Municipal Agriculture Assistance. Net dividends are distributed from livelihood and rental proceeds.
           </div>
 
           <p style="font-size: 12px; margin-bottom: 15px;">
@@ -515,7 +541,7 @@ export default function HogRaisingIgpTracker({
           <table>
             <thead>
               <tr>
-                <th>Farmer Name (Miyembro sa BAFA)</th>
+                <th>Farmer Name (Miyembro sa AFA)</th>
                 <th>Location (Sitio)</th>
                 <th>Status</th>
                 <th class="text-right">Dividend Share (PHP)</th>
@@ -539,10 +565,10 @@ export default function HogRaisingIgpTracker({
 
           <div class="signature-grid">
             <div>
-              <div class="signature-line">RODOLFO CLIMACO<br/><span style="font-size:10px; font-weight:normal;">Treasurer, BAFA</span></div>
+              <div class="signature-line">RODOLFO CLIMACO<br/><span style="font-size:10px; font-weight:normal;">Treasurer, AFA</span></div>
             </div>
             <div>
-              <div class="signature-line">JUANITO BACALSO<br/><span style="font-size:10px; font-weight:normal;">President, BAFA</span></div>
+              <div class="signature-line">JUANITO BACALSO<br/><span style="font-size:10px; font-weight:normal;">President, AFA</span></div>
             </div>
           </div>
 
@@ -566,13 +592,17 @@ export default function HogRaisingIgpTracker({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 text-left">
         <div>
           <h2 className={`text-xl font-black ${theme.headerText} flex items-center gap-2.5 font-display`}>
-            <PiggyBank className={`w-6 h-6 ${isOfficerMode ? 'text-emerald-400' : 'text-[#2D6A4F]'}`} />
+            {selectedProduce.includes('Rental') || selectedProduce.includes('Lingkoranan') || selectedProduce.includes('Sako') ? (
+              <Boxes className={`w-6 h-6 ${isOfficerMode ? 'text-amber-400' : 'text-amber-600'}`} />
+            ) : (
+              <Briefcase className={`w-6 h-6 ${isOfficerMode ? 'text-emerald-400' : 'text-[#2D6A4F]'}`} />
+            )}
             <span>
               {getProduceProjectName(selectedProduce)}
             </span>
           </h2>
           <p className={`text-xs ${theme.subText} mt-1 font-medium`}>
-            Track the PHP 1,000,000 LGU grant, expenses, activity logs, and member dividends for <strong>{selectedProduce}</strong>.
+            Track the capital grant, expenses, rental & sales logs, and member dividends for <strong>{selectedProduce}</strong>.
           </p>
         </div>
 
@@ -647,7 +677,7 @@ export default function HogRaisingIgpTracker({
               </button>
             </div>
             <p className="text-xs text-slate-400 mb-4 font-semibold leading-relaxed">
-              I-register ang bag-ong pamaagi sa pag-uma o pagbuhi og hayop (e.g., Poultry Raising, Tilapia Breeding, Mushrooms). Kini makapahimo sa asosasyon nga dynamic ug makasulod og daghang matang sa livelihood projects.
+              I-register ang bag-ong livelihood project o kagamitan nga abangan (e.g., Poultry Raising, Sound System Rental, Tent Rental, Mushrooms). Kini makapahimo sa asosasyon nga dynamic ug makasulod og daghang matang sa income projects.
             </p>
             <form
               onSubmit={(e) => {
@@ -671,7 +701,7 @@ export default function HogRaisingIgpTracker({
                   type="text"
                   value={newProduceName}
                   onChange={(e) => setNewProduceName(e.target.value)}
-                  placeholder="e.g., Poultry Raising, Tilapia, Mushrooms, Corn"
+                  placeholder="e.g., Poultry Raising, Tent Rental, Mushrooms, Corn"
                   required
                   className="w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500 font-sans font-bold"
                 />
@@ -825,12 +855,12 @@ export default function HogRaisingIgpTracker({
       {/* NAVIGATION TABS FOR IGP PORTAL */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 gap-1 select-none overflow-x-auto no-print">
         {[
-          { id: 'overview', label: 'Summary & Breakdown', icon: PiggyBank },
+          { id: 'overview', label: 'Summary & Breakdown', icon: selectedProduce.includes('Rental') ? Boxes : Briefcase },
           { id: 'schedule', label: 'Rotational Group Schedule', icon: Calendar },
           { id: 'chores', label: 'Daily Care Check-in', icon: Activity },
           { id: 'dividends', label: 'Interest Dividends', icon: Award },
           { id: 'reports', label: 'Quarterly & December Closing', icon: ShieldCheck },
-          { id: 'ledger', label: 'IGP Pig Ledger', icon: FileText, adminOnly: true },
+          { id: 'ledger', label: 'IGP Financial Ledger', icon: FileText, adminOnly: true },
         ].map((tab) => {
           if (tab.adminOnly && !isTreasurerOrOfficer) return null;
           const isActive = activeTab === tab.id;
@@ -866,8 +896,8 @@ export default function HogRaisingIgpTracker({
             {/* Breakdown graph / details */}
             <div className={`lg:col-span-7 p-6 rounded-3xl border ${theme.cardBg} space-y-6`}>
               <div>
-                <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Breakdown sa Gastos gikan sa 1M Grant</h3>
-                <p className="text-xs text-slate-400 mt-1">Giunsa paggamit ang pundo para sa baboyan sumpay sa feed, bitamina, ug pagpalit og binuhing baboy.</p>
+                <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Breakdown sa Gastos sa IGP Capital</h3>
+                <p className="text-xs text-slate-400 mt-1">Giunsa paggamit ang pundo para sa {selectedProduce} sumpay sa kagamitan, supplies, ug operating budget.</p>
               </div>
 
               {/* Graphical Visual Bars */}
@@ -903,7 +933,7 @@ export default function HogRaisingIgpTracker({
                 <div className="text-slate-500 dark:text-slate-400 space-y-1">
                   <p className="font-bold text-slate-800 dark:text-slate-300">Giunsa Pagkwenta ang Tubo (Interest)?</p>
                   <p className="leading-relaxed">
-                    Ang tanan nga gasto (buying piglets, food, vitamins) ibawas sa 1 million nga grant. Kon dunay mahalin nga baboy, ang halin isulod sa pundo. Ang makuha nga deperensya (Net Profit/Interest) mao ang i-apod-apod sa matag mag-uuma nga nakigbahin sa pag-alaga sa mga baboy!
+                    Ang tanan nga gasto (buying supplies, equipment, feeds) ibawas sa capital pundo sa IGP. Kon dunay kita o halin gikan sa abang ug benta, ang halin isulod sa pundo. Ang makuha nga deperensya (Net Profit/Surplus) mao ang i-apod-apod sa matag mag-uuma nga nakigbahin sa mga buluhaton!
                   </p>
                 </div>
               </div>
@@ -932,10 +962,10 @@ export default function HogRaisingIgpTracker({
 
                 <div className="space-y-2 text-xs leading-relaxed text-slate-500">
                   <p>
-                    <strong>LGU Grant Code:</strong> <span className="font-mono text-slate-700 dark:text-slate-200 font-bold bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border">TUB-2026-HOG-01</span>
+                    <strong>Project Reference Code:</strong> <span className="font-mono text-slate-700 dark:text-slate-200 font-bold bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border">AFA-2026-IGP-01</span>
                   </p>
                   <p>
-                    <strong>Project Site:</strong> Communal Piggery Facility, Sitio Proper (Luyo sa Barangay Hall).
+                    <strong>Project Site:</strong> Communal Piggery Facility, Barangay Alegria (Duol sa Barangay Hall).
                   </p>
                   <p>
                     <strong>Rotational Caretakers:</strong> 6 ka mga rehistradong mag-uuma ang napa-ilalom sa schedule sa pag-alaga.
@@ -1270,7 +1300,7 @@ export default function HogRaisingIgpTracker({
                 <table className="w-full text-xs text-left text-slate-300">
                   <thead className="bg-slate-50 dark:bg-slate-950 font-black text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-150 dark:border-slate-850">
                     <tr>
-                      <th className="p-4 rounded-l-xl">Miyembro sa BAFA (Farmer Name)</th>
+                      <th className="p-4 rounded-l-xl">Miyembro sa AFA (Farmer Name)</th>
                       <th className="p-4">Lokasyon (Sitio)</th>
                       <th className="p-4">Grupo sa Caretakers (Batch)</th>
                       <th className="p-4">Membership Status</th>
@@ -1323,8 +1353,8 @@ export default function HogRaisingIgpTracker({
               {/* Actions Header Row */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Piggery Financial Ledger (Gasto ug Halin)</h3>
-                  <p className="text-xs text-slate-400 mt-1">Isulat ang mga gasto sa baboyan sama sa pagkaon, bakuna, ug liso, lakip usab ang halin sa baboy.</p>
+                  <h3 className="font-extrabold text-base text-slate-800 dark:text-white">IGP Financial Ledger (Gasto, Abang ug Halin)</h3>
+                  <p className="text-xs text-slate-400 mt-1">Isulat ang mga gasto sa {selectedProduce}, lakip ang kita o halin gikan sa abang ug benta.</p>
                 </div>
 
                 <div className="flex gap-2 w-full sm:w-auto shrink-0 font-bold">
@@ -1334,7 +1364,7 @@ export default function HogRaisingIgpTracker({
                     className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2 text-xs bg-rose-750 hover:bg-rose-700 text-white rounded-xl shadow-sm transition-all cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Log Pig Expense</span>
+                    <span>Log IGP Expense</span>
                   </button>
                   <button
                     id="add-hog-sale-btn"
@@ -1342,7 +1372,7 @@ export default function HogRaisingIgpTracker({
                     className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm transition-all cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Record Hog Sale</span>
+                    <span>{selectedProduce.includes('Rental') || selectedProduce.includes('Lingkoranan') || selectedProduce.includes('Sako') ? 'Record Rental Income' : 'Record Sale / Income'}</span>
                   </button>
                 </div>
               </div>
@@ -1356,7 +1386,7 @@ export default function HogRaisingIgpTracker({
                       <th className="p-4">Kategorya (Category)</th>
                       <th className="p-4">Description / Receipt Note</th>
                       <th className="p-4">Adlaw (Date)</th>
-                      <th className="p-4">Quantity (Baboy Count)</th>
+                      <th className="p-4">Quantity (Kadaghanon)</th>
                       <th className="p-4 rounded-r-xl text-right">Kantidad (Amount PHP)</th>
                     </tr>
                   </thead>
@@ -1364,7 +1394,7 @@ export default function HogRaisingIgpTracker({
                     {/* Combine Expenses and Sales sorted by date descending */}
                     {[
                       ...state.expenses.map(e => ({ ...e, type: 'expense' as const, qty: undefined })),
-                      ...state.sales.map(s => ({ ...s, type: 'income' as const, category: 'Hog Sales' as const, description: s.notes || `Sold ${s.hogsCount} mature hogs.`, amount: s.revenue, qty: s.hogsCount }))
+                      ...state.sales.map(s => ({ ...s, type: 'income' as const, category: s.produce || 'IGP Income', description: s.notes || (s.produce?.includes('Rental') || s.produce?.includes('Lingkoranan') || s.produce?.includes('Sako') ? `Abang sa ${s.produceCount || s.hogsCount} ka buok.` : `Sold ${s.hogsCount} mature units.`), amount: s.revenue, qty: s.produceCount || s.hogsCount }))
                     ]
                     .sort((a, b) => b.date.localeCompare(a.date))
                     .map((item, idx) => {
@@ -1569,7 +1599,7 @@ export default function HogRaisingIgpTracker({
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden text-left">
             <div className="bg-slate-900 px-5 py-4 border-b border-slate-700 flex justify-between items-center">
-              <h3 className="font-bold text-white text-base">Record Piggery Expense</h3>
+              <h3 className="font-bold text-white text-base">Record Expense ({selectedProduce})</h3>
               <button 
                 onClick={() => setShowExpenseModal(false)}
                 className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer"
@@ -1586,10 +1616,9 @@ export default function HogRaisingIgpTracker({
                   onChange={(e) => setExpCategory(e.target.value as any)}
                   className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none"
                 >
-                  <option value="Feeds">Feeds (Pagkaon sa Baboy)</option>
-                  <option value="Piglets">Piglets (Pagpalit og Liso sa Baboy)</option>
-                  <option value="Vitamins/Medicines">Vitamins & Medicines (Tambal ug Vaccine)</option>
-                  <option value="Other">Other (Koral repairs / Balde / utilities)</option>
+                  {dynamicCategories.map(cat => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  ))}
                 </select>
               </div>
 
@@ -1665,7 +1694,11 @@ export default function HogRaisingIgpTracker({
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden text-left">
             <div className="bg-slate-900 px-5 py-4 border-b border-slate-700 flex justify-between items-center">
-              <h3 className="font-bold text-white text-base">Record Hog Sale (Benta sa Baboy)</h3>
+              <h3 className="font-bold text-white text-base">
+                {selectedProduce.includes('Rental') || selectedProduce.includes('Lingkoranan') || selectedProduce.includes('Sako')
+                  ? `Record Rental Income (${selectedProduce})`
+                  : `Record Sale / Income (${selectedProduce})`}
+              </h3>
               <button 
                 onClick={() => setShowSaleModal(false)}
                 className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer"
@@ -1677,7 +1710,11 @@ export default function HogRaisingIgpTracker({
               {/* Quantity sold & Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase">Number of Hogs Sold</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase">
+                    {selectedProduce.includes('Rental') || selectedProduce.includes('Lingkoranan') || selectedProduce.includes('Sako')
+                      ? 'Number of Items Rented (Kadaghanon)'
+                      : 'Quantity / Units Sold'}
+                  </label>
                   <input
                     type="number"
                     min="1"
@@ -1746,7 +1783,9 @@ export default function HogRaisingIgpTracker({
                       : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'
                   }`}
                 >
-                  Record Hog Sale
+                  {selectedProduce.includes('Rental') || selectedProduce.includes('Lingkoranan') || selectedProduce.includes('Sako')
+                    ? 'Record Rental Income'
+                    : 'Record Sale / Income'}
                 </button>
               </div>
             </form>

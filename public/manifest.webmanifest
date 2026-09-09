@@ -1,7 +1,7 @@
 {
   "name": "Alegria Farmers Association Portal",
-  "short_name": "BAFA Portal",
-  "description": "Official digital portal for the Barangay Alegria Farmers Association.",
+  "short_name": "AFA Portal",
+  "description": "Official digital portal for the Alegria Farmers Association.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

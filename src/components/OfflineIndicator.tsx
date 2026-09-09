@@ -112,32 +112,64 @@ export default function OfflineIndicator({
           )}
         </button>
 
-        {/* Sync Status Info */}
-        {queueCount > 0 ? (
-          <div className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-md text-[11px] font-semibold text-amber-400">
-            <AlertCircle className="w-3 h-3" />
-            <span>{queueCount} pending</span>
+        {/* Automatic Sync Status Badges */}
+        {isSyncing ? (
+          <div 
+            id="sync-status-syncing"
+            className="flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-bold text-emerald-300 animate-pulse" 
+            title="Automatically syncing changes to the database..."
+          >
+            <RotateCw className="w-3 h-3 animate-spin text-emerald-400" />
+            <span>Auto-Syncing to DB...</span>
+          </div>
+        ) : queueCount > 0 ? (
+          !isOnline ? (
+            <div 
+              id="sync-status-offline-saved"
+              className="flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/35 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-amber-300"
+              title="Changes saved offline. They will automatically sync to the database as soon as you reconnect without pressing any button."
+            >
+              <AlertCircle className="w-3 h-3 text-amber-400" />
+              <span>{queueCount} offline saved • Auto-syncs on connect</span>
+            </div>
+          ) : (
+            <div 
+              id="sync-status-pending-online"
+              className="flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/35 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-300"
+              title="Auto-syncing queued offline changes to the database..."
+            >
+              <RotateCw className="w-3 h-3 animate-spin text-emerald-400" />
+              <span>Auto-syncing ({queueCount})...</span>
+            </div>
+          )
+        ) : isConnected ? (
+          <div 
+            id="sync-status-auto-synced"
+            className="hidden sm:flex items-center gap-1 bg-emerald-950/40 border border-emerald-500/25 px-2 py-0.5 rounded-md text-[10px] font-bold text-emerald-400" 
+            title="All offline and online changes are automatically synced to the database. No button push required."
+          >
+            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            <span>Auto-Synced</span>
           </div>
         ) : null}
 
-        {/* Sync Trigger Button */}
-        {queueCount > 0 && (
-          <button
-            id="sync-trigger-btn"
-            disabled={!isOnline || isSyncing}
-            onClick={onSync}
-            className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-              !isOnline
-                ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
-                : isSyncing
-                ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white border-transparent shadow-sm'
-            }`}
-          >
-            <RotateCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
-          </button>
-        )}
+        {/* Optional Manual Instant Refresh Pulse (Officers don't need to push this, but available if requested) */}
+        <button
+          id="sync-trigger-btn"
+          type="button"
+          disabled={!isOnline || isSyncing}
+          onClick={onSync}
+          className={`p-1 rounded-lg border transition-all ${
+            !isOnline
+              ? 'bg-slate-800 text-slate-600 border-slate-700 cursor-not-allowed opacity-50'
+              : isSyncing
+              ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30 cursor-not-allowed opacity-60'
+              : 'bg-slate-800/80 text-slate-400 hover:text-emerald-300 hover:bg-slate-750 border-slate-700 cursor-pointer'
+          }`}
+          title="Auto-sync is active. Click to trigger an immediate database heartbeat pulse if desired."
+        >
+          <RotateCw className={`w-3 h-3 ${isSyncing ? 'animate-spin text-emerald-400' : ''}`} />
+        </button>
       </div>
 
       {/* MODAL: DATABASE CONNECTION AUDIT & DETAILS */}

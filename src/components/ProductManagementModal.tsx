@@ -64,7 +64,7 @@ export default function ProductManagementModal({
     setSpecs('');
     setStockStatus('In Stock');
     setFarmerName('');
-    setFarmerSitio('Sitio Fatima');
+    setFarmerSitio('Sitio Tapon');
     setFarmerPhone('0912-345-6789');
     setIsPublished(true);
     setShowAddEditModal(true);
@@ -486,13 +486,17 @@ export default function ProductManagementModal({
                     onChange={(e) => setFarmerName(e.target.value)}
                     className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500 text-xs"
                   />
-                  <input
-                    type="text"
-                    placeholder="Sitio (e.g., Sitio Fatima)"
+                  <select
                     value={farmerSitio}
                     onChange={(e) => setFarmerSitio(e.target.value)}
                     className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500 text-xs"
-                  />
+                  >
+                    <option value="">Pilia ang Sitio (Official 4 Sitios)</option>
+                    <option value="Sitio Tapon">Sitio Tapon</option>
+                    <option value="Sitio Pundok 1">Sitio Pundok 1</option>
+                    <option value="Sitio Pundok 2">Sitio Pundok 2</option>
+                    <option value="Sitio Lamak">Sitio Lamak</option>
+                  </select>
                   <input
                     type="text"
                     required

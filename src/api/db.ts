@@ -1,5 +1,5 @@
 import pg from 'pg';
-import { OFFICIAL_OFFICERS } from '../initialData';
+import { OFFICIAL_OFFICERS, INITIAL_PRODUCTS } from '../initialData';
 import { AuditorReport, DelegationRequest } from '../types';
 
 // Bulletproof Pool resolution across CJS, ESM, and bundled Vercel serverless environments
@@ -510,6 +510,44 @@ export async function ensureDatabaseSchema(pool: pg.Pool) {
       }
       console.log('[DB DEBUG] Officer accounts provisioned');
     }
+
+    // Clean out any legacy hog or tilapia items from products table to strictly respect user directive
+    try {
+      await client.query(`
+        DELETE FROM products 
+        WHERE name ILIKE '%baboy%' 
+           OR name ILIKE '%hog%' 
+           OR name ILIKE '%tilapia%' 
+           OR ceb_name ILIKE '%baboy%' 
+           OR ceb_name ILIKE '%hog%'
+           OR category = 'Livestock'
+      `);
+    } catch {}
+
+    // Seed authentic Association community products (Chairs & Sacks Rental, Coffee, Corn, Coconut) if products table is empty
+    try {
+      const prodCounts = await client.query(`SELECT count(*) as count FROM products`);
+      const productsCount = Number(prodCounts.rows[0]?.count || 0);
+      if (productsCount === 0) {
+        for (const p of INITIAL_PRODUCTS) {
+          await client.query(`
+            INSERT INTO products (
+              id, name, ceb_name, category, description, unit, price, quantity_available, 
+              stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, 
+              is_published, updated_by, managed_by, date_updated
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+            ON CONFLICT (id) DO NOTHING;
+          `, [
+            p.id, p.name, p.cebName || null, p.category, p.description, p.unit, p.price,
+            p.quantityAvailable || null, p.stockStatus, p.farmerName || null, p.farmerSitio || null,
+            p.farmerPhone || null, p.contactPerson || null, p.isPublished, p.updatedBy,
+            p.managedBy || null, p.dateUpdated
+          ]);
+        }
+      }
+    } catch (prodErr) {
+      console.warn('[Auto-seed products warning]:', prodErr);
+    }
   } catch (err: any) {
     console.error('[DB DEBUG] ensureDatabaseSchema failed:', {
       message: err?.message,
@@ -554,11 +592,11 @@ export async function purgeAllDummyData(pool: pg.Pool) {
       await client.query('TRUNCATE TABLE sync_queue CASCADE');
     } catch {}
 
-    // Reset hog_raising to blank
+    // Reset hog_raising to clean Association IGP state
     await client.query('DELETE FROM hog_raising');
     await client.query(`
       INSERT INTO hog_raising (id, capital_grant, produces, expenses, sales, groups, chore_logs, closed_years)
-      VALUES ('main_state', 0, ARRAY['Hog Raising'], '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, ARRAY[]::int[]);
+      VALUES ('main_state', 0, ARRAY['Hog Raising', 'Chairs Rental (Abang sa Lingkoranan)', 'Sacks Rental (Abang sa Sako)', 'Poultry Raising'], '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, ARRAY[]::int[]);
     `);
 
     // Remove all users except official 6 officers
@@ -574,7 +612,7 @@ export async function purgeAllDummyData(pool: pg.Pool) {
     await client.query('COMMIT');
     return {
       success: true,
-      message: 'All dummy and demo records successfully purged from Supabase! Database is now empty and ready for real data.',
+      message: 'All operational records successfully purged! Ready for real data.',
     };
   } catch (err) {
     await client.query('ROLLBACK');
@@ -640,7 +678,7 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
 
     let hogState = {
       capitalGrant: 0,
-      produces: ['Hog Raising'],
+      produces: ['Hog Raising', 'Chairs Rental (Abang sa Lingkoranan)', 'Sacks Rental (Abang sa Sako)', 'Poultry Raising'],
       expenses: [],
       sales: [],
       groups: [],
@@ -650,9 +688,17 @@ export async function fetchAllDataFromPostgres(pool: pg.Pool) {
 
     if (hogRes.rows.length > 0) {
       const row = hogRes.rows[0];
+      const rawProduces: string[] = Array.isArray(row.produces) ? row.produces : ['Hog Raising'];
+      const cleanProduces = rawProduces.filter((p: string) => p !== 'Tilapia Breeding' && !p.toLowerCase().includes('tilapia'));
+      if (!cleanProduces.includes('Chairs Rental (Abang sa Lingkoranan)')) {
+        cleanProduces.push('Chairs Rental (Abang sa Lingkoranan)');
+      }
+      if (!cleanProduces.includes('Sacks Rental (Abang sa Sako)')) {
+        cleanProduces.push('Sacks Rental (Abang sa Sako)');
+      }
       hogState = {
         capitalGrant: Number(row.capital_grant || 0),
-        produces: row.produces || ['Hog Raising'],
+        produces: cleanProduces,
         expenses: row.expenses || [],
         sales: row.sales || [],
         groups: row.groups || [],
@@ -848,6 +894,9 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
 
     // Handle Explicit Deletions if specified
     if (state.deletedIds && typeof state.deletedIds === 'object') {
+      if (Array.isArray(state.deletedIds.users) && state.deletedIds.users.length > 0) {
+        await client.query('DELETE FROM users WHERE id = ANY($1)', [state.deletedIds.users]);
+      }
       if (Array.isArray(state.deletedIds.members) && state.deletedIds.members.length > 0) {
         await client.query('DELETE FROM members WHERE id = ANY($1)', [state.deletedIds.members]);
       }
@@ -877,6 +926,7 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
     // Single item deletion support
     if (state.deleteItem && state.deleteItem.entity && state.deleteItem.id) {
       const tableMap: Record<string, string> = {
+        user: 'users',
         member: 'members',
         meeting: 'meetings',
         resolution: 'resolutions',

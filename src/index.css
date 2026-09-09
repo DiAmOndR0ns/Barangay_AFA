@@ -6,6 +6,25 @@
   --font-display: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
+  --color-afa-50: #f5faf6;
+  --color-afa-100: #eaf6ee;
+  --color-afa-200: #d6efd9;
+  --color-afa-300: #b6e3c0;
+  --color-afa-400: #7ec79f;
+  --color-afa-500: #4ca57b;
+  --color-afa-600: #2d6a4f;
+  --color-afa-700: #1d4f3d;
+  --color-afa-800: #153d31;
+  --color-afa-900: #0f2d24;
+
+  --color-afa-gold-200: #fff0c2;
+  --color-afa-gold-400: #f4c76d;
+  --color-afa-gold-500: #e9b34a;
+
+  --color-afa-coral-400: #f7a57a;
+  --color-afa-coral-500: #e87d5d;
+  --color-afa-coral-600: #d75d3e;
+
   --color-bafa-50: #f5faf6;
   --color-bafa-100: #eaf6ee;
   --color-bafa-200: #d6efd9;
@@ -28,6 +47,21 @@
 
 :root {
   color-scheme: light;
+  --afa-bg: #f3faf5;
+  --afa-surface: #ffffff;
+  --afa-surface-soft: #f5f8f4;
+  --afa-surface-strong: #eaf6ee;
+  --afa-border: #d9e9de;
+  --afa-primary: #1b4332;
+  --afa-primary-strong: #123326;
+  --afa-primary-soft: #eaf5ee;
+  --afa-text: #18372d;
+  --afa-text-soft: #4b6259;
+  --afa-accent: #d77a4b;
+  --afa-accent-soft: #fff1e8;
+  --afa-gold: #e2af42;
+  --afa-shadow: rgba(19, 39, 31, 0.10);
+
   --bafa-bg: #f3faf5;
   --bafa-surface: #ffffff;
   --bafa-surface-soft: #f5f8f4;

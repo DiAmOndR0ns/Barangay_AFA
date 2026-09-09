@@ -3,7 +3,7 @@ import { Member, Meeting, Resolution, FinancialTransaction, SystemLog, OfficerRo
 import { 
   ShieldCheck, Users, Coins, BookOpen, FileCheck, Activity, Check, X,
   KeyRound, Trash2, Clock, Smartphone, AlertTriangle, Printer, Calendar,
-  Sprout, MapPin, Search, Lock, Download
+  Sprout, MapPin, Search, Lock, Download, ShieldAlert, Shield
 } from 'lucide-react';
 import { buildAuditChain } from '../utils/audit';
 import PrintMinutesModal from './PrintMinutesModal';
@@ -21,6 +21,7 @@ interface ExecutiveViewProps {
   onApproveUser?: (id: string) => void;
   onDeclineUser?: (id: string) => void;
   onDeleteUser?: (id: string) => void;
+  onUpdateUserRole?: (id: string, newRole: OfficerRole | 'Member') => void;
   onResetPassword?: (id: string, newPass: string) => void;
   onPresidentTurnover?: (
     newPresidentId: string,
@@ -45,6 +46,7 @@ export default function ExecutiveView({
   onApproveUser,
   onDeclineUser,
   onDeleteUser,
+  onUpdateUserRole,
   onResetPassword,
   onPresidentTurnover,
   onOpenReportModal,
@@ -56,6 +58,11 @@ export default function ExecutiveView({
   // Credentials edit state
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState<string>('');
+
+  // Officer Governance & Deletion modal state
+  const [officerToDelete, setOfficerToDelete] = useState<User | null>(null);
+  const [editingRoleOfficerId, setEditingRoleOfficerId] = useState<string | null>(null);
+  const [selectedNewRole, setSelectedNewRole] = useState<OfficerRole | 'Member'>('Secretary');
   
   // Search query for logs/roster
   const [logSearch, setLogSearch] = useState<string>('');
@@ -370,26 +377,188 @@ export default function ExecutiveView({
           </div>
         </div>
 
-        {/* RIGHT CARD: CREDENTIALS MANAGEMENT DESK (5 columns) */}
-        <div id="credentials-desk-card" className="order-1 lg:col-span-12 self-start bg-white border border-[#E9E4D9] rounded-3xl p-5 shadow-sm space-y-3">
-          <div className="border-b border-[#F0EBE1] pb-3 text-left">
-            <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
-              <KeyRound className="w-5.5 h-5.5 text-[#E65100]" />
-              <span>Credentials & Password Resets Desk</span>
-            </h3>
-            <p className="text-xs text-[#5D6B54] mt-1 font-medium">
-              Reset forgotten passwords and manage secure officer credentials across the association.
-            </p>
+        {/* OFFICER ROSTER & ROLE GOVERNANCE DESK */}
+        <div id="officer-governance-card" className="order-1 lg:col-span-12 self-start bg-white border border-[#E9E4D9] rounded-3xl p-5 shadow-sm space-y-4 text-left">
+          <div className="border-b border-[#F0EBE1] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-extrabold font-display text-[#1B4332] flex items-center gap-2">
+                <ShieldAlert className="w-5.5 h-5.5 text-[#1B4332]" />
+                <span>Officer Governance & Role Management (Delete Officer & Revoke Role)</span>
+              </h3>
+              <p className="text-xs text-[#5D6B54] mt-1 font-medium">
+                Enforce officer access, reassign governance roles, and delete officers when relieved of duties. All changes made offline are automatically synced to the database without requiring manual button clicks.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-1.5 bg-[#EAF4EC] border border-[#2D6A4F]/30 text-[#1B4332] px-3 py-1 rounded-full text-xs font-bold shrink-0 self-start sm:self-center">
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Auto-Sync Active</span>
+            </div>
           </div>
 
-          {/* List of accounts & their password reset status */}
+          {/* Officers Roster List */}
           <div className="space-y-3">
             <h4 className="text-xs font-extrabold text-[#4F5E46] uppercase tracking-wider">
-              Active System Accounts ({users.length})
+              Association Officers ({users.filter(u => ['President', 'Vice_President', 'Secretary', 'Treasurer', 'Auditor', 'PIO'].includes(u.role)).length})
             </h4>
 
-            <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
-              {users.map((user) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {users.filter(u => ['President', 'Vice_President', 'Secretary', 'Treasurer', 'Auditor', 'PIO'].includes(u.role)).map((officer) => {
+                const isEditingRole = editingRoleOfficerId === officer.id;
+                const isEditingPass = editingUserId === officer.id;
+                const isPresident = officer.role === 'President';
+
+                return (
+                  <div 
+                    key={officer.id} 
+                    className="p-4 rounded-2xl border border-[#E9E4D9] bg-[#FAF8F5] text-left transition-all space-y-3 flex flex-col justify-between"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <span className="inline-block text-[10px] font-extrabold font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#1B4332] text-white">
+                            {officer.role.replace('_', ' ')}
+                          </span>
+                          <h4 className="font-extrabold text-sm text-[#1B4332] mt-1.5">{officer.name}</h4>
+                          <p className="text-[11px] text-[#5D6B54] font-mono">@{officer.username}</p>
+                        </div>
+                        {isPresident && (
+                          <span className="text-[9px] bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full font-bold">
+                            Chief Executive
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Inline Role Changer */}
+                      {isEditingRole && !isPresident && (
+                        <div className="bg-white p-2.5 rounded-xl border border-[#D5CFC1] space-y-2 animate-fade-in">
+                          <label className="block text-[10px] font-bold text-[#4F5E46] uppercase">Select New Governance Role:</label>
+                          <select 
+                            value={selectedNewRole}
+                            onChange={(e) => setSelectedNewRole(e.target.value as any)}
+                            className="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-300 bg-slate-50 text-slate-800"
+                          >
+                            <option value="Vice_President">Vice President</option>
+                            <option value="Secretary">Secretary</option>
+                            <option value="Treasurer">Treasurer</option>
+                            <option value="Auditor">Auditor</option>
+                            <option value="PIO">PIO</option>
+                            <option value="Member">Demote to Member</option>
+                          </select>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditingRoleOfficerId(null)}
+                              className="flex-1 py-1 text-[10px] font-bold bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onUpdateUserRole) {
+                                  onUpdateUserRole(officer.id, selectedNewRole);
+                                }
+                                setEditingRoleOfficerId(null);
+                              }}
+                              className="flex-1 py-1 text-[10px] font-bold bg-[#1B4332] text-white rounded-lg hover:bg-[#2D6A4F] cursor-pointer"
+                            >
+                              Save Role
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Inline Password Reset Form */}
+                      {isEditingPass && (
+                        <form onSubmit={(e) => handleResetPasswordSubmit(e, officer.id)} className="bg-white p-2.5 rounded-xl border border-[#E9E4D9] space-y-2 animate-fade-in">
+                          <label className="block text-[10px] font-extrabold text-[#4F5E46] uppercase">New Officer Password:</label>
+                          <input 
+                            type="text" 
+                            required
+                            placeholder="e.g. afa2026"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full px-2 py-1 text-xs bg-[#FAF8F5] border border-[#D5CFC1] rounded-lg font-mono font-bold text-[#1B4332] focus:outline-none"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditingUserId(null)}
+                              className="flex-1 py-1 bg-white border border-[#D5CFC1] text-[#85947E] text-[10px] font-bold rounded-lg cursor-pointer text-center"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              className="flex-1 py-1 bg-[#1B4332] text-white text-[10px] font-extrabold rounded-lg cursor-pointer text-center"
+                            >
+                              Save Pass
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
+
+                    {/* Action Buttons for Officer */}
+                    <div className="pt-2 border-t border-[#E9E4D9] flex flex-wrap items-center gap-1.5 justify-between">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingUserId(officer.id);
+                            setNewPassword('afa2026');
+                          }}
+                          className="px-2 py-1 text-[10px] font-bold bg-white border border-[#D5CFC1] text-[#1B4332] rounded-lg hover:bg-[#F2EFE9] flex items-center gap-1 cursor-pointer"
+                          title="Reset password"
+                        >
+                          <KeyRound className="w-3 h-3 text-[#E65100]" />
+                          <span>Reset</span>
+                        </button>
+
+                        {!isPresident && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingRoleOfficerId(officer.id);
+                              setSelectedNewRole(officer.role as any);
+                            }}
+                            className="px-2 py-1 text-[10px] font-bold bg-white border border-[#D5CFC1] text-[#1B4332] rounded-lg hover:bg-[#F2EFE9] flex items-center gap-1 cursor-pointer"
+                            title="Modify or reassign role"
+                          >
+                            <Shield className="w-3 h-3 text-emerald-700" />
+                            <span>Role</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {!isPresident ? (
+                        <button
+                          type="button"
+                          onClick={() => setOfficerToDelete(officer)}
+                          className="px-2.5 py-1 text-[10px] font-bold bg-rose-50 border border-rose-300 text-rose-700 hover:bg-rose-100 rounded-lg flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                          title="Delete officer and revoke role"
+                        >
+                          <Trash2 className="w-3 h-3 text-rose-600" />
+                          <span>Delete Officer</span>
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-medium italic">Turnover only</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Member Portal Accounts Desk */}
+          <div className="pt-3 border-t border-[#F0EBE1] space-y-2">
+            <h4 className="text-xs font-extrabold text-[#4F5E46] uppercase tracking-wider">
+              Farmer Member Portal Accounts ({users.filter(u => u.role === 'Member').length})
+            </h4>
+
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {users.filter(u => u.role === 'Member').map((user) => {
                 const isEditing = editingUserId === user.id;
                 return (
                   <div 
@@ -406,57 +575,51 @@ export default function ExecutiveView({
                           <span>{user.name}</span>
                           {user.resetRequested && (
                             <span className="text-[8px] bg-[#E65100] text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse">
-                              NANGAYO OG RESET (HELP!)
+                              PASSWORD RESET REQUESTED
                             </span>
                           )}
                         </div>
                         <p className="text-[10px] text-[#5D6B54] font-medium mt-0.5">
-                          Role: <strong className="text-[#1B4332]">{user.role.replace('_', ' ')}</strong> • Username: <strong className="font-mono text-[#1B4332]">{user.username}</strong>
+                          Member Login • Username: <strong className="font-mono text-[#1B4332]">@{user.username}</strong>
                         </p>
-                        <div className="flex items-center gap-1 mt-1 text-[10px] text-[#5D6B54]">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Credentials: <span className="font-mono text-[10px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/80 font-bold">Encrypted & Masked</span></span>
-                        </div>
                       </div>
 
-                      {user.role !== 'President' && !isEditing && (
-                        <div className="flex flex-col gap-1 shrink-0">
-                          <button
-                            onClick={() => {
-                              setEditingUserId(user.id);
-                              setNewPassword('bafa2026'); // quick suggestion
-                            }}
-                            className={`px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1 border ${
-                              user.resetRequested 
-                                ? 'bg-[#E65100] text-white border-[#E65100]' 
-                                : 'bg-white text-[#1B4332] border-[#D5CFC1] hover:bg-white'
-                            }`}
-                            title="I-reset ang password niini nga user"
-                          >
-                            <KeyRound className="w-3.5 h-3.5" />
-                            <span>I-reset</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => onDeleteUser && onDeleteUser(user.id)}
-                            className="p-1 text-[#85947E] hover:text-[#D32F2F] hover:bg-[#FFEBEE] rounded-lg transition-all cursor-pointer self-center"
-                            title="Tanggalon sa system (Delete Account)"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => {
+                            setEditingUserId(user.id);
+                            setNewPassword('afa2026');
+                          }}
+                          className={`px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1 border ${
+                            user.resetRequested 
+                              ? 'bg-[#E65100] text-white border-[#E65100]' 
+                              : 'bg-white text-[#1B4332] border-[#D5CFC1] hover:bg-white'
+                          }`}
+                          title="Reset password"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                          <span>Reset</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => onDeleteUser && onDeleteUser(user.id)}
+                          className="p-1.5 text-[#85947E] hover:text-[#D32F2F] hover:bg-[#FFEBEE] rounded-lg transition-all cursor-pointer"
+                          title="Remove user account"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Inline password edit form */}
                     {isEditing && (
                       <form onSubmit={(e) => handleResetPasswordSubmit(e, user.id)} className="bg-white p-3 rounded-xl border border-[#E9E4D9] space-y-2.5">
                         <div className="space-y-1">
-                          <label className="block text-[10px] font-extrabold text-[#4F5E46] uppercase">Isulat ang Bag-ong Password:</label>
+                          <label className="block text-[10px] font-extrabold text-[#4F5E46] uppercase">New Password:</label>
                           <input 
                             type="text" 
                             required
-                            placeholder="e.g. bafa2026"
+                            placeholder="e.g. afa2026"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             className="w-full px-2 py-1.5 text-xs bg-[#FAF8F5] border border-[#D5CFC1] rounded-lg font-mono font-bold text-[#1B4332] focus:outline-none focus:border-[#1B4332]"
@@ -468,13 +631,13 @@ export default function ExecutiveView({
                             onClick={() => setEditingUserId(null)}
                             className="flex-1 py-1.5 bg-white border border-[#D5CFC1] text-[#85947E] text-[10px] font-bold rounded-lg cursor-pointer text-center"
                           >
-                            Kansela
+                            Cancel
                           </button>
                           <button
                             type="submit"
                             className="flex-1 py-1.5 bg-[#1B4332] text-white text-[10px] font-extrabold rounded-lg cursor-pointer text-center"
                           >
-                            I-save Password
+                            Save Password
                           </button>
                         </div>
                       </form>
@@ -951,6 +1114,65 @@ export default function ExecutiveView({
                   <span>I-seal Karon</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OFFICER DELETION & ROLE REVOCATION CONFIRMATION MODAL */}
+      {officerToDelete && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white border-2 border-rose-500 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-6 text-left space-y-4">
+            <div className="flex items-center gap-3 border-b border-rose-100 pb-3">
+              <div className="w-12 h-12 rounded-2xl bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">Confirm Officer Account Deletion</h3>
+                <p className="text-xs text-rose-600 font-bold uppercase tracking-wider">Role Revocation & System Removal</p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 space-y-2.5 text-xs">
+              <p className="text-slate-800 font-semibold">
+                You are about to permanently delete this officer and revoke their administrative role:
+              </p>
+              <div className="bg-white p-3 rounded-xl border border-rose-200 space-y-1">
+                <div className="font-extrabold text-slate-900 text-sm">{officerToDelete.name}</div>
+                <div className="text-slate-600">
+                  Assigned Role: <strong className="text-rose-700 font-bold">{officerToDelete.role.replace('_', ' ')}</strong>
+                </div>
+                <div className="text-slate-500 font-mono text-[11px]">Username: @{officerToDelete.username}</div>
+              </div>
+              <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-[11px] font-medium flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>
+                  <strong>Automatic Cloud Sync:</strong> This deletion will be immediately synchronized with the cloud database. If performed while offline, it will automatically sync the moment connection is restored without needing to click any button.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setOfficerToDelete(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer text-center"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDeleteUser) {
+                    onDeleteUser(officerToDelete.id);
+                  }
+                  setOfficerToDelete(null);
+                }}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl cursor-pointer text-center shadow-md flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete Officer & Role</span>
+              </button>
             </div>
           </div>
         </div>

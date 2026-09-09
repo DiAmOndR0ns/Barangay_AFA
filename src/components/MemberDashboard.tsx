@@ -4,7 +4,7 @@ import {
   User as UserIcon, MapPin, Smartphone, Layers, Tag, Calendar, 
   Printer, Upload, LogOut, FileText, CheckCircle, CreditCard, 
   AlertCircle, Award, ShieldCheck, Trash2, Image as ImageIcon, Check, Sprout, Landmark, Building,
-  Megaphone, Search, Bell, ChevronDown, ChevronUp, PiggyBank, ShoppingBag, Clock, Coffee,
+  Megaphone, Search, Bell, ChevronDown, ChevronUp, Briefcase, ShoppingBag, Clock, Coffee,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
 import AnnouncementDashboard from './AnnouncementDashboard';
@@ -24,12 +24,10 @@ interface MemberDashboardProps {
 }
 
 const SITIOS = [
-  'Sitio Proper (Centro)',
-  'Sitio Fatima',
-  'Sitio Huyong-Huyong',
-  'Sitio Mahayahay',
-  'Sitio Tuburan',
-  'Sitio Ylaya'
+  'Sitio Tapon',
+  'Sitio Pundok 1',
+  'Sitio Pundok 2',
+  'Sitio Lamak'
 ];
 
 const CROPS_AND_LIVESTOCK = [
@@ -94,7 +92,7 @@ export default function MemberDashboard({
   };
 
   // Generate a membership code based on signup date or user id
-  const memberCode = `BAFA-${currentUser.joinedDate?.replace(/-/g, '').substring(2, 6) || '2026'}-${currentUser.id.split('-')[1]?.substring(0, 4).toUpperCase() || 'M024'}`;
+  const memberCode = `AFA-${currentUser.joinedDate?.replace(/-/g, '').substring(2, 6) || '2026'}-${currentUser.id.split('-')[1]?.substring(0, 4).toUpperCase() || 'M024'}`;
 
   // Form submit handler
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -172,7 +170,7 @@ export default function MemberDashboard({
 
   const handlePrintCredentials = () => {
     const originalTitle = document.title;
-    document.title = `BAFA_ID_${currentUser.name.replace(/\s+/g, '_')}`;
+    document.title = `AFA_ID_${currentUser.name.replace(/\s+/g, '_')}`;
     window.print();
     setTimeout(() => {
       document.title = originalTitle;
@@ -187,7 +185,7 @@ export default function MemberDashboard({
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-[#D8F3DC] text-[#1B4332] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              BAFA Regular Member
+              AFA Regular Member
             </span>
             <span className="bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
               <ShieldCheck className="w-3 h-3" />
@@ -198,7 +196,7 @@ export default function MemberDashboard({
             Welcome, {currentUser.name}!
           </h2>
           <p className="text-xs sm:text-sm text-[#B7E4C7] mt-1 max-w-xl font-medium">
-            This is your official member portal. You can update your profile photo, register farm parcels, view attendance dividends, and print your certified BAFA membership ID.
+            This is your official member portal. You can update your profile photo, register farm parcels, view attendance dividends, and print your certified AFA membership ID.
           </p>
         </div>
 
@@ -251,7 +249,7 @@ export default function MemberDashboard({
                   : 'border-transparent text-[#2D3A22] hover:text-[#1B4332] hover:bg-white hover:border-[#1B4332]/40'
               }`}
             >
-              <PiggyBank className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
+              <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
               <span>Project IGP</span>
             </button>
 
@@ -570,7 +568,7 @@ export default function MemberDashboard({
             <div className="space-y-1 text-xs text-[#5D4037]">
               <h4 className="font-black">Tinuig nga Amot ug Katungod (Annual Renewal)</h4>
               <p className="leading-relaxed text-[#6D4C41]">
-                Sigon sa balaod sa atong BAFA, ang imong membership balido sulod sa **usa ka (1) tuig**. Kada dapit sa **Disyembre**, ang atong Tesorero (Gracelyn P Asendiente) mangolekta og **PHP 100.00** nga tinuig nga amot para sa pag-renew sa imong mga benepisyo.
+                Sigon sa balaod sa atong AFA, ang imong membership balido sulod sa **usa ka (1) tuig**. Kada dapit sa **Disyembre**, ang atong Tesorero (Gracelyn P Asendiente) mangolekta og **PHP 100.00** nga tinuig nga amot para sa pag-renew sa imong mga benepisyo.
               </p>
               <div className="pt-1 text-[10px] font-black text-[#1B4332] flex items-center gap-1 uppercase">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
@@ -774,7 +772,7 @@ export default function MemberDashboard({
                         <Building className="w-4.5 h-4.5 text-[#D8F3DC]" />
                         <div>
                           <span className="text-[7px] font-black uppercase text-white block tracking-wider leading-none">Alegria Farmers</span>
-                          <span className="text-[6px] text-[#B7E4C7] font-bold uppercase block leading-none">Association (BAFA)</span>
+                          <span className="text-[6px] text-[#B7E4C7] font-bold uppercase block leading-none">Association (AFA)</span>
                         </div>
                       </div>
                       <div className="text-right">
@@ -856,17 +854,17 @@ export default function MemberDashboard({
                     <h5 className="text-[9px] uppercase font-bold text-[#E65100] underline font-sans leading-none pt-1">Certificate of Good Standing</h5>
                     
                     <p className="text-[8px] px-2 leading-relaxed">
-                      Kini nagpamatuod nga si <strong className="text-black uppercase font-sans font-black">{currentUser.name}</strong> usa ka aktibong miyembro sa **Alegria Farmers Association (BAFA)**, nga nag-uma sa **{currentUser.farmLocation}**.
+                      Kini nagpamatuod nga si <strong className="text-black uppercase font-sans font-black">{currentUser.name}</strong> usa ka aktibong miyembro sa **Alegria Farmers Association (AFA)**, nga nag-uma sa **{currentUser.farmLocation}**.
                     </p>
 
                     <div className="grid grid-cols-2 gap-4 mt-3 pt-2 border-t border-[#F0EBE1] text-[6px] font-sans">
                       <div>
                         <strong className="text-slate-800 block uppercase font-bold">Zenaida A. Elbiña</strong>
-                        <span className="text-slate-500 block">BAFA President</span>
+                        <span className="text-slate-500 block">AFA President</span>
                       </div>
                       <div>
                         <strong className="text-slate-800 block uppercase font-bold">Gracelyn P Asendiente</strong>
-                        <span className="text-slate-500 block">BAFA Treasurer</span>
+                        <span className="text-slate-500 block">AFA Treasurer</span>
                       </div>
                     </div>
                   </div>
@@ -914,7 +912,7 @@ export default function MemberDashboard({
                 <span>Mga Produkto ug Abot sa Asosasyon (Association Produce & Products)</span>
               </h3>
               <p className="text-xs text-slate-600 mt-1 font-semibold">
-                Kini ang opisyal nga listahan sa mga abot ug produkto nga gibaligya sa BAFA ug sa atong mga kaubang mag-uuma sa Tuburan.
+                Kini ang opisyal nga listahan sa mga abot ug produkto nga gibaligya sa AFA ug sa atong mga kaubang mag-uuma sa Tuburan.
               </p>
             </div>
             <div className="bg-[#D8F3DC] text-[#1B4332] px-3.5 py-1.5 rounded-xl text-xs font-black border border-[#1B4332]/20">
@@ -963,7 +961,7 @@ export default function MemberDashboard({
                         Mag-uuma nga Nagbaligya (Selling Farmer):
                       </span>
                       <div className="font-extrabold text-[#1B4332] flex items-center justify-between flex-wrap gap-1">
-                        <span>{prod.farmerName || prod.contactPerson || 'BAFA Member Farmer'}</span>
+                        <span>{prod.farmerName || prod.contactPerson || 'AFA Member Farmer'}</span>
                         {prod.farmerSitio && <span className="text-[11px] text-slate-600 font-bold">📍 {prod.farmerSitio}</span>}
                       </div>
                       {(prod.farmerPhone || prod.contactPerson) && (
@@ -1077,7 +1075,7 @@ export default function MemberDashboard({
               <p className="text-[10px] tracking-[0.2em] font-sans text-slate-500 uppercase leading-normal">Republic of the Philippines</p>
               <p className="text-[10px] tracking-[0.15em] font-sans text-slate-500 uppercase leading-normal">Province of Cebu • Municipality of Tuburan</p>
               <h4 className="text-base font-bold font-sans tracking-wide text-emerald-800 uppercase mt-1 leading-none">
-                Alegria Farmers Association (BAFA)
+                Alegria Farmers Association (AFA)
               </h4>
               <p className="text-[9px] font-sans text-slate-400 italic">Official Ledger Registry ID No: {memberCode}</p>
             </div>
@@ -1092,7 +1090,7 @@ export default function MemberDashboard({
           </div>
 
           <p className="text-sm text-slate-800 leading-loose text-justify indent-10 font-serif">
-            This is to certify that <strong className="text-black font-sans font-black uppercase text-base underline decoration-1 underline-offset-4">{currentUser.name}</strong>, of legal age, residing at <strong className="text-black font-sans font-bold">{currentUser.farmLocation}</strong>, Tuburan, Cebu, is a registered active member in good standing of the **Alegria Farmers Association (BAFA)**.
+            This is to certify that <strong className="text-black font-sans font-black uppercase text-base underline decoration-1 underline-offset-4">{currentUser.name}</strong>, of legal age, residing at <strong className="text-black font-sans font-bold">{currentUser.farmLocation}</strong>, Tuburan, Cebu, is a registered active member in good standing of the **Alegria Farmers Association (AFA)**.
           </p>
 
           <p className="text-sm text-slate-800 leading-loose text-justify indent-10 font-serif">
@@ -1113,7 +1111,7 @@ export default function MemberDashboard({
               <div className="space-y-1">
                 <div className="w-40 border-b border-slate-400 mx-auto h-1" />
                 <p className="font-bold uppercase text-slate-850">Zenaida A. Elbiña</p>
-                <p className="text-[10px] text-slate-500">President, BAFA</p>
+                <p className="text-[10px] text-slate-500">President, AFA</p>
               </div>
             </div>
 
@@ -1122,7 +1120,7 @@ export default function MemberDashboard({
               <div className="space-y-1">
                 <div className="w-40 border-b border-slate-400 mx-auto h-1" />
                 <p className="font-bold uppercase text-slate-850">Gracelyn P Asendiente</p>
-                <p className="text-[10px] text-slate-500">Treasurer, BAFA</p>
+                <p className="text-[10px] text-slate-500">Treasurer, AFA</p>
               </div>
             </div>
           </div>
@@ -1147,7 +1145,7 @@ export default function MemberDashboard({
                 <Building className="w-5 h-5 text-emerald-800 shrink-0" />
                 <div>
                   <h4 className="text-[8px] font-black uppercase text-emerald-800 leading-none">Alegria Farmers</h4>
-                  <span className="text-[6.5px] text-slate-600 block leading-none">Association (BAFA)</span>
+                  <span className="text-[6.5px] text-slate-600 block leading-none">Association (AFA)</span>
                 </div>
               </div>
               <div className="text-right text-[5px] text-slate-500 leading-tight">

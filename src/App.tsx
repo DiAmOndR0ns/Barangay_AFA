@@ -26,7 +26,7 @@ import ProductManagementModal from './components/ProductManagementModal';
 import { buildAuditChain, hashPassword, sanitizeUserForStorage } from './utils/audit';
 import { 
   Building, ShieldCheck, Megaphone, Users, Coins, 
-  Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, PiggyBank, FileText, ShoppingBag,
+  Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, Briefcase, FileText, ShoppingBag,
   ChevronLeft, ChevronRight, Download
 } from 'lucide-react';
 
@@ -329,6 +329,52 @@ export default function App() {
     }
   };
 
+  // Deletion persistence tracking for PostgreSQL / Supabase
+  interface StoredDeletedIds {
+    users?: string[];
+    members?: string[];
+    meetings?: string[];
+    resolutions?: string[];
+    financialTransactions?: string[];
+    announcements?: string[];
+    products?: string[];
+    activities?: string[];
+    funds?: string[];
+  }
+
+  const getStoredDeletedIds = (): StoredDeletedIds => {
+    try {
+      const raw = localStorage.getItem('bafa_deleted_ids');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const storeDeletedId = (entity: keyof StoredDeletedIds, id: string): StoredDeletedIds => {
+    try {
+      const current = getStoredDeletedIds();
+      current[entity] = Array.from(new Set([...(current[entity] || []), id]));
+      localStorage.setItem('bafa_deleted_ids', JSON.stringify(current));
+      return current;
+    } catch {
+      return {};
+    }
+  };
+
+  const clearStoredDeletedIds = () => {
+    try {
+      localStorage.removeItem('bafa_deleted_ids');
+    } catch {
+      // Ignore
+    }
+  };
+
+  const hasPendingDeletions = (): boolean => {
+    const ids = getStoredDeletedIds();
+    return Object.values(ids).some(arr => Array.isArray(arr) && arr.length > 0);
+  };
+
   const logAction = (action: string, details: string, syncStatus: 'synced' | 'pending' = 'synced', overrideLogs?: SystemLog[]) => {
     const rawNewLog: SystemLog = {
       id: `log-${Date.now()}`,
@@ -351,7 +397,7 @@ export default function App() {
   // Sync Queue handler
   const addToSyncQueue = (
     action: 'create' | 'update' | 'delete',
-    entityType: 'member' | 'meeting' | 'resolution' | 'transaction' | 'announcement' | 'hog_expense' | 'hog_sale' | 'hog_chore' | 'product' | 'activity' | string,
+    entityType: 'user' | 'officer' | 'member' | 'meeting' | 'resolution' | 'transaction' | 'announcement' | 'hog_expense' | 'hog_sale' | 'hog_chore' | 'product' | 'activity' | string,
     payload: any
   ) => {
     const queueItem: SyncQueueItem = {
@@ -368,10 +414,10 @@ export default function App() {
     // Also record a pending log
     logAction(
       `Queued Offline: ${action.toUpperCase()} ${entityType}`,
-      `Added operation to offline queue: ${action} ${entityType}. Will sync when reconnected.`,
+      `Saved offline change for ${action} ${entityType}. Auto-syncs to database on connection.`,
       'pending'
     );
-    showToastMessage('Saved offline! Operation queued for synchronization.', 'warning');
+    showToastMessage('Saved offline! Will automatically sync to database without needing to press any button.', 'warning');
   };
 
   // Central Cloud Synchronization Engine:
@@ -390,12 +436,14 @@ export default function App() {
       hogRaising?: HogRaisingState;
       funds?: OrganizationFund[];
       systemLogs?: SystemLog[];
+      deletedIds?: StoredDeletedIds;
     },
     options?: { silent?: boolean; source?: string }
   ): Promise<boolean> => {
     if (!navigator.onLine) return false;
 
     try {
+      const currentDeletedIds = overrides?.deletedIds || getStoredDeletedIds();
       const payload = {
         users: overrides?.users || users,
         members: overrides?.members || members,
@@ -407,7 +455,8 @@ export default function App() {
         activities: overrides?.activities || activities,
         hogRaising: overrides?.hogRaising || hogRaising,
         funds: overrides?.funds || funds,
-        systemLogs: overrides?.systemLogs || logs
+        systemLogs: overrides?.systemLogs || logs,
+        deletedIds: currentDeletedIds
       };
 
       const res = await fetch('/api/sync/push', {
@@ -418,10 +467,11 @@ export default function App() {
 
       const result = await res.json();
       if (result?.success && !result?.offlineMode) {
-        // Clear all locally stored pending contributions and mutations to protect confidentiality
+        // Clear all locally stored pending contributions, mutations, and deletions
         setSyncQueue([]);
         localStorage.removeItem('bafa_sync_queue');
         updateStorage('bafa_sync_queue', []);
+        clearStoredDeletedIds();
 
         // Mark pending system logs as synced in state and storage
         setLogs(prev => {
@@ -435,7 +485,7 @@ export default function App() {
 
         if (!options?.silent) {
           const prefix = options?.source ? `[${options.source}] ` : '';
-          showToastMessage(`${prefix}All contributions & records synced to database! Local pending queue cleared.`, 'success');
+          showToastMessage(`${prefix}Offline changes automatically synced to database!`, 'success');
         }
         return true;
       }
@@ -574,14 +624,14 @@ export default function App() {
   };
 
   // Network connectivity listener and auto-synchronization:
-  // Automatically detects internet connection recovery, syncs all pending contributions,
-  // and securely clears the pending queue from local storage.
+  // Automatically detects internet connection recovery or offline queue presence,
+  // syncs all offline changes directly to the database without requiring officers to click any button.
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
       checkDatabaseConnection();
-      console.log('[Network]: Internet connection restored. Syncing pending contributions to Supabase...');
-      pushAllDataToCloud(undefined, { silent: false, source: 'Internet Restored' });
+      console.log('[Auto-Sync]: Connection online. Syncing all offline changes to database...');
+      pushAllDataToCloud(undefined, { silent: false, source: 'Auto-Sync (Reconnected)' });
     };
 
     const handleOffline = () => {
@@ -589,8 +639,9 @@ export default function App() {
     };
 
     const handleWindowFocus = () => {
-      if (navigator.onLine && syncQueue.length > 0) {
-        pushAllDataToCloud(undefined, { silent: true, source: 'Focus Auto-Sync' });
+      if (navigator.onLine && (syncQueue.length > 0 || hasPendingDeletions())) {
+        console.log('[Auto-Sync]: Window focused with pending items. Triggering auto-sync...');
+        pushAllDataToCloud(undefined, { silent: true, source: 'Auto-Sync (Focus)' });
       }
     };
 
@@ -598,18 +649,28 @@ export default function App() {
     window.addEventListener('offline', handleOffline);
     window.addEventListener('focus', handleWindowFocus);
 
-    // Periodic auto-sync worker every 20 seconds
+    // Fast reactive sync: If online and there are pending items or deletions, trigger auto-sync after brief debounce
+    let reactiveTimer: any = null;
+    if (navigator.onLine && (syncQueue.length > 0 || hasPendingDeletions())) {
+      reactiveTimer = setTimeout(() => {
+        console.log('[Auto-Sync Reactive]: Detected pending queue while online. Automatically syncing to database...');
+        pushAllDataToCloud(undefined, { silent: true, source: 'Auto-Sync (Reactive)' });
+      }, 800);
+    }
+
+    // Periodic auto-sync heartbeat every 10 seconds: ensures officers never have to push a button
     const intervalId = setInterval(() => {
-      if (navigator.onLine && (syncQueue.length > 0 || logs.some(l => l.syncStatus === 'pending'))) {
-        console.log('[Auto-Sync Worker]: Found pending contributions/logs. Auto-syncing to cloud database...');
-        pushAllDataToCloud(undefined, { silent: true, source: 'Auto-Sync' });
+      if (navigator.onLine && (syncQueue.length > 0 || hasPendingDeletions() || logs.some(l => l.syncStatus === 'pending'))) {
+        console.log('[Auto-Sync Heartbeat]: Automatically synchronizing pending items to database...');
+        pushAllDataToCloud(undefined, { silent: true, source: 'Auto-Sync (Heartbeat)' });
       }
-    }, 20000);
+    }, 10000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('focus', handleWindowFocus);
+      if (reactiveTimer) clearTimeout(reactiveTimer);
       clearInterval(intervalId);
     };
   }, [syncQueue.length, logs, members, meetings, resolutions, transactions, announcements, products, activities, hogRaising, funds, users]);
@@ -755,20 +816,80 @@ export default function App() {
     const updated = members.filter(m => m.id !== id);
     setMembers(updated);
     updateStorage('bafa_members', updated);
+    storeDeletedId('members', id);
 
     // Also remove their portal user account so no orphan login accounts remain
     const updatedUsers = users.filter(u => u.id !== id && u.memberIdNumber !== targetMember?.memberIdNumber);
     if (updatedUsers.length !== users.length) {
       setUsers(updatedUsers);
       updateStorage('bafa_users', updatedUsers);
+      storeDeletedId('users', id);
     }
 
     if (isOnline) {
       logAction('Deleted Farmer Registration', `Removed member registration for: ${mName}`);
-      showToastMessage(`Removed ${mName} from roster.`, 'warning');
-      pushAllDataToCloud({ members: updated, users: updatedUsers }, { silent: true });
+      showToastMessage(`Removed ${mName} from roster. Auto-syncing to database...`, 'warning');
+      pushAllDataToCloud({ members: updated, users: updatedUsers }, { silent: true, source: 'Member Deletion' });
     } else {
       addToSyncQueue('delete', 'member', { id, name: mName });
+      showToastMessage(`Removed ${mName} offline. Will automatically sync to database on connection.`, 'warning');
+    }
+  };
+
+  const handleDeleteMeeting = (id: string) => {
+    const targetMeeting = meetings.find(m => m.id === id);
+    const title = targetMeeting ? targetMeeting.title : 'Assembly Record';
+    const updated = meetings.filter(m => m.id !== id);
+    setMeetings(updated);
+    updateStorage('bafa_meetings', updated);
+    storeDeletedId('meetings', id);
+
+    logAction('Deleted Assembly Minutes', `Removed assembly record: "${title}"`);
+
+    if (isOnline) {
+      showToastMessage(`Deleted meeting "${title}". Auto-syncing to database...`, 'warning');
+      pushAllDataToCloud({ meetings: updated }, { silent: true, source: 'Meeting Deletion' });
+    } else {
+      addToSyncQueue('delete', 'meeting', { id, title });
+      showToastMessage(`Meeting deleted offline. Will automatically sync to database.`, 'warning');
+    }
+  };
+
+  const handleDeleteResolution = (id: string) => {
+    const targetRes = resolutions.find(r => r.id === id);
+    const title = targetRes ? `${targetRes.resolutionNumber}: ${targetRes.title}` : 'Resolution';
+    const updated = resolutions.filter(r => r.id !== id);
+    setResolutions(updated);
+    updateStorage('bafa_resolutions', updated);
+    storeDeletedId('resolutions', id);
+
+    logAction('Deleted Resolution', `Removed resolution: "${title}"`);
+
+    if (isOnline) {
+      showToastMessage(`Deleted resolution "${title}". Auto-syncing to database...`, 'warning');
+      pushAllDataToCloud({ resolutions: updated }, { silent: true, source: 'Resolution Deletion' });
+    } else {
+      addToSyncQueue('delete', 'resolution', { id, title });
+      showToastMessage(`Resolution deleted offline. Will automatically sync to database.`, 'warning');
+    }
+  };
+
+  const handleDeleteTransaction = (id: string) => {
+    const targetTx = transactions.find(t => t.id === id);
+    const desc = targetTx ? `${targetTx.description} (PHP ${targetTx.amount.toLocaleString()})` : 'Transaction';
+    const updated = transactions.filter(t => t.id !== id);
+    setTransactions(updated);
+    updateStorage('bafa_transactions', updated);
+    storeDeletedId('financialTransactions', id);
+
+    logAction('Deleted Financial Transaction', `Removed transaction entry: "${desc}"`);
+
+    if (isOnline) {
+      showToastMessage(`Deleted transaction "${desc}". Auto-syncing to database...`, 'warning');
+      pushAllDataToCloud({ financialTransactions: updated }, { silent: true, source: 'Transaction Deletion' });
+    } else {
+      addToSyncQueue('delete', 'transaction', { id, desc });
+      showToastMessage(`Transaction deleted offline. Will automatically sync to database.`, 'warning');
     }
   };
 
@@ -1078,7 +1199,7 @@ export default function App() {
   const handleAddProduce = (produceName: string) => {
     const updatedState: HogRaisingState = {
       ...hogRaising,
-      produces: Array.from(new Set([...(hogRaising.produces || ['Hog Raising', 'Poultry Raising', 'Tilapia Breeding']), produceName]))
+      produces: Array.from(new Set([...(hogRaising.produces || ['Chairs Rental', 'Sacks Rental', 'Crop Livelihood']), produceName]))
     };
     setHogRaising(updatedState);
     updateStorage('bafa_hog_raising', updatedState);
@@ -1259,7 +1380,7 @@ export default function App() {
         const newMember: Member = {
           id: targetUser.id,
           name: targetUser.name,
-          farmLocation: targetUser.farmLocation || 'Sitio Proper (Centro)',
+          farmLocation: targetUser.farmLocation || 'Sitio Tapon',
           primaryCrops: targetUser.primaryCrops || ['Crops'],
           contactNumber: targetUser.contactNumber || '',
           status: 'Active',
@@ -1291,17 +1412,76 @@ export default function App() {
     const targetUser = users.find(u => u.id === id);
     if (!targetUser) return;
 
+    const roleName = targetUser.role.replace('_', ' ');
+    const isOfficer = ['President', 'Vice_President', 'Secretary', 'Treasurer', 'Auditor', 'PIO'].includes(targetUser.role);
+
     const updatedUsers = users.filter(u => u.id !== id);
     setUsers(updatedUsers);
     updateStorage('bafa_users', updatedUsers);
+    storeDeletedId('users', id);
 
-    // Also remove from members roster if they are a member
-    const updatedMembers = members.filter(m => m.id !== id);
-    setMembers(updatedMembers);
-    updateStorage('bafa_members', updatedMembers);
+    // Also remove from members roster if linked
+    const updatedMembers = members.filter(m => m.id !== id && m.memberIdNumber !== targetUser.memberIdNumber);
+    if (updatedMembers.length !== members.length) {
+      setMembers(updatedMembers);
+      updateStorage('bafa_members', updatedMembers);
+      storeDeletedId('members', id);
+    }
 
-    logAction('Revoked Access', `Revoked portal access for ${targetUser.name}`);
-    showToastMessage(`Revoked access for ${targetUser.name}.`, 'warning');
+    logAction(
+      isOfficer ? 'Deleted Officer & Revoked Role' : 'Revoked User Access',
+      `Permanently deleted ${isOfficer ? 'officer' : 'user'} account for ${targetUser.name} and revoked role ${roleName}.`
+    );
+
+    // If currently logged-in user is the one being deleted
+    if (currentUser && currentUser.id === id) {
+      showToastMessage(`Your officer account (${roleName}) was deleted. Logging out...`, 'warning');
+      setTimeout(() => {
+        handleLogout();
+      }, 1200);
+      return;
+    }
+
+    if (isOnline) {
+      showToastMessage(`Officer ${targetUser.name} (${roleName}) deleted. Auto-syncing to database...`, 'warning');
+      pushAllDataToCloud({ users: updatedUsers, members: updatedMembers }, { silent: true, source: 'Officer Deletion' });
+    } else {
+      addToSyncQueue('delete', isOfficer ? 'officer' : 'user', { id, name: targetUser.name, role: targetUser.role });
+      showToastMessage(`Officer ${targetUser.name} deleted offline. Will automatically sync to database on connection.`, 'warning');
+    }
+  };
+
+  const handleUpdateUserRole = (id: string, newRole: OfficerRole | 'Member') => {
+    const targetUser = users.find(u => u.id === id);
+    if (!targetUser) return;
+
+    const oldRoleName = targetUser.role.replace('_', ' ');
+    const newRoleName = newRole.replace('_', ' ');
+
+    const updatedUsers = users.map(u => u.id === id ? { ...u, role: newRole } : u);
+    setUsers(updatedUsers);
+    updateStorage('bafa_users', updatedUsers);
+
+    logAction(
+      'Updated Officer Role',
+      `Modified governance role for ${targetUser.name} from "${oldRoleName}" to "${newRoleName}".`
+    );
+
+    // If current logged-in user role changed, update session
+    if (currentUser && currentUser.id === id) {
+      const updatedCurrent = { ...currentUser, role: newRole };
+      setCurrentUser(updatedCurrent);
+      setCurrentRole(newRole as any);
+      sessionStorage.setItem('afa_user', JSON.stringify(updatedCurrent));
+    }
+
+    if (isOnline) {
+      showToastMessage(`Updated ${targetUser.name}'s role to ${newRoleName}. Auto-syncing to database...`, 'info');
+      pushAllDataToCloud({ users: updatedUsers }, { silent: true, source: 'Role Updated' });
+    } else {
+      addToSyncQueue('update', 'officer', { id, name: targetUser.name, newRole });
+      showToastMessage(`Role updated offline. Will auto-sync to database once reconnected.`, 'warning');
+    }
   };
 
   const handleUpdateProfile = (updatedUser: User) => {
@@ -1697,7 +1877,7 @@ export default function App() {
                       : 'border-transparent text-slate-700 hover:text-[#1B4332] hover:bg-[#F2EFE9]'
                   }`}
                 >
-                  <PiggyBank className="w-4 h-4 text-[#1B4332]" />
+                  <Briefcase className="w-4 h-4 text-[#1B4332]" />
                   <span>IGP Tracker</span>
                   <span className="bg-[#1B4332]/10 text-[#1B4332] border border-[#1B4332]/20 text-[9px] px-2 py-0.5 rounded-full font-black ml-1">
                     Active
@@ -1766,6 +1946,7 @@ export default function App() {
                 onApproveUser={handleApproveUser}
                 onDeclineUser={handleDeclineUser}
                 onDeleteUser={handleDeleteUser}
+                onUpdateUserRole={handleUpdateUserRole}
                 onResetPassword={handleResetPassword}
                 onPresidentTurnover={handlePresidentTurnover}
                 onOpenReportModal={() => setShowReportModal(true)}
@@ -1786,8 +1967,10 @@ export default function App() {
                 meetings={meetings}
                 onAddMeeting={handleAddMeeting}
                 onUpdateMeeting={handleUpdateMeeting}
+                onDeleteMeeting={handleDeleteMeeting}
                 resolutions={resolutions}
                 onAddResolution={handleAddResolution}
+                onDeleteResolution={handleDeleteResolution}
                 isOnline={isOnline}
                 onOpenReportModal={() => setShowReportModal(true)}
               />
@@ -1800,6 +1983,7 @@ export default function App() {
                 funds={funds}
                 hogRaising={hogRaising}
                 onAddTransaction={handleAddTransaction}
+                onDeleteTransaction={handleDeleteTransaction}
                 onAuditTransaction={handleAuditTransaction}
                 onUpdateCapitalGrant={handleUpdateCapitalGrant}
                 currentRole={currentRole}

@@ -219,7 +219,7 @@ async function startServer() {
       const pool = getPool();
       const savePromise = saveFullStateToPostgres(pool, req.body);
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Cloud DB push timed out after 12 seconds.')), 12000)
+        setTimeout(() => reject(new Error('Cloud DB push timed out after 30 seconds.')), 30000)
       );
       await Promise.race([savePromise, timeoutPromise]);
       return res.json({

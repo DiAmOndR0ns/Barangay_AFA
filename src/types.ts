@@ -1,5 +1,15 @@
 export type OfficerRole = 'President' | 'Vice_President' | 'Secretary' | 'Treasurer' | 'Auditor' | 'PIO';
 
+// The 4 Official Sitios of Barangay Alegria, Tuburan, Cebu (based on the official Barangay Profile of Tuburan)
+export const OFFICIAL_ALEGRIA_SITIOS = [
+  'Sitio Tapon',
+  'Sitio Pundok 1',
+  'Sitio Pundok 2',
+  'Sitio Lamak'
+] as const;
+
+export type AlegriaSitio = typeof OFFICIAL_ALEGRIA_SITIOS[number];
+
 export interface User {
   id: string;
   username: string;
@@ -12,7 +22,7 @@ export interface User {
   memberIdNumber?: string;
   rsbsaNumber?: string;
   isRsbsaRegistered?: boolean;
-  farmLocation?: string; // for Member role
+  farmLocation?: string; // for Member role (e.g. Sitio Tapon, Sitio Pundok 1, Sitio Pundok 2, Sitio Lamak)
   farmSize?: number; // in hectares, for Member role
   primaryCrops?: string[]; // for Member role
   contactNumber?: string;
@@ -27,7 +37,7 @@ export interface Member {
   memberIdNumber?: string; // e.g. AFA-2026-001
   rsbsaNumber?: string; // Registry System for Basic Sectors in Agriculture (e.g. 07-22-51-001-000123)
   isRsbsaRegistered?: boolean;
-  farmLocation: string; // e.g. Sitio Alegria Centro, Sitio Fatima, Sitio Tuburan, Sitio Ylaya
+  farmLocation: string; // e.g. Sitio Tapon, Sitio Pundok 1, Sitio Pundok 2, Sitio Lamak
   farmSize?: number; // in hectares (optional/not requested by AFA)
   primaryCrops: string[]; // e.g. Corn, Coconut, Banana, Cacao, Vegetables
   contactNumber: string;
@@ -110,7 +120,7 @@ export interface Product {
   specs?: string;
   stockStatus: 'In Stock' | 'Low Stock' | 'Pre-Order' | 'Out of Stock' | 'Available' | 'Limited Stock';
   farmerName?: string; // e.g. "Zenaida A. Elbiña"
-  farmerSitio?: string; // e.g. "Sitio Fatima"
+  farmerSitio?: string; // e.g. "Sitio Tapon"
   farmerPhone?: string; // e.g. "0945-876-1234"
   contactPerson?: string; // e.g. "Zenaida A. Elbiña (0945-876-1234)"
   imageUrl?: string;
@@ -134,7 +144,7 @@ export interface SyncQueueItem {
   id: string;
   timestamp: string;
   action: 'create' | 'update' | 'delete';
-  entityType: 'member' | 'meeting' | 'resolution' | 'transaction' | 'announcement' | 'hog_expense' | 'hog_sale' | 'hog_chore' | 'product' | 'activity' | string;
+  entityType: 'user' | 'officer' | 'member' | 'meeting' | 'resolution' | 'transaction' | 'announcement' | 'hog_expense' | 'hog_sale' | 'hog_chore' | 'product' | 'activity' | string;
   payload: any;
 }
 
@@ -160,7 +170,7 @@ export interface IgpExpense {
   amount: number;
   date: string;
   recordedBy: string;
-  fundSource?: string; // Where budget was taken from, e.g. "DOLE-DILP Capital Grant (₱1M)", "5% Livestock Insurance Pool", "AFA General Fund"
+  fundSource?: string; // Where budget was taken from, e.g. "DOLE-DILP Capital Grant", "5% Livestock Insurance Pool", "AFA General Fund"
 }
 
 export interface IgpSale {
@@ -204,8 +214,8 @@ export interface OrganizationFund {
 }
 
 export interface HogRaisingState {
-  capitalGrant: number; // Initially PHP 1,000,000
-  produces?: string[]; // Dynamic list of produce projects, e.g. ["Hog Raising", "Poultry Raising"]
+  capitalGrant: number;
+  produces?: string[]; // Dynamic list of produce projects, e.g. ["Hog Raising", "Chairs Rental (Abang sa Lingkoranan)", "Sacks Rental (Abang sa Sako)", "Poultry Raising"]
   expenses: IgpExpense[];
   sales: IgpSale[];
   groups: IgpGroup[];

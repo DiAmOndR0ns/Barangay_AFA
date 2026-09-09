@@ -25,9 +25,11 @@ interface SecretaryViewProps {
   meetings: Meeting[];
   onAddMeeting: (meeting: Omit<Meeting, 'id'>) => void;
   onUpdateMeeting: (meeting: Meeting) => void;
+  onDeleteMeeting?: (id: string) => void;
   
   resolutions: Resolution[];
   onAddResolution: (resolution: Omit<Resolution, 'id' | 'status'>) => void;
+  onDeleteResolution?: (id: string) => void;
   
   isOnline: boolean;
   onOpenReportModal?: () => void;
@@ -44,8 +46,10 @@ export default function SecretaryView({
   meetings,
   onAddMeeting,
   onUpdateMeeting,
+  onDeleteMeeting,
   resolutions,
   onAddResolution,
+  onDeleteResolution,
   isOnline,
   onOpenReportModal
 }: SecretaryViewProps) {
@@ -92,8 +96,8 @@ export default function SecretaryView({
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [memberName, setMemberName] = useState('');
   const [memberContact, setMemberContact] = useState('');
-  const [memberSitio, setMemberSitio] = useState('Sitio Proper (Centro)');
-  const [memberIdNum, setMemberIdNum] = useState(`BAFA-2026-0${members.length + 1}`);
+  const [memberSitio, setMemberSitio] = useState('Sitio Tapon');
+  const [memberIdNum, setMemberIdNum] = useState(`AFA-2026-0${members.length + 1}`);
   const [memberRsbsa, setMemberRsbsa] = useState('');
   const [isRsbsaRegistered, setIsRsbsaRegistered] = useState(true);
   const [memberGender, setMemberGender] = useState<'Male' | 'Female' | 'Other'>('Male');
@@ -121,12 +125,10 @@ export default function SecretaryView({
   const [resAbstain, setResAbstain] = useState('0');
 
   const SITIOS = [
-    'Sitio Proper (Centro)',
-    'Sitio Ylaya',
-    'Sitio Fatima',
-    'Sitio Mahayahay',
-    'Sitio Huyong-Huyong',
-    'Sitio Guimbal'
+    'Sitio Tapon',
+    'Sitio Pundok 1',
+    'Sitio Pundok 2',
+    'Sitio Lamak'
   ];
 
   const CROPS = [
@@ -154,7 +156,7 @@ export default function SecretaryView({
     e.preventDefault();
     if (!memberName.trim()) return;
 
-    const finalMemberId = memberIdNum || `BAFA-2026-0${members.length + 1}`;
+    const finalMemberId = memberIdNum || `AFA-2026-0${members.length + 1}`;
     const cleanUsername = (loginUsername.trim() || memberName.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '.')).toLowerCase();
     const cleanPassword = loginPassword.trim() || 'password123';
 
@@ -187,8 +189,8 @@ export default function SecretaryView({
     // Reset Form
     setMemberName('');
     setMemberContact('');
-    setMemberSitio('Sitio Proper (Centro)');
-    setMemberIdNum(`BAFA-2026-0${members.length + 2}`);
+    setMemberSitio('Sitio Tapon');
+    setMemberIdNum(`AFA-2026-0${members.length + 2}`);
     setMemberRsbsa('');
     setIsRsbsaRegistered(true);
     setMemberGender('Male');
@@ -417,7 +419,7 @@ export default function SecretaryView({
                             <span>{member.name}</span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
-                            <span className="text-emerald-400 font-bold">{member.memberIdNumber || 'BAFA-2026-000'}</span>
+                            <span className="text-emerald-400 font-bold">{member.memberIdNumber || 'AFA-2026-000'}</span>
                             <span>•</span>
                             <span>Joined: {member.joinedDate || 'Recent'}</span>
                           </div>
@@ -621,6 +623,20 @@ export default function SecretaryView({
                           <Printer className="w-3.5 h-3.5" />
                           <span>Print Minutes</span>
                         </button>
+                        {onDeleteMeeting && (
+                          <button
+                            id={`delete-meeting-btn-${meeting.id}`}
+                            onClick={() => {
+                              if (window.confirm(`Delete assembly meeting "${meeting.title}"? Changes will auto-sync to the database.`)) {
+                                onDeleteMeeting(meeting.id);
+                              }
+                            }}
+                            className="flex items-center justify-center p-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold rounded-lg transition-all cursor-pointer border border-rose-800/40"
+                            title="Delete meeting record"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -666,13 +682,29 @@ export default function SecretaryView({
                     <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/20">
                       {res.resolutionNumber}
                     </span>
-                    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
-                      res.status === 'Approved' 
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                        : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                    }`}>
-                      {res.status}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
+                        res.status === 'Approved' 
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      }`}>
+                        {res.status}
+                      </span>
+                      {onDeleteResolution && (
+                        <button
+                          id={`delete-resolution-btn-${res.id}`}
+                          onClick={() => {
+                            if (window.confirm(`Delete resolution "${res.resolutionNumber}: ${res.title}"? Changes will auto-sync to the database.`)) {
+                              onDeleteResolution(res.id);
+                            }
+                          }}
+                          className="p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                          title="Delete resolution"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <h4 className="text-base font-bold text-white mt-2 leading-snug">{res.title}</h4>
@@ -712,241 +744,261 @@ export default function SecretaryView({
         </div>
       )}
 
-      {/* MEMBER MODAL */}
+      {/* MEMBER MODAL - Compact and Scrollable */}
       {showMemberModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
-            <div className="bg-slate-900 px-5 py-4 border-b border-slate-700 flex justify-between items-center">
-              <h3 className="font-bold text-white text-base">Register New Association Farmer</h3>
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 overflow-y-auto p-2 sm:p-4 flex items-center justify-center animate-fade-in">
+          <div className="bg-slate-800 border border-slate-700 w-full max-w-md max-h-[88vh] sm:max-h-[80vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto">
+            <div className="bg-slate-900 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-slate-700 flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-emerald-900/60 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm leading-tight">Register Association Farmer</h3>
+                  <p className="text-[10px] text-slate-400">Official AFA Membership & RSBSA Enrollment</p>
+                </div>
+              </div>
               <button 
+                type="button"
                 onClick={() => setShowMemberModal(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
               >
                 &times;
               </button>
             </div>
-            <form onSubmit={handleMemberSubmit} className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Farmer Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Juan De la Cruz"
-                    value={memberName}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setMemberName(val);
-                      if (!hasEditedUsernameManually) {
-                        const generated = val.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '.');
-                        setLoginUsername(generated);
-                      }
-                    }}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Member ID Code</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. BAFA-2026-043"
-                    value={memberIdNum}
-                    onChange={(e) => setMemberIdNum(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-              </div>
 
-              {/* RSBSA Registration Field */}
-              <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-750 space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Basic Sectors in Agriculture (RSBSA)</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-emerald-400">
-                    <input 
-                      type="checkbox"
-                      checked={isRsbsaRegistered}
-                      onChange={(e) => setIsRsbsaRegistered(e.target.checked)}
-                      className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0"
+            <form onSubmit={handleMemberSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3 text-left overscroll-contain scrollbar-thin scrollbar-thumb-slate-600">
+                {/* Farmer Name & Member ID */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Farmer Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Juan De la Cruz"
+                      value={memberName}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setMemberName(val);
+                        if (!hasEditedUsernameManually) {
+                          const generated = val.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '.');
+                          setLoginUsername(generated);
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                     />
-                    <span>RSBSA Registered</span>
-                  </label>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Member ID Code</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. AFA-2026-043"
+                      value={memberIdNum}
+                      onChange={(e) => setMemberIdNum(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-750 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
                 </div>
-                {isRsbsaRegistered && (
-                  <input
-                    type="text"
-                    placeholder="RSBSA Control No. (e.g. 07-22-51-001-000542)"
-                    value={memberRsbsa}
-                    onChange={(e) => setMemberRsbsa(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:border-emerald-500"
-                  />
-                )}
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Contact Number</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 0917-000-0000"
-                  value={memberContact}
-                  onChange={(e) => setMemberContact(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Gender</label>
-                  <select
-                    value={memberGender}
-                    onChange={(e) => setMemberGender(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
+                {/* Contact Number & Sitio Location */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Contact Number</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 0917-000-0000"
+                      value={memberContact}
+                      onChange={(e) => setMemberContact(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Sitio (Farm Location)</label>
+                    <select
+                      value={memberSitio}
+                      onChange={(e) => setMemberSitio(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    >
+                      {SITIOS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Birth Date</label>
-                  <input
-                    type="date"
-                    value={memberBirthDate}
-                    onChange={(e) => setMemberBirthDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                  />
+
+                {/* Gender & Birth Date */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Gender</label>
+                    <select
+                      value={memberGender}
+                      onChange={(e) => setMemberGender(e.target.value as any)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Birth Date</label>
+                    <input
+                      type="date"
+                      value={memberBirthDate}
+                      onChange={(e) => setMemberBirthDate(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Sitio (Farm Location within Alegria)</label>
-                <select
-                  value={memberSitio}
-                  onChange={(e) => setMemberSitio(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                >
-                  {SITIOS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase mb-1.5 flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-emerald-400" />
-                  Primary Crops & Livestock Products
-                </label>
-                <div className="grid grid-cols-2 gap-2 bg-slate-900 p-3 rounded-xl border border-slate-750 max-h-36 overflow-y-auto">
-                  {CROPS.map((crop) => (
-                    <label key={crop} className="flex items-center gap-2 cursor-pointer text-slate-300 text-xs">
-                      <input
-                        type="checkbox"
-                        checked={selectedCrops.includes(crop)}
-                        onChange={() => handleCropToggle(crop)}
-                        className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0 focus:ring-offset-0"
-                      />
-                      <span>{crop}</span>
+                {/* RSBSA Registration Field */}
+                <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-750 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Basic Sectors in Agriculture (RSBSA)</span>
                     </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Portal Login Credentials Section */}
-              <div className="p-4 bg-slate-900/90 rounded-2xl border border-slate-750 space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Key className="w-4 h-4 text-emerald-400" />
-                    <div>
-                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">Member Portal Account</h4>
-                      <p className="text-[11px] text-slate-400">Direct login credentials issued by the Secretary</p>
-                    </div>
+                    <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-emerald-400">
+                      <input 
+                        type="checkbox"
+                        checked={isRsbsaRegistered}
+                        onChange={(e) => setIsRsbsaRegistered(e.target.checked)}
+                        className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0"
+                      />
+                      <span>RSBSA Registered</span>
+                    </label>
                   </div>
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-emerald-400">
-                    <input 
-                      type="checkbox"
-                      checked={createLoginAccount}
-                      onChange={(e) => setCreateLoginAccount(e.target.checked)}
-                      className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0"
+                  {isRsbsaRegistered && (
+                    <input
+                      type="text"
+                      placeholder="RSBSA Control No. (e.g. 07-22-51-001-000542)"
+                      value={memberRsbsa}
+                      onChange={(e) => setMemberRsbsa(e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:border-emerald-500"
                     />
-                    <span>Create Login</span>
-                  </label>
+                  )}
                 </div>
 
-                {createLoginAccount && (
-                  <div className="space-y-3 pt-2 border-t border-slate-800 animate-fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                          Portal Username
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-mono">@</span>
-                          <input
-                            type="text"
-                            required={createLoginAccount}
-                            placeholder="e.g. juan.delacruz"
-                            value={loginUsername}
-                            onChange={(e) => {
-                              setLoginUsername(e.target.value);
-                              setHasEditedUsernameManually(true);
-                            }}
-                            className="w-full pl-7 pr-3 py-2 text-xs bg-slate-950 border border-slate-700 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
-                      </div>
+                {/* Crops & Livestock */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1.5 flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-emerald-400" />
+                    Primary Crops & Livestock Products
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 bg-slate-900 p-2.5 rounded-xl border border-slate-750 max-h-28 overflow-y-auto">
+                    {CROPS.map((crop) => (
+                      <label key={crop} className="flex items-center gap-2 cursor-pointer text-slate-300 text-xs hover:text-white">
+                        <input
+                          type="checkbox"
+                          checked={selectedCrops.includes(crop)}
+                          onChange={() => handleCropToggle(crop)}
+                          className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0 focus:ring-offset-0"
+                        />
+                        <span className="truncate">{crop}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
+                {/* Portal Login Credentials Section */}
+                <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-750 space-y-2.5">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Key className="w-4 h-4 text-emerald-400" />
                       <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <label className="block text-xs font-bold text-slate-300 uppercase">
-                            Initial Password
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => setLoginPassword(`Bafa@${Math.floor(100 + Math.random() * 900)}`)}
-                            className="text-[10px] text-emerald-400 hover:underline font-bold cursor-pointer"
-                          >
-                            Generate
-                          </button>
-                        </div>
-                        <div className="relative">
-                          <input
-                            type={showLoginPassword ? 'text' : 'password'}
-                            required={createLoginAccount}
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            className="w-full pl-3 pr-9 py-2 text-xs bg-slate-950 border border-slate-700 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowLoginPassword(!showLoginPassword)}
-                            className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-200"
-                          >
-                            {showLoginPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">Member Portal Account</h4>
+                        <p className="text-[10px] sm:text-[11px] text-slate-400">Direct login credentials issued by the Secretary</p>
                       </div>
                     </div>
-                    <p className="text-[11px] text-slate-400 italic">
-                      *Ang miyembro makagamit niini aron makasulod sa Member Portal ug makakita sa iyang tinigom, attendance, ug dividend share.
-                    </p>
+                    <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-emerald-400">
+                      <input 
+                        type="checkbox"
+                        checked={createLoginAccount}
+                        onChange={(e) => setCreateLoginAccount(e.target.checked)}
+                        className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0"
+                      />
+                      <span>Create Login</span>
+                    </label>
                   </div>
-                )}
+
+                  {createLoginAccount && (
+                    <div className="space-y-2.5 pt-2 border-t border-slate-800 animate-fade-in">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-300 uppercase mb-1">
+                            Portal Username
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-2 text-xs text-slate-500 font-mono">@</span>
+                            <input
+                              type="text"
+                              required={createLoginAccount}
+                              placeholder="e.g. juan.delacruz"
+                              value={loginUsername}
+                              onChange={(e) => {
+                                setLoginUsername(e.target.value);
+                                setHasEditedUsernameManually(true);
+                              }}
+                              className="w-full pl-6 pr-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:border-emerald-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-[11px] font-bold text-slate-300 uppercase">
+                              Initial Password
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setLoginPassword(`Afa@${Math.floor(100 + Math.random() * 900)}`)}
+                              className="text-[10px] text-emerald-400 hover:underline font-bold cursor-pointer"
+                            >
+                              Generate
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type={showLoginPassword ? 'text' : 'password'}
+                              required={createLoginAccount}
+                              value={loginPassword}
+                              onChange={(e) => setLoginPassword(e.target.value)}
+                              className="w-full pl-2.5 pr-8 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:border-emerald-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowLoginPassword(!showLoginPassword)}
+                              className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-200"
+                            >
+                              {showLoginPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-400 italic">
+                        *Makagamit niini ang mag-uuma aron makasulod sa Member Portal ug makakita sa iyang tinigom, attendance, ug dividend share.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="pt-2 flex gap-3">
+              {/* Fixed Bottom Action Footer */}
+              <div className="shrink-0 bg-slate-900/95 backdrop-blur-sm px-4 py-2.5 sm:px-5 border-t border-slate-700 flex gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowMemberModal(false)}
-                  className="flex-1 py-2.5 text-sm font-semibold bg-slate-700 hover:bg-slate-650 text-slate-200 rounded-xl transition-all"
+                  className="flex-1 py-2 text-xs sm:text-sm font-semibold bg-slate-700 hover:bg-slate-650 text-slate-200 rounded-xl transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm transition-all"
+                  className="flex-1 py-2 text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  Save Registration
+                  <Check className="w-4 h-4" />
+                  <span>Save Registration</span>
                 </button>
               </div>
             </form>
@@ -1129,7 +1181,7 @@ export default function SecretaryView({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. BAFA-2026-003"
+                    placeholder="e.g. AFA-2026-003"
                     value={resNumber}
                     onChange={(e) => setResNumber(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500 font-mono"
@@ -1358,7 +1410,7 @@ export default function SecretaryView({
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `BAFA FARMER PORTAL LOGIN\nMember: ${createdCredentials.name}\nMember ID: ${createdCredentials.memberId}\nUsername: ${createdCredentials.username}\nPassword: ${createdCredentials.initialPassword}\nPortal: Barangay Alegria Farmers Association`
+                    `AFA FARMER PORTAL LOGIN\nMember: ${createdCredentials.name}\nMember ID: ${createdCredentials.memberId}\nUsername: ${createdCredentials.username}\nPassword: ${createdCredentials.initialPassword}\nPortal: Alegria Farmers Association`
                   );
                   setCopiedCredentials(true);
                   setTimeout(() => setCopiedCredentials(false), 2500);
@@ -1430,7 +1482,7 @@ export default function SecretaryView({
                   <label className="block text-xs font-bold text-slate-300 uppercase">Password</label>
                   <button
                     type="button"
-                    onClick={() => setManagePassword(`Bafa@${Math.floor(100 + Math.random() * 900)}`)}
+                    onClick={() => setManagePassword(`Afa@${Math.floor(100 + Math.random() * 900)}`)}
                     className="text-[10px] text-emerald-400 hover:underline font-bold cursor-pointer"
                   >
                     Generate Random

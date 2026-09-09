@@ -4,7 +4,8 @@ import { verifyPassword, hashPassword } from '../utils/audit';
 import { 
   Building, Lock, Shield, Sprout, Smartphone, CheckCircle, 
   UserPlus, ArrowRight, UserCheck, MapPin, Layers, Tag, Landmark, RefreshCw,
-  User as UserIcon, HelpCircle, AlertTriangle, KeyRound
+  User as UserIcon, HelpCircle, AlertTriangle, KeyRound, Eye, EyeOff,
+  ShieldCheck, Phone, Check, Info, FileText
 } from 'lucide-react';
 
 interface AuthScreenProps {
@@ -17,24 +18,54 @@ interface AuthScreenProps {
 }
 
 const SITIOS = [
-  'Sitio Proper (Centro)',
-  'Sitio Fatima',
-  'Sitio Huyong-Huyong',
-  'Sitio Mahayahay',
-  'Sitio Tuburan',
-  'Sitio Ylaya'
+  'Sitio Tapon',
+  'Sitio Pundok 1',
+  'Sitio Pundok 2',
+  'Sitio Lamak'
 ];
 
-const CROPS_AND_LIVESTOCK = [
-  'Corn (Mais)',
-  'Coconut (Lubi)',
-  'Cacao',
-  'Tuburan Coffee',
-  'Vegetables (Utanon)',
-  'Cassava (Kamoteng Kahoy)',
-  'Hog Raising (Baboyan)',
-  'Poultry Raising (Manokan)',
-  'Goat Raising (Kanding)'
+const OFFICER_ROLES_INFO: { 
+  role: OfficerRole; 
+  label: string; 
+  cebLabel: string; 
+  desc: string; 
+}[] = [
+  { 
+    role: 'Vice_President', 
+    label: 'Vice President', 
+    cebLabel: 'Bise Presidente',
+    desc: 'Mopuli ug motabang sa Presidente sa pagdumala sa mga komite ug operasyon sa asosasyon.'
+  },
+  { 
+    role: 'Secretary', 
+    label: 'Secretary', 
+    cebLabel: 'Kalihim',
+    desc: 'Tigtipig sa mga opisyal nga rekord, minutes sa panagtigom, resolusyon, ug listahan sa miyembro.'
+  },
+  { 
+    role: 'Treasurer', 
+    label: 'Treasurer', 
+    cebLabel: 'Mamahandi',
+    desc: 'Tigtipig sa pundo, koleksyon sa amot, disbursements, ug pinansyal nga libro sa AFA.'
+  },
+  { 
+    role: 'Auditor', 
+    label: 'Auditor', 
+    cebLabel: 'Auditor (Tigsusi)',
+    desc: 'Pagsusi ug pag-audit sa tanang pinansyal nga transaksyon, resibo, asset, ug pundo.'
+  },
+  { 
+    role: 'PIO', 
+    label: 'Public Information Officer (PIO)', 
+    cebLabel: 'Opisyal sa Impormasyon',
+    desc: 'Pagpagawas sa mga pahibalo, anunsyo sa komunidad, ug pakig-alayon sa mga mag-uuma.'
+  },
+  { 
+    role: 'President', 
+    label: 'President', 
+    cebLabel: 'Presidente',
+    desc: 'Pangulo sa asosasyon, tigdumala sa mga opisyal, ug tig-aprobar sa mga kalihokan.'
+  }
 ];
 
 export default function AuthScreen({ 
@@ -53,22 +84,17 @@ export default function AuthScreen({
   const [showResetForm, setShowResetForm] = useState(false);
   const [resetUsername, setResetUsername] = useState('');
 
-  // Sign-up State
-  const [registerRole, setRegisterRole] = useState<'Member' | OfficerRole>('Member');
+  // Sign-up State (STRICTLY FOR OFFICERS ONLY)
+  const [registerRole, setRegisterRole] = useState<OfficerRole>('Vice_President');
   const [regUsername, setRegUsername] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [regName, setRegName] = useState('');
   const [regContact, setRegContact] = useState('');
   const [regSitio, setRegSitio] = useState(SITIOS[0]);
-  const [regSelectedCrops, setRegSelectedCrops] = useState<string[]>([]);
-
-  const handleCropToggle = (cropName: string) => {
-    if (regSelectedCrops.includes(cropName)) {
-      setRegSelectedCrops(regSelectedCrops.filter(c => c !== cropName));
-    } else {
-      setRegSelectedCrops([...regSelectedCrops, cropName]);
-    }
-  };
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
+  const [showMemberGuide, setShowMemberGuide] = useState(false);
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,37 +128,65 @@ export default function AuthScreen({
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regUsername.trim() || !regPassword.trim() || !regName.trim()) {
-      toast('Palihug sulati ang tanang kinahanglang dapit (Please fill out all required fields).', 'error');
+    
+    if (!regName.trim()) {
+      toast('Palihug isulod ang imong tibuok ngalan (Please enter your full name).', 'error');
+      return;
+    }
+
+    if (!regUsername.trim()) {
+      toast('Palihug paghimo og username (Please enter a username).', 'error');
+      return;
+    }
+
+    const cleanUsername = regUsername.trim().toLowerCase();
+    if (cleanUsername.length < 3) {
+      toast('Ang username kinahanglan labing menus 3 ka letra (Username must be at least 3 characters).', 'error');
       return;
     }
 
     const usernameExists = users.some(
-      u => u.username.toLowerCase() === regUsername.trim().toLowerCase()
+      u => u.username.toLowerCase() === cleanUsername
     );
 
     if (usernameExists) {
-      toast('Nagamit na kini nga Username. Pagpili og lain (Username already taken).', 'error');
+      toast('Nagamit na kini nga Username. Palihug pagpili og lain (Username already taken).', 'error');
       return;
     }
 
+    if (!regPassword.trim() || regPassword.trim().length < 6) {
+      toast('Ang password kinahanglan labing menus 6 ka letra o numero (Password must be at least 6 characters).', 'error');
+      return;
+    }
+
+    if (regPassword.trim() !== regConfirmPassword.trim()) {
+      toast('Dili managsama ang Password ug Confirm Password (Passwords do not match).', 'error');
+      return;
+    }
+
+    if (!regContact.trim()) {
+      toast('Palihug ibutang ang imong contact number para sa beripikasyon (Please provide contact number).', 'error');
+      return;
+    }
+
+    // Submit strictly as Officer
     onRegister({
-      username: regUsername.trim(),
+      username: cleanUsername,
       passwordHash: hashPassword(regPassword.trim()),
       name: regName.trim(),
-      role: registerRole,
+      role: registerRole, // strictly OfficerRole
       contactNumber: regContact.trim(),
-      farmLocation: registerRole === 'Member' ? regSitio : undefined,
-      primaryCrops: registerRole === 'Member' ? regSelectedCrops : undefined,
+      farmLocation: regSitio,
     });
 
     // Reset fields
     setRegUsername('');
     setRegPassword('');
+    setRegConfirmPassword('');
     setRegName('');
     setRegContact('');
-    setRegSelectedCrops([]);
     setIsLogin(true);
+    toast('Malampusong napadala ang rehistrasyon sa Opisyal! Palihug hulata ang pag-aprobar ni Presidente Zenaida (Officer registration submitted! Awaiting President approval).', 'success');
   };
 
   const handleResetRequestSubmit = (e: React.FormEvent) => {
@@ -179,7 +233,7 @@ export default function AuthScreen({
                 Sistemang Alang sa mga Mag-uuma sa Alegria
               </h2>
               <p className="text-sm sm:text-[15px] text-[#D7F0DF] leading-relaxed font-medium">
-                Kini nga sistema gidisenyo aron mahimong yano, sayon gamiton, ug daling masabtan sa atong mga kaubang mag-uuma.
+                Kini nga sistema gidisenyo aron mahimong yano, sayon gamiton, ug daling masabtan sa atong mga kaubang mag-uuma ug opisyal.
               </p>
               
               <div className="space-y-3 pt-2 text-sm text-[#E5F5EB]">
@@ -191,15 +245,15 @@ export default function AuthScreen({
                 </div>
                 <div className="flex items-start gap-3 rounded-2xl bg-white/5 border border-white/10 p-3">
                   <div className="bg-[#2D6A4F] p-1.5 rounded-full mt-0.5 text-white shrink-0">
-                    <CheckCircle className="w-3.5 h-3.5" />
+                    <ShieldCheck className="w-3.5 h-3.5" />
                   </div>
-                  <span><strong className="font-extrabold text-white">Pagdumala sa Password:</strong> Kung makalimot, hangyoa lang si Presidente Zenaida para sa bag-ong password.</span>
+                  <span><strong className="font-extrabold text-white">Rehistro sa Opisyal:</strong> Ang mga bag-ong napili nga opisyal mahimong mag-rehistro dinhi alang sa pag-aprobar sa Presidente.</span>
                 </div>
                 <div className="flex items-start gap-3 rounded-2xl bg-white/5 border border-white/10 p-3">
                   <div className="bg-[#2D6A4F] p-1.5 rounded-full mt-0.5 text-white shrink-0">
                     <CheckCircle className="w-3.5 h-3.5" />
                   </div>
-                  <span><strong className="font-extrabold text-white">Balita ug Presyo:</strong> Makita dayon ang mga pinakabag-ong anunsyo mahitungod sa sementos, liso, ug presyo.</span>
+                  <span><strong className="font-extrabold text-white">Pagpasakop sa Miyembro:</strong> Ang mga regular nga mag-uuma iparehistro sa Opisina sa Kalihim (Secretary Desk).</span>
                 </div>
               </div>
             </div>
@@ -226,6 +280,7 @@ export default function AuthScreen({
                   onClick={() => {
                     setIsLogin(true);
                     setShowResetForm(false);
+                    setShowMemberGuide(false);
                   }}
                   className={`text-sm font-extrabold font-display pb-3 relative transition-all cursor-pointer tracking-[0.08em] ${
                     isLogin && !showResetForm
@@ -240,6 +295,7 @@ export default function AuthScreen({
                   onClick={() => {
                     setIsLogin(false);
                     setShowResetForm(false);
+                    setShowMemberGuide(false);
                   }}
                   className={`text-sm font-extrabold font-display pb-3 relative transition-all cursor-pointer tracking-[0.08em] ${
                     !isLogin && !showResetForm
@@ -247,13 +303,13 @@ export default function AuthScreen({
                       : 'text-[#5D6E62] hover:text-[#1B4332]'
                   }`}
                 >
-                  PAGPASAKOP (How to Join)
+                  REHISTRO SA OPISYAL (Officer Sign Up)
                 </button>
               </div>
 
               {!isLogin && (
                 <span className="hidden sm:inline bg-[#EAF6EE] text-[#1D5B42] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-[0.14em] border border-[#B7E3C4]">
-                  Pinaagi sa Kalihim (Secretary-Issued)
+                  Opisyal Lamang (Officers Only)
                 </span>
               )}
             </div>
@@ -332,7 +388,7 @@ export default function AuthScreen({
                         onClick={() => {
                           setUsername(user.username);
                           setPassword('password123'); // seed preset
-                          toast(`Nahi-select si ${user.name}! Pindota ang "Access Portal" sa ubos aron makasulod.`, 'info');
+                          toast(`Nahi-select si ${user.name}! Pindota ang "Mosulod sa Portal" sa ubos aron makasulod.`, 'info');
                         }}
                         className={`p-2.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between min-h-[76px] h-20 relative group overflow-hidden ${
                           username.toLowerCase() === user.username.toLowerCase()
@@ -422,10 +478,10 @@ export default function AuthScreen({
                   )}
                 </form>
               </div>
-            ) : (
+            ) : showMemberGuide ? (
               
-              /* OFFICIAL SECRETARY-LED MEMBERSHIP ENROLLMENT INFO */
-              <div className="space-y-4 text-left animate-fade-in max-h-[62vh] overflow-y-auto pr-1">
+              /* OPTIONAL SECRETARY-LED MEMBERSHIP ENROLLMENT INFO FOR REGULAR FARMERS */
+              <div className="space-y-4 text-left animate-fade-in max-h-[64vh] overflow-y-auto pr-1">
                 <div className="bg-[#EAF6EE] border-2 border-[#52B788]/40 rounded-2xl p-4.5 space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#1B4332] text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -436,10 +492,10 @@ export default function AuthScreen({
                         Opisyal nga Polisa sa Asosasyon
                       </span>
                       <h4 className="text-base font-extrabold text-[#123326] mt-1 font-display">
-                        Pinaagi sa Kalihim (Secretary-Authorized Only)
+                        Pagpasakop sa Miyembro: Pinaagi sa Kalihim Lamang
                       </h4>
                       <p className="text-xs text-[#2D5A43] leading-relaxed mt-1">
-                        Aron masiguro ang husto nga RSBSA verification, audit trails, ug opisyal nga listahan sa Alegria Farmers, ang <strong>Kalihim (Jennylyn S. Lumactao)</strong> lamang ang awtorisado nga mopasakop ug mohatag og Portal Login credentials ngadto sa mga mag-uuma.
+                        Aron masiguro ang husto nga RSBSA verification ug audit trails, ang mga regular nga mag-uuma <strong>dili kinahanglan mag-sign up sa online form</strong>. Ang <strong>Kalihim (Jennylyn S. Lumactao)</strong> lamang ang awtorisado nga mopasakop ug mohatag og Login Slip credentials.
                       </p>
                     </div>
                   </div>
@@ -509,37 +565,297 @@ export default function AuthScreen({
                   </span>
                 </div>
 
-                {/* DIRECT ACTION BUTTONS */}
+                {/* BUTTON TO RETURN TO OFFICER SIGN UP */}
                 <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsLogin(true);
-                      setShowResetForm(false);
-                    }}
+                    onClick={() => setShowMemberGuide(false)}
                     className="flex-1 py-3 bg-[#1B4332] hover:bg-[#143326] text-white rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Naa na koy Account? Sulod Dinhi (Log In)</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Balik sa Rehistro sa Opisyal (Officer Sign Up)</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      setShowResetForm(true);
+                      setIsLogin(true);
+                      setShowMemberGuide(false);
                     }}
                     className="py-3 px-4 bg-[#FAF8F5] hover:bg-[#F2ECE0] text-[#4F5E46] border border-[#D5CFC1] rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Nakalimot sa Koda?</span>
+                    <span>Mosulod sa Portal (Log In)</span>
                   </button>
                 </div>
+              </div>
+            ) : (
+              
+              /* STRICTLY OFFICER REGISTRATION FORM */
+              <div className="space-y-4 text-left animate-fade-in max-h-[64vh] overflow-y-auto pr-1">
+                
+                {/* OFFICER ONLY BANNER */}
+                <div className="bg-[#EAF6EE] border-2 border-[#52B788]/40 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#1B4332] text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <ShieldCheck className="w-5 h-5 text-[#52B788]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#1B4332] bg-white px-2 py-0.5 rounded-md border border-[#A7D7B5]">
+                          Opisyal Lamang
+                        </span>
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
+                          Nagkinahanglan og Pag-aprobar
+                        </span>
+                      </div>
+                      <h4 className="text-sm sm:text-base font-extrabold text-[#123326] mt-1 font-display">
+                        Rehistrasyon Alang sa mga Opisyal Lamang
+                      </h4>
+                      <p className="text-xs text-[#2D5A43] leading-relaxed mt-0.5">
+                        Kini nga porma gigahin lamang sa pagrehistro sa mga piniling opisyal sa AFA. Ang matag bag-ong account kinahanglan una aprobahan ni Presidente Zenaida A. Elbiña sa dili pa makasulod.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#B7E3C4] flex items-center justify-between text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setShowMemberGuide(true)}
+                      className="font-bold text-[#1B4332] hover:text-[#0f241a] hover:underline flex items-center gap-1 cursor-pointer text-[11px]"
+                    >
+                      <Info className="w-3.5 h-3.5 text-[#2D6A4F]" />
+                      <span>Dili opisyal? Tan-awa unsaon pagpasakop ang regular nga miyembro</span>
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+                  
+                  {/* ROLE SELECTION */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
+                      Pilia ang Katungdanan (Officer Position) *
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {OFFICER_ROLES_INFO.map(item => {
+                        const isSelected = registerRole === item.role;
+                        const incumbent = users.find(u => u.role === item.role && u.isApproved);
+                        return (
+                          <button
+                            key={item.role}
+                            type="button"
+                            onClick={() => setRegisterRole(item.role)}
+                            className={`p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between min-h-[66px] ${
+                              isSelected 
+                                ? 'bg-[#EAF5EE] border-[#1B4332] shadow-sm' 
+                                : 'bg-[#F9FBF9] border-[#D8E7D9] hover:border-[#8EBDA2]'
+                            }`}
+                          >
+                            <div>
+                              <span className={`block font-black text-xs leading-tight ${isSelected ? 'text-[#1B4332]' : 'text-slate-800'}`}>
+                                {item.cebLabel}
+                              </span>
+                              <span className="block text-[10px] text-slate-500 font-semibold truncate">
+                                {item.label}
+                              </span>
+                            </div>
+                            {incumbent && (
+                              <span className="text-[9px] text-[#2D6A4F] font-bold truncate mt-1 block">
+                                Karon: {incumbent.name.split(' ')[0]}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Role Description Card */}
+                    <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#E2DDD3] text-[11px] text-[#4F5E46] flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-[#1B4332] shrink-0" />
+                      <span>
+                        <strong className="text-[#1B4332]">{OFFICER_ROLES_INFO.find(r => r.role === registerRole)?.cebLabel}:</strong>{' '}
+                        {OFFICER_ROLES_INFO.find(r => r.role === registerRole)?.desc}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* NAME & USERNAME */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
+                        Tibuok Ngalan sa Opisyal *
+                      </label>
+                      <div className="relative">
+                        <UserIcon className="absolute left-3 top-3 w-4 h-4 text-[#4D615A]" />
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Roberto S. Santos"
+                          value={regName}
+                          onChange={(e) => setRegName(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 text-sm bg-[#F8FAF8] border-2 border-[#D8E7D9] rounded-xl text-[#1E352E] focus:outline-none focus:border-[#1B4332] focus:ring-2 focus:ring-[#D8F3DC] font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
+                          Username (Account) *
+                        </label>
+                        {regUsername && users.some(u => u.username.toLowerCase() === regUsername.trim().toLowerCase()) && (
+                          <span className="text-[10px] text-red-600 font-bold">Nagamit na</span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <UserPlus className="absolute left-3 top-3 w-4 h-4 text-[#4D615A]" />
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. roberto.santos"
+                          value={regUsername}
+                          onChange={(e) => setRegUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+                          className="w-full pl-9 pr-3 py-2.5 text-sm bg-[#F8FAF8] border-2 border-[#D8E7D9] rounded-xl text-[#1E352E] focus:outline-none focus:border-[#1B4332] focus:ring-2 focus:ring-[#D8F3DC] font-semibold font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PASSWORD & CONFIRM PASSWORD */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
+                        Password / Koda * (min. 6)
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 w-4 h-4 text-[#4D615A]" />
+                        <input
+                          type={showRegPassword ? 'text' : 'password'}
+                          required
+                          placeholder="Isulod ang koda"
+                          value={regPassword}
+                          onChange={(e) => setRegPassword(e.target.value)}
+                          className="w-full pl-9 pr-9 py-2.5 text-sm bg-[#F8FAF8] border-2 border-[#D8E7D9] rounded-xl text-[#1E352E] focus:outline-none focus:border-[#1B4332] focus:ring-2 focus:ring-[#D8F3DC] font-semibold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegPassword(!showRegPassword)}
+                          className="absolute right-3 top-3 text-[#4D615A] hover:text-[#1B4332] cursor-pointer"
+                        >
+                          {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
+                          Kumpirmaha ang Password *
+                        </label>
+                        {regConfirmPassword && (
+                          regPassword === regConfirmPassword ? (
+                            <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+                              <Check className="w-3 h-3" /> Sakto
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-red-600 font-bold">Dili pareha</span>
+                          )
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 w-4 h-4 text-[#4D615A]" />
+                        <input
+                          type={showRegConfirmPassword ? 'text' : 'password'}
+                          required
+                          placeholder="Isulod pag-usab"
+                          value={regConfirmPassword}
+                          onChange={(e) => setRegConfirmPassword(e.target.value)}
+                          className="w-full pl-9 pr-9 py-2.5 text-sm bg-[#F8FAF8] border-2 border-[#D8E7D9] rounded-xl text-[#1E352E] focus:outline-none focus:border-[#1B4332] focus:ring-2 focus:ring-[#D8F3DC] font-semibold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                          className="absolute right-3 top-3 text-[#4D615A] hover:text-[#1B4332] cursor-pointer"
+                        >
+                          {showRegConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CONTACT NUMBER & SITIO */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
+                        Contact Number (Mobile) *
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-3 w-4 h-4 text-[#4D615A]" />
+                        <input
+                          type="tel"
+                          required
+                          placeholder="0917-123-4567"
+                          value={regContact}
+                          onChange={(e) => setRegContact(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 text-sm bg-[#F8FAF8] border-2 border-[#D8E7D9] rounded-xl text-[#1E352E] focus:outline-none focus:border-[#1B4332] focus:ring-2 focus:ring-[#D8F3DC] font-semibold font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
+                        Sitio sa Alegria (Puy-anan) *
+                      </label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 w-4 h-4 text-[#4D615A]" />
+                        <select
+                          value={regSitio}
+                          onChange={(e) => setRegSitio(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 text-sm bg-[#F8FAF8] border-2 border-[#D8E7D9] rounded-xl text-[#1E352E] focus:outline-none focus:border-[#1B4332] font-semibold appearance-none cursor-pointer"
+                        >
+                          {SITIOS.map(s => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SUBMIT BUTTON */}
+                  <div className="space-y-2 pt-2">
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 bg-[#1B4332] hover:bg-[#143326] text-white rounded-2xl font-black text-sm transition-all shadow-[0_12px_28px_rgba(27,67,50,0.25)] flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <ShieldCheck className="w-4.5 h-4.5 text-[#52B788]" />
+                      <span>Ipadala ang Rehistrasyon sa Opisyal</span>
+                    </button>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-between text-xs gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsLogin(true)}
+                        className="font-bold text-[#1B4332] hover:underline cursor-pointer"
+                      >
+                        ← Naa na koy account? Pagsulod Dinhi (Log In)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowMemberGuide(true)}
+                        className="font-bold text-[#D76B3F] hover:underline cursor-pointer"
+                      >
+                        Unsaon pagpasakop sa mga miyembro?
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
               </div>
             )}
           </div>
 
           <div className="text-center text-[10px] text-[#85947E] mt-6 border-t border-[#F0EBE1] pt-3">
-            Sistemang AFA v1.1 • Gidisenyo alang sa kasayon sa matag mag-uuma.
+            Sistemang AFA v1.1 • Gidisenyo alang sa kasayon sa matag mag-uuma ug opisyal.
           </div>
         </div>
 

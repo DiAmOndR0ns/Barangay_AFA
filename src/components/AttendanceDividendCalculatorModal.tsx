@@ -181,7 +181,7 @@ export default function AttendanceDividendCalculatorModal({
           </div>
 
           <div class="formula-note">
-            <strong>BUDGET & CAPITAL ORIGIN (WHERE BUDGET WAS TAKEN FROM):</strong> Revolving Livelihood Capital funded by the <strong>DOLE Integrated Livelihood Program (DILP) Grant (PHP 1,000,000.00)</strong> & Municipal Agriculture Assistance. 
+            <strong>BUDGET & CAPITAL ORIGIN (WHERE BUDGET WAS TAKEN FROM):</strong> Revolving Livelihood Capital funded by the <strong>DOLE Integrated Livelihood Program (DILP) Capital Grant</strong> & Municipal Agriculture Assistance. 
             <br/><br/>
             <strong>Official Distribution Formula:</strong> 50% Direct Handlers (₱${handlersShare.toLocaleString()}) | 30% FCCT Cooperative Member Pool (₱${fcctGeneralMembershipPool.toLocaleString()}) | 20% Association Fund (₱${associationTotalFund.toLocaleString()}) | 5% Dispersal & Insurance Pool (₱${dispersalInsurancePool.toLocaleString()}). Attendance-weighted distribution allocates higher dividend shares to active members who participate in regular meetings and assemblies.
           </div>

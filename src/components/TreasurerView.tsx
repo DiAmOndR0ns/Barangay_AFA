@@ -5,7 +5,7 @@ import {
   Coins, ArrowUpRight, ArrowDownRight, Plus, 
   Search, ShieldCheck, AlertTriangle, CheckCircle, 
   XCircle, Filter, FileText, Info, Building2, Wallet, Database,
-  PiggyBank, TrendingUp, BarChart3, Calendar, Sparkles
+  Briefcase, TrendingUp, BarChart3, Calendar, Sparkles, Trash2
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -23,6 +23,7 @@ interface TreasurerViewProps {
   funds?: OrganizationFund[];
   hogRaising?: HogRaisingState;
   onAddTransaction: (tx: Omit<FinancialTransaction, 'id' | 'auditedStatus'>) => void;
+  onDeleteTransaction?: (id: string) => void;
   onAuditTransaction: (id: string, status: 'Audited' | 'Flagged', notes: string) => void;
   onUpdateCapitalGrant?: (amount: number) => void;
   currentRole: OfficerRole;
@@ -34,6 +35,7 @@ export default function TreasurerView({
   funds = INITIAL_FUNDS,
   hogRaising = INITIAL_HOG_RAISING,
   onAddTransaction,
+  onDeleteTransaction,
   onAuditTransaction,
   onUpdateCapitalGrant,
   currentRole,
@@ -107,7 +109,7 @@ export default function TreasurerView({
 
   // Compute available produces
   const availableProduces = useMemo(() => {
-    return hogRaising?.produces || ['Hog Raising', 'Poultry Raising', 'Tilapia Breeding'];
+    return (hogRaising?.produces || ['Chairs Rental', 'Sacks Rental', 'Crop Livelihood']).filter(p => !p.toLowerCase().includes('tilapia'));
   }, [hogRaising]);
 
   // Aggregate monthly expenses and sales income for the Hog Raising IGP Project
@@ -374,11 +376,11 @@ export default function TreasurerView({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                <PiggyBank className="w-5 h-5 text-emerald-400" />
+                <Briefcase className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
                 <h3 className="text-base font-black text-white flex items-center gap-2">
-                  <span>Hog Raising IGP - Monthly Expenses vs. Income Trends</span>
+                  <span>Association IGP & Rentals - Monthly Expenses vs. Income Trends</span>
                   <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     Interactive Recharts
                   </span>
@@ -851,7 +853,8 @@ export default function TreasurerView({
                       </button>
                     )
                   ) : (
-                    /* Display Audit Status Badge to Treasurer */
+                  <div className="flex items-center gap-2">
+                    {/* Display Audit Status Badge to Treasurer */}
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                       tx.auditedStatus === 'Audited'
                         ? 'bg-emerald-500/10 text-emerald-400'
@@ -861,6 +864,21 @@ export default function TreasurerView({
                     }`}>
                       {tx.auditedStatus}
                     </span>
+                    {onDeleteTransaction && (
+                      <button
+                        id={`delete-tx-${tx.id}`}
+                        onClick={() => {
+                          if (window.confirm(`Delete transaction "${tx.description}" (PHP ${tx.amount.toLocaleString()})? Changes will auto-sync to the database.`)) {
+                            onDeleteTransaction(tx.id);
+                          }
+                        }}
+                        className="p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                        title="Delete transaction record"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                   )}
                 </div>
               </div>

@@ -3,7 +3,7 @@ import {
   Sprout, Trophy, BookOpen, LogIn, ArrowRight, Sparkles, Coffee, 
   Heart, Milestone, TrendingUp, Calendar, Users, Award, ShieldCheck, 
   Check, ChevronLeft, ChevronRight, Lock, ShieldAlert, Megaphone,
-  MapPin, Clock, Tag, AlertTriangle
+  MapPin, Clock, Tag, AlertTriangle, Boxes, Package, Phone, X, ShoppingBag
 } from 'lucide-react';
 import { HogRaisingState, Member, Product, Announcement, AssociationActivity } from '../types';
 
@@ -25,11 +25,11 @@ export default function GuestPortal({
   activities = []
 }: GuestPortalProps) {
   const [activeTab, setActiveTab] = useState<'home' | 'announcements' | 'activities' | 'products' | 'history' | 'achievements'>('home');
+  const [selectedProductModal, setSelectedProductModal] = useState<any | null>(null);
 
   // Dynamically calculate stats to accurately reflect the registered roster
   const registeredMembersCount = members.length;
   const activeMembersCount = members.filter(m => m.status === 'Active').length;
-  const currentPigsCount = 18; // AFA Standard Piglet Batch size
 
   // Theme styling tailored for senior citizens (high contrast, warm, large readable text)
   const theme = {
@@ -41,74 +41,97 @@ export default function GuestPortal({
     primaryBtn: 'bg-[#1B4332] hover:bg-[#143326] text-white shadow-lg text-sm sm:text-base font-black px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl cursor-pointer'
   };
 
-  // Default Showcase Product Data
+  // Default Showcase Product & Rental Data reflecting database products
   const defaultProductsList = [
+    {
+      id: 'prod-chairs-rental',
+      name: 'Abang sa Lingkoranan (Plastic Chairs Rental)',
+      cebName: 'Mga Lingkoranan nga Abangan Alang sa Tanan (Rentable by Everyone)',
+      desc: 'Lig-on ug limpyo nga mga monobloc plastic chairs nga maabangan alang sa mga asembliya, kasal, pista, lubong, ug panagtigom sa komunidad.',
+      specs: 'Heavy-Duty Monobloc Chairs (Bukas alang sa tanan)',
+      price: 'PHP 10 matag adlaw / lingkoranan',
+      quantityAvailable: '150 ka buok lingkoranan',
+      farmerName: 'AFA Community Logistics & Asset Committee',
+      farmerSitio: 'Sitio Tapon',
+      farmerPhone: '0917-345-6789',
+      category: 'Rental & Services',
+      stockStatus: 'In Stock',
+      icon: Boxes,
+      color: 'bg-emerald-100 border-emerald-300 text-emerald-900'
+    },
+    {
+      id: 'prod-sacks-rental',
+      name: 'Abang sa Sako (Harvest & Storage Sacks Rental)',
+      cebName: 'Mga Sako nga Abangan para sa Ting-ani (Rentable by Everyone)',
+      desc: 'Limpyo ug lig-on nga mga 50kg woven sacks nga maabangan sa tanang mag-uuma ug lumulupyo alang sa ting-ani sa mais, kape, kopras, ug abot sa uma.',
+      specs: '50kg Capacity Woven Polypropylene Sacks (Bukas alang sa tanan)',
+      price: 'PHP 5 matag gamit / sako',
+      quantityAvailable: '250 ka buok sako',
+      farmerName: 'AFA Warehouse & Logistics Committee',
+      farmerSitio: 'Sitio Lamak',
+      farmerPhone: '0917-345-6789',
+      category: 'Rental & Services',
+      stockStatus: 'In Stock',
+      icon: Package,
+      color: 'bg-amber-100 border-amber-300 text-amber-900'
+    },
     {
       id: 'prod-coffee',
       name: 'Kape sa Tuburan (Tuburan Coffee)',
-      cebName: 'Espesyal nga Roasted Coffee Beans',
+      cebName: 'Espesyal nga Roasted Coffee Beans & Ginaling nga Kape',
       desc: 'Lunsay nga kape gikan sa mga bungtod sa Tuburan. Organiko, humot, ug lami kaayo ang pagka-galing.',
       specs: '100% Organic Robusta & Liberica beans',
-      price: 'PHP 250 matag 250g',
+      price: 'PHP 250 matag 250g pack',
       quantityAvailable: '45 ka pack (250g bags)',
       farmerName: 'Zenaida A. Elbiña',
-      farmerSitio: 'Sitio Fatima',
+      farmerSitio: 'Sitio Tapon',
       farmerPhone: '0945-876-1234',
+      category: 'Coffee & Crops',
+      stockStatus: 'In Stock',
       icon: Coffee,
-      color: 'bg-amber-100 border-amber-300 text-amber-900'
+      color: 'bg-stone-100 border-stone-300 text-stone-900'
     },
     {
       id: 'prod-corn',
       name: 'Dalag ug Puti nga Mais (Cebu Yellow & White Corn)',
-      cebName: 'Lab-as nga Mais alang sa Pagkaon',
+      cebName: 'Lab-as nga Mais alang sa Pagkaon ug Binhi',
       desc: 'Gitanom sa tabunok nga yuta sa Alegria nga walay kemikal nga makadaot. Tam-is ug lab-as kaayo.',
-      specs: 'Bag-ong ani matag semana',
+      specs: 'Bag-ong ani sa Alegria',
       price: 'PHP 45 matag kilo',
       quantityAvailable: '250 ka kilo',
       farmerName: 'Gracelyn P. Asendiente',
-      farmerSitio: 'Sitio Lower Alegria',
+      farmerSitio: 'Sitio Pundok 2',
       farmerPhone: '0917-345-6789',
+      category: 'Produce',
+      stockStatus: 'In Stock',
       icon: Sprout,
       color: 'bg-yellow-100 border-yellow-300 text-yellow-900'
-    },
-    {
-      id: 'prod-pork',
-      name: 'Lab-as nga Baboy (High-Grade Live & Fresh Pork)',
-      cebName: 'Produkto sa Atong Hog Raising Project',
-      desc: 'Gi-atiman pag-ayo sa atong miyembro sa baboyan. Kasaligan, limpyo, ug pakan-on sa husto nga nutrisyon.',
-      specs: 'LGU Supported Healthy Feeding Standard',
-      price: 'PHP 230 - 250 matag kilo',
-      quantityAvailable: '8 ka ulo (approx 85-90kg/head)',
-      farmerName: 'AFA Hog Raising Committee (Led by Anselna Arnado)',
-      farmerSitio: 'Sitio Upper Alegria',
-      farmerPhone: '0922-987-6543',
-      icon: TrendingUp,
-      color: 'bg-rose-100 border-rose-300 text-rose-900'
     },
     {
       id: 'prod-coconut',
       name: 'Lubi ug Kopras (Organic Coconut & Copra)',
       cebName: 'Pang-unang Tinubdan sa Atong Mag-uuma',
-      desc: 'Katas sa lubi ug taas nga kalidad nga kopras para sa mantika. Direkta gikan sa mga mag-uuma sa unom ka Sitio.',
+      desc: 'Katas sa lubi ug taas nga kalidad nga kopras para sa mantika. Direkta gikan sa mga mag-uuma sa 4 ka opisyal nga Sitio sa Alegria.',
       specs: 'Premium Copra & Fresh Buko',
       price: 'PHP 20 matag buok',
       quantityAvailable: '500 ka buok',
       farmerName: 'Lorena B. Pinote',
-      farmerSitio: 'Sitio Anislagan',
+      farmerSitio: 'Sitio Pundok 1',
       farmerPhone: '0998-123-4567',
+      category: 'Produce',
+      stockStatus: 'In Stock',
       icon: Sparkles,
       color: 'bg-emerald-100 border-emerald-300 text-emerald-900'
     }
   ];
 
-
   // Milestones Data
   const milestones = [
     {
       year: '2026',
-      title: 'Hog Raising IGP Upgrade & LGU Grant',
-      cebTitle: 'PHP 1 Milyon nga Kapital gikan sa LGU',
-      desc: 'Nadawat sa AFA ang pundo alang sa modernong baboyan aron matabangan ang mga miyembro nga adunay sumpay nga kita.',
+      title: 'Community IGP & Rental Services Expansion',
+      cebTitle: 'Opisyal nga Pagpalapad sa mga Proyekto sa Asosasyon (IGP & Rentals)',
+      desc: 'Gipalapdan sa AFA ang mga kagamitan ug serbisyo sama sa abang sa mga lingkoranan ug sako nga bukas alang sa tanan aron makahatag og dugang kita sa mga miyembro.',
       icon: Trophy
     },
     {
@@ -129,7 +152,7 @@ export default function GuestPortal({
       year: '2022',
       title: 'AFA Official Incorporation',
       cebTitle: 'Opisyal nga Pagkatukod sa Atong Asosasyon',
-      desc: 'Naghiusa ang mga mag-uuma gikan sa unom ka Sitio sa Alegria aron magtinabangay ug mapanalipdan ang presyo sa uma.',
+      desc: 'Naghiusa ang mga mag-uuma gikan sa upat (4) ka opisyal nga Sitio sa Alegria aron magtinabangay ug mapanalipdan ang presyo sa uma.',
       icon: BookOpen
     }
   ];
@@ -253,18 +276,18 @@ export default function GuestPortal({
                 <div className="min-w-0 flex-1">
                   <span className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-wider leading-tight">Mga Rehistradong Mag-uuma</span>
                   <span className="text-2xl sm:text-3xl font-black text-[#1B4332] font-mono leading-tight block break-words">{registeredMembersCount} Miyembro</span>
-                  <span className="block text-[11px] sm:text-xs text-slate-600 mt-0.5 sm:mt-1 font-bold break-words">{activeMembersCount} Aktibo sa Unom ka Sitio</span>
+                  <span className="block text-[11px] sm:text-xs text-slate-600 mt-0.5 sm:mt-1 font-bold break-words">{activeMembersCount} Aktibo sa 4 ka Sitio</span>
                 </div>
               </div>
 
               <div className="bg-white rounded-3xl p-4 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-sm min-w-0">
-                <div className="p-3 sm:p-4 rounded-2xl bg-sky-100 text-sky-800 shrink-0">
-                  <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10" />
+                <div className="p-3 sm:p-4 rounded-2xl bg-emerald-100 text-[#1B4332] shrink-0">
+                  <Boxes className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <span className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-wider leading-tight">Baboyan IGP Status</span>
-                  <span className="text-2xl sm:text-3xl font-black text-sky-950 font-mono leading-tight block break-words">{currentPigsCount} ka Baboy</span>
-                  <span className="block text-[11px] sm:text-xs text-slate-600 mt-0.5 sm:mt-1 font-bold break-words">Live Batch karon nga tuig</span>
+                  <span className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-wider leading-tight">Komunidad IGP & Rentals</span>
+                  <span className="text-xl sm:text-2xl font-black text-[#1B4332] font-mono leading-tight block break-words">Lingkoranan & Sako</span>
+                  <span className="block text-[11px] sm:text-xs text-emerald-700 mt-0.5 sm:mt-1 font-bold break-words">Bukas abangan alang sa tanan</span>
                 </div>
               </div>
 
@@ -278,7 +301,7 @@ export default function GuestPortal({
                 </h3>
                 <p className="text-xs sm:text-sm md:text-base text-slate-700 leading-relaxed font-semibold break-words">
                   Ang AFA gilusad aron tagaan og gahum, modernong tabang, ug dugang kita ang atong mga lokal nga mag-uuma. 
-                  Gikan sa atong iladong <strong className="text-[#BF360C]">Kape sa Tuburan</strong>, saging, mais, hangtod sa gisuportahan nga <strong className="text-[#1B4332]">Hog Raising Project</strong>, 
+                  Gikan sa atong iladong <strong className="text-[#BF360C]">Kape sa Tuburan</strong>, saging, mais, hangtod sa mga proyekto sa komunidad sama sa <strong className="text-[#1B4332]">Abang sa Lingkoranan ug Sako</strong>, 
                   atong paningkamotan nga mapalambo ang agrikultura pinaagi sa kooperasyon.
                 </p>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-4 pt-2">
@@ -559,7 +582,7 @@ export default function GuestPortal({
                 </p>
                 <p>
                   Tungod niini, niadtong tuig 2022, sa tabang sa atong lider nga si <strong className="text-[#1B4332]">Presidente Zenaida A. Elbiña</strong> kauban ang suporta sa Lokal nga Kagamhanan (LGU) ug Department of Agriculture (DA), 
-                  ang asosasyon opisyal nga na-rehistro ug natukod. Ang panguna nga katuyoan mao ang paghiusa sa unom ka nagkalain-laing Sitio sa Alegria aron adunay usa ka tingog ug hiniusang kusog.
+                  ang asosasyon opisyal nga na-rehistro ug natukod. Ang panguna nga katuyoan mao ang paghiusa sa upat (4) ka opisyal nga Sitio sa Alegria (Sitio Tapon, Sitio Pundok 1, Sitio Pundok 2, Sitio Lamak) aron adunay usa ka tingog ug hiniusang kusog.
                 </p>
                 
                 <div className="bg-[#FAF8F5] border-l-4 border-[#1B4332] p-4 sm:p-5 rounded-r-2xl space-y-2 min-w-0 break-words">
@@ -571,7 +594,7 @@ export default function GuestPortal({
 
                 <p>
                   Karon, ang AFA nagserbisyo na sa daghang aktibong pamilya sa mag-uuma. Mapasigarbohon kami nga nakatukod og mga programa sama sa collective selling sa <strong className="text-[#BF360C]">Kape sa Tuburan</strong>, 
-                  fertilizer distribution sessions, ug ang modernong <strong className="text-[#1B4332]">Hog Raising Income Generating Project (IGP)</strong> nga nakadawat og dako nga pagtagad ug grant gikan sa LGU sa Tuburan.
+                  fertilizer distribution sessions, ug ang mga livelihood projects ug <strong className="text-[#1B4332]">Kagamitan nga Abangan (Chairs & Sacks Rentals)</strong> nga bukas para sa tanan nga gipaluyohan sa Asosasyon.
                 </p>
               </div>
 
@@ -702,7 +725,7 @@ export default function GuestPortal({
                 </span>
                 <h4 className="text-base sm:text-lg font-black text-orange-950 break-words">Miyembro nga Adunay Sumpay nga Kita</h4>
                 <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words">
-                  Pinaagi sa Hog Raising IGP, ang matag miyembro makadawat og bahin o dividends gikan sa halin sa baboy matag batch. 
+                  Pinaagi sa mga Livelihood Projects ug Rental IGP (sama sa abang sa mga lingkoranan ug sako nga bukas alang sa tanan), ang matag miyembro makadawat og bahin o dividends gikan sa halin ug abot sa asosasyon. 
                   Kini naghatag og sigurado ug kasaligan nga dugang kwarta nga magamit sa pamilya para sa pagpa-skwela sa mga anak o medisina sa mga senior citizen.
                 </p>
               </div>
@@ -727,23 +750,46 @@ export default function GuestPortal({
 
             {/* Products Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0">
-              {(products.length > 0 ? products : defaultProductsList).map((prod: any) => {
-                const Icon = prod.icon || Coffee;
-                const cardColor = prod.color || 'bg-emerald-100 border-emerald-300 text-emerald-900';
+              {((products.length > 0 ? products : defaultProductsList).filter(
+                (p: any) => !p.name?.toLowerCase().includes('baboy') && 
+                            !p.name?.toLowerCase().includes('hog') && 
+                            !p.cebName?.toLowerCase().includes('baboy') &&
+                            !p.category?.toLowerCase().includes('hog')
+              )).map((prod: any) => {
+                const Icon = prod.icon || (prod.category?.includes('Rental') ? Boxes : Coffee);
+                const cardColor = prod.color || (prod.category?.includes('Rental') ? 'bg-emerald-100 border-emerald-300 text-emerald-900' : 'bg-stone-100 border-stone-300 text-stone-900');
                 return (
-                  <div key={prod.id} className="bg-white border-2 border-[#D5CFC1] hover:border-[#1B4332] hover:shadow-xl hover:-translate-y-1 hover:bg-[#F8FCF9] transition-all duration-300 rounded-3xl p-4 sm:p-6 flex flex-col justify-between min-w-0 cursor-pointer group">
+                  <div 
+                    key={prod.id} 
+                    onClick={() => setSelectedProductModal(prod)}
+                    className="bg-white border-2 border-[#D5CFC1] hover:border-[#1B4332] hover:shadow-xl hover:-translate-y-1 hover:bg-[#F8FCF9] transition-all duration-300 rounded-3xl p-4 sm:p-6 flex flex-col justify-between min-w-0 cursor-pointer group"
+                  >
                     <div className="space-y-3.5 min-w-0">
                       <div className="flex items-start sm:items-center gap-3 min-w-0">
-                        <div className={`p-2.5 sm:p-3 rounded-2xl ${cardColor} border shadow-inner shrink-0`}>
+                        <div className={`p-2.5 sm:p-3 rounded-2xl ${cardColor} border shadow-inner shrink-0 group-hover:scale-105 transition-transform`}>
                           <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-sm sm:text-base md:text-lg font-black text-[#1B4332] font-display leading-snug break-words">{prod.name}</h4>
-                          <span className="text-xs text-slate-600 font-extrabold leading-snug break-words block mt-0.5">{prod.cebName}</span>
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#1B4332] border border-emerald-200">
+                              {prod.category || 'Rental & Produce'}
+                            </span>
+                            {prod.category?.includes('Rental') && (
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">
+                                Rentable by Everyone
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="text-sm sm:text-base md:text-lg font-black text-[#1B4332] font-display leading-snug break-words group-hover:text-emerald-800 transition-colors">
+                            {prod.name}
+                          </h4>
+                          <span className="text-xs text-slate-600 font-extrabold leading-snug break-words block mt-0.5">
+                            {prod.cebName}
+                          </span>
                         </div>
                       </div>
                       
-                      <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words">
+                      <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words line-clamp-3">
                         {prod.desc || prod.description}
                       </p>
                     </div>
@@ -753,18 +799,18 @@ export default function GuestPortal({
                       <div className="flex flex-col sm:flex-row sm:items-end justify-between text-xs font-black gap-2 min-w-0">
                         <div className="space-y-0.5 min-w-0">
                           <span className="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Magamit nga Kadaghanon (Quantity):</span>
-                          <span className="text-[#1B4332] font-bold text-xs break-words">{prod.quantityAvailable || prod.specs || prod.unit || 'Magamit sa tig-ani'}</span>
+                          <span className="text-[#1B4332] font-bold text-xs break-words">{prod.quantityAvailable || prod.specs || prod.unit || 'Magamit sa Asosasyon'}</span>
                         </div>
                         <div className="sm:text-right space-y-0.5 min-w-0 shrink-0">
-                          <span className="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Standard Presyo (Price):</span>
-                          <span className="text-[#BF360C] font-mono font-black text-xs sm:text-sm break-words">{typeof prod.price === 'number' ? `PHP ${prod.price.toLocaleString()} / ${prod.unit}` : prod.price}</span>
+                          <span className="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Standard Presyo / Rate:</span>
+                          <span className="text-[#BF360C] font-mono font-black text-xs sm:text-sm break-words">{typeof prod.price === 'number' ? `PHP ${prod.price.toLocaleString()} / ${prod.unit || 'buok'}` : prod.price}</span>
                         </div>
                       </div>
 
                       {/* Selling Farmer Contact Details */}
                       <div className="bg-[#FAF8F5] border border-[#E2DCCE] p-3 rounded-2xl space-y-1.5 min-w-0">
                         <span className="block text-[10px] text-amber-900 uppercase font-extrabold tracking-wider break-words">
-                          Nalambigit nga Mag-uuma / Nagbaligya (Selling Farmer):
+                          Nalambigit nga Mag-uuma / Custodian:
                         </span>
                         <div className="text-xs font-black text-[#1B4332] flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0">
                           <span className="break-words min-w-0">{prod.farmerName || prod.contactPerson || 'Miyembro nga Mag-uuma sa AFA'}</span>
@@ -776,6 +822,19 @@ export default function GuestPortal({
                           </div>
                         )}
                       </div>
+
+                      {/* Action Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProductModal(prod);
+                        }}
+                        className="w-full py-2.5 bg-[#1B4332] hover:bg-[#143326] text-white font-black text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm group-hover:bg-[#143326]"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>Tan-awa ang Detalye / Abangi (View Details & Rent)</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -787,7 +846,7 @@ export default function GuestPortal({
             <div className="bg-[#EAF4EC] rounded-3xl p-5 sm:p-8 text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto min-w-0">
               <h4 className="text-base sm:text-lg md:text-xl font-black text-[#1B4332] font-display break-words">Gusto ba ka mopalit o mo-order?</h4>
               <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words">
-                Ang tanang halin niini direkta nga moadto sa atong mga kaubang mag-uuma sa unom ka Sitio sa Alegria, Tuburan, Cebu. 
+                Ang tanang halin niini direkta nga moadto sa atong mga kaubang mag-uuma sa upat (4) ka opisyal nga Sitio (Sitio Tapon, Sitio Pundok 1, Sitio Pundok 2, Sitio Lamak) sa Alegria, Tuburan, Cebu. 
                 Aron pagpalit, palihug kontaka o bisitaha si Presidente Zenaida A. Elbiña o bisan kinsa nga Opisyales sa AFA sa personal.
               </p>
               <div className="font-bold text-[#BF360C] text-xs sm:text-sm break-words">
@@ -816,6 +875,129 @@ export default function GuestPortal({
           </div>
         </div>
       </footer>
+
+      {/* GUEST PRODUCT & RENTAL DETAILS MODAL (STRICTLY REFLECTS DATABASE) */}
+      {selectedProductModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 overflow-y-auto p-3 sm:p-4 flex items-center justify-center animate-fade-in">
+          <div className="bg-white border-2 border-[#D5CFC1] rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+            {/* Header */}
+            <div className="bg-[#1B4332] px-5 py-4 flex items-center justify-between text-white shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-2 rounded-xl bg-white/15 text-white shrink-0">
+                  <Boxes className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-black truncate">{selectedProductModal.name}</h3>
+                  <p className="text-xs text-emerald-200 truncate">{selectedProductModal.cebName || 'Opisyal nga Produkto / Gamit sa Asosasyon'}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedProductModal(null)}
+                className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer text-xl font-bold shrink-0 ml-2"
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-left flex-1 text-slate-800">
+              {/* Category & Status */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 bg-emerald-100 text-[#1B4332] border border-emerald-300 rounded-full text-xs font-black uppercase tracking-wider">
+                  {selectedProductModal.category || 'Rental & Produce'}
+                </span>
+                {selectedProductModal.category?.includes('Rental') && (
+                  <span className="px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 rounded-full text-xs font-black">
+                    Bukas Abangan Alang sa Tanan (Rentable by Everyone)
+                  </span>
+                )}
+                <span className="px-3 py-1 bg-sky-100 text-sky-900 border border-sky-300 rounded-full text-xs font-bold font-mono">
+                  {selectedProductModal.stockStatus || 'In Stock'}
+                </span>
+              </div>
+
+              {/* Price & Quantity Available Card */}
+              <div className="bg-[#FAF7F2] border border-[#E8E2D5] p-4 rounded-2xl flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Standard Presyo / Rental Rate:</span>
+                  <span className="text-xl sm:text-2xl font-black text-[#BF360C] font-mono">
+                    {typeof selectedProductModal.price === 'number' 
+                      ? `PHP ${selectedProductModal.price.toLocaleString()} / ${selectedProductModal.unit || 'unit'}` 
+                      : selectedProductModal.price}
+                  </span>
+                </div>
+                <div className="sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Magamit nga Stock (Available):</span>
+                  <span className="text-sm font-black text-[#1B4332]">
+                    {selectedProductModal.quantityAvailable || selectedProductModal.specs || selectedProductModal.unit || 'Available in stock'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider">Deskripsyon & Gamit:</h5>
+                <p className="text-sm text-slate-700 leading-relaxed font-medium bg-white p-3.5 rounded-2xl border border-slate-200">
+                  {selectedProductModal.desc || selectedProductModal.description || 'De-kalidad nga produkto o kagamitan gikan sa Alegria Farmers Association.'}
+                </p>
+              </div>
+
+              {/* Specs */}
+              {selectedProductModal.specs && (
+                <div className="space-y-1.5">
+                  <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider">Kapasidad / Detalye (Specs):</h5>
+                  <div className="text-xs font-semibold text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200 font-mono">
+                    {selectedProductModal.specs}
+                  </div>
+                </div>
+              )}
+
+              {/* Farmer / Custodian Contact Box */}
+              <div className="bg-[#EAF4EC] border border-[#B7E3C4] p-4 rounded-2xl space-y-2">
+                <h5 className="text-xs font-black text-[#1B4332] uppercase tracking-wider flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-[#1B4332]" />
+                  <span>Nalambigit nga Mag-uuma / Custodian:</span>
+                </h5>
+                <div className="text-sm font-black text-[#1B4332]">
+                  {selectedProductModal.farmerName || selectedProductModal.contactPerson || 'AFA Logistics & Custodian Committee'}
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-700 font-semibold pt-1">
+                  {selectedProductModal.farmerSitio && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#1B4332]" />
+                      <span>{selectedProductModal.farmerSitio}</span>
+                    </span>
+                  )}
+                  {(selectedProductModal.farmerPhone || selectedProductModal.contactPerson) && (
+                    <span className="flex items-center gap-1 font-mono font-bold text-[#BF360C]">
+                      <Phone className="w-3.5 h-3.5 text-[#BF360C]" />
+                      <span>{selectedProductModal.farmerPhone || selectedProductModal.contactPerson}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Order/Rental Instructions */}
+              <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-900 leading-relaxed">
+                <strong>Pahibalo sa Pag-abang o Pagpalit:</strong> Ang mga kagamitan sama sa lingkoranan ug sako, ingon man ang mga lab-as nga abot, bukas abangan ug paliton sa tanang lumulupyo ug bisita. Pakig-alayon lamang sa giasayn nga mag-uuma o bisitaha ang Alegria Farmers Center.
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedProductModal(null)}
+                className="px-5 py-2.5 bg-[#1B4332] hover:bg-[#143326] text-white text-xs sm:text-sm font-black rounded-xl cursor-pointer transition-all shadow-sm"
+              >
+                Sirad-i (Close)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
