@@ -898,7 +898,7 @@ export default function MemberDashboard({
             isTreasurerOrOfficer={false}
             currentUser={currentUser}
             isOfficerMode={false}
-            closedYears={hogRaisingState.closedYears || []}
+            closedYears={hogRaisingState.closedYears || [2025]}
           />
         </div>
       )}

@@ -34,29 +34,11 @@ export const OFFICIAL_OFFICERS: User[] = [
     joinedDate: '2024-01-01'
   },
   {
-    id: 'user-asst-sec',
-    username: 'asstsec',
-    passwordHash: DEFAULT_HASH,
-    name: 'Joan A. Cebas',
-    role: 'Assistant_Secretary',
-    isApproved: true,
-    joinedDate: '2024-01-01'
-  },
-  {
     id: 'user-tres',
     username: 'treasurer',
     passwordHash: DEFAULT_HASH,
     name: 'Gracelyn P Asendiente',
     role: 'Treasurer',
-    isApproved: true,
-    joinedDate: '2024-01-01'
-  },
-  {
-    id: 'user-asst-tres',
-    username: 'assttres',
-    passwordHash: DEFAULT_HASH,
-    name: 'Ana Lourdes D. Pasaylo',
-    role: 'Assistant_Treasurer',
     isApproved: true,
     joinedDate: '2024-01-01'
   },

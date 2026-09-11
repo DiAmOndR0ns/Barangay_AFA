@@ -5,7 +5,7 @@ import {
   Coins, ArrowUpRight, ArrowDownRight, Plus, 
   Search, ShieldCheck, AlertTriangle, CheckCircle, 
   XCircle, Filter, FileText, Info, Building2, Wallet, Database,
-  Briefcase, TrendingUp, BarChart3, Calendar, Sparkles, Trash2, Boxes
+  Briefcase, TrendingUp, BarChart3, Calendar, Sparkles, Trash2
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -94,66 +94,6 @@ export default function TreasurerView({
   };
 
   const { total: currentBalance, income: totalIncome, expenses: totalExpenses } = calculateBalances();
-
-  // Fund materials acquisition metrics (buying hogs or feeds)
-  const feedsPurchases = useMemo(() => {
-    return (hogRaising?.expenses || [])
-      .filter(e => e.category.toLowerCase().includes('feed') || e.description.toLowerCase().includes('feed'))
-      .reduce((sum, e) => sum + e.amount, 0);
-  }, [hogRaising]);
-
-  const hogsPurchases = useMemo(() => {
-    return (hogRaising?.expenses || [])
-      .filter(e => e.category.toLowerCase().includes('pig') || e.category.toLowerCase().includes('hog') || e.description.toLowerCase().includes('pig') || e.description.toLowerCase().includes('hog'))
-      .reduce((sum, e) => sum + e.amount, 0);
-  }, [hogRaising]);
-
-  // Display funds with standard recognized association funds if empty
-  const displayFunds: OrganizationFund[] = useMemo(() => {
-    if (funds && funds.length > 0) return funds;
-    return [
-      {
-        id: 'fund-livestock',
-        name: 'Association Livelihood & Livestock Project Fund',
-        code: 'IGP-LIVESTOCK',
-        allocatedAmount: liveCapitalGrant,
-        currentBalance: Math.max(0, liveCapitalGrant - (hogRaising?.expenses || []).reduce((s, e) => s + e.amount, 0)),
-        description: 'Approved working capital for purchasing piglets/hogs, feeds, and livelihood inputs.',
-        custodian: 'Treasurer (Gracelyn P. Asendiente)',
-        lastUpdated: new Date().toISOString().split('T')[0]
-      },
-      {
-        id: 'fund-gen-ops',
-        name: 'General Operational Fund',
-        code: 'GF-OPS',
-        allocatedAmount: 50000,
-        currentBalance: Math.max(0, currentBalance),
-        description: 'General administrative, logistics, and assembly operations buffer.',
-        custodian: 'Treasurer (Gracelyn P. Asendiente)',
-        lastUpdated: new Date().toISOString().split('T')[0]
-      },
-      {
-        id: 'fund-agri-inputs',
-        name: 'Agricultural Production & Inputs Fund',
-        code: 'AGRI-INPUTS',
-        allocatedAmount: 30000,
-        currentBalance: 30000,
-        description: 'Fertilizer, seed inventory, and communal crop cultivation buffer.',
-        custodian: 'Auditor (Lorena B. Pinote)',
-        lastUpdated: new Date().toISOString().split('T')[0]
-      },
-      {
-        id: 'fund-disp',
-        name: '5% Livestock Insurance & Dispersal Pool',
-        code: 'DISP-5%',
-        allocatedAmount: 15000,
-        currentBalance: 15000,
-        description: 'Risk reserve for livestock health emergency, mortality protection, and dispersal replacement.',
-        custodian: 'President (Zenaida A. Elbiña)',
-        lastUpdated: new Date().toISOString().split('T')[0]
-      }
-    ];
-  }, [funds, liveCapitalGrant, hogRaising, currentBalance]);
 
   // Compute available years for the Hog Raising IGP chart
   const availableYears = useMemo(() => {
@@ -297,7 +237,7 @@ export default function TreasurerView({
       date: txDate,
       description: txDesc,
       fundSource: txFundSource,
-      recordedBy: currentRole === 'Assistant_Treasurer' ? 'Assistant Treasurer (Ana Lourdes D. Pasaylo)' : 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
     });
     setTxAmount('');
     setTxDesc('');
@@ -328,7 +268,6 @@ export default function TreasurerView({
   });
 
   const isAuditor = currentRole === 'Auditor';
-  const isAssistantTreasurer = currentRole === 'Assistant_Treasurer';
 
   return (
     <div id="treasurer-view-container" className="space-y-6">
@@ -387,7 +326,7 @@ export default function TreasurerView({
               <span>Registered Organization Fund Accounts & Database Audits</span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Live organizational treasury allocations & dedicated project funds recorded in PostgreSQL Cloud Database
+              Live organizational treasury allocations & capital grant accounts recorded in PostgreSQL Cloud Database
             </p>
           </div>
           <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-xl text-xs font-semibold">
@@ -396,44 +335,8 @@ export default function TreasurerView({
           </div>
         </div>
 
-        {/* Materials Acquisition & Fund Disbursements Summary Banner */}
-        <div className="bg-slate-900/90 border border-slate-750 p-4 rounded-xl space-y-2.5">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-800 text-xs">
-            <span className="font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
-              <Boxes className="w-4 h-4 text-amber-400" />
-              <span>Funds Disbursed for Material Acquisitions</span>
-            </span>
-            <span className="text-[11px] font-mono text-emerald-400 font-bold">
-              Automatically Deducted from Project Fund
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">🌾 Feeds Purchases</span>
-              <div className="text-base font-mono font-black text-amber-400 mt-0.5">
-                PHP {feedsPurchases.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </div>
-              <span className="text-[10px] text-slate-400">Nutritional stock & rations</span>
-            </div>
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">🐖 Hogs / Piglets Acquired</span>
-              <div className="text-base font-mono font-black text-emerald-400 mt-0.5">
-                PHP {hogsPurchases.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </div>
-              <span className="text-[10px] text-slate-400">Livestock capital stock</span>
-            </div>
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">💼 Total Materials Acquired</span>
-              <div className="text-base font-mono font-black text-blue-400 mt-0.5">
-                PHP {(feedsPurchases + hogsPurchases).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </div>
-              <span className="text-[10px] text-slate-400">Charged against project capital</span>
-            </div>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {displayFunds.map((fund) => (
+          {funds.map((fund) => (
             <div key={fund.id} className="bg-slate-900/80 border border-slate-700/60 p-4 rounded-xl space-y-2 relative overflow-hidden">
               <div className="flex justify-between items-start gap-2">
                 <div>
@@ -558,7 +461,7 @@ export default function TreasurerView({
 
           <div className="bg-slate-900/80 border border-slate-700/60 p-3.5 rounded-xl">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Project Working Capital</span>
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Capital Grant</span>
               {onUpdateCapitalGrant && (currentRole === 'Treasurer' || currentRole === 'Auditor') && !isEditingGrant && (
                 <button
                   type="button"
@@ -622,7 +525,7 @@ export default function TreasurerView({
                 <div className="text-[10px] text-emerald-400 mt-1 flex items-center justify-between">
                   <span className="flex items-center gap-1">
                     <TrendingUp className="w-3 h-3" />
-                    <span>Allocated Project Working Capital</span>
+                    <span>DOLE & DA Seed Grant</span>
                   </span>
                   <span className="text-[9px] text-slate-400 font-mono flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -779,19 +682,11 @@ export default function TreasurerView({
         <div>
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Coins className="w-5 h-5 text-emerald-400" />
-            <span>
-              {isAuditor 
-                ? 'Auditor Financial Oversight' 
-                : isAssistantTreasurer 
-                ? 'Assistant Treasurer Financial Operations' 
-                : 'Treasurer Financial Ledger'}
-            </span>
+            <span>{isAuditor ? 'Auditor Financial Oversight' : 'Treasurer Financial Ledger'}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
             {isAuditor 
               ? 'Verify association transaction records and highlight any financial discrepancies.' 
-              : isAssistantTreasurer
-              ? 'Assist the Treasurer in recording amot, fees, dues, equipment rental, and ledger disbursements.'
               : 'Record all incoming payments, member dues, and association expenses.'}
           </p>
         </div>
@@ -805,7 +700,7 @@ export default function TreasurerView({
               className="flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold bg-slate-900 hover:bg-slate-850 text-emerald-400 border border-emerald-500/30 rounded-xl shadow-sm transition-all w-full md:w-auto cursor-pointer"
             >
               <FileText className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>{isAuditor ? 'Export Auditor Report' : isAssistantTreasurer ? 'Export Asst. Treasurer Report' : 'Export Financial Report'}</span>
+              <span>{isAuditor ? 'Export Auditor Report' : 'Export Financial Report'}</span>
             </button>
           )}
 
@@ -1090,18 +985,18 @@ export default function TreasurerView({
                   onChange={(e) => setTxFundSource(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-sm bg-slate-900 border border-slate-750 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                 >
-                  {displayFunds.map(f => (
+                  {funds.map(f => (
                     <option key={f.id} value={`${f.code} (${f.name})`}>
                       {f.code} - {f.name} (Bal: ₱{f.currentBalance.toLocaleString()})
                     </option>
                   ))}
-                  <option value="Association Livelihood & Livestock Fund">Association Livelihood & Livestock Fund</option>
-                  <option value="General Operational Fund (GF-OPS)">General Operational Fund (GF-OPS)</option>
+                  <option value="GF-SLP (General Fund / DSWD-SLP Operational Buffer)">GF-SLP (General Fund / DSWD-SLP Operational Buffer)</option>
+                  <option value="DOLE Integrated Livelihood Program (DILP) Capital Grant">DOLE Integrated Livelihood Program (DILP) Capital Grant</option>
                   <option value="ATI-TRG (ATI Training & Capacity Building Fund)">ATI-TRG (ATI Training & Capacity Building Fund)</option>
                   <option value="DISP-5% (Dispersal & Livestock Insurance Risk Pool)">DISP-5% (Dispersal & Livestock Insurance Risk Pool)</option>
                   <option value="FCCT-SAVINGS (FCCT Cooperative Bank Deposit)">FCCT-SAVINGS (FCCT Cooperative Bank Deposit)</option>
                   <option value="CBU (Member Capital Build-Up & Equity Fund)">CBU (Member Capital Build-Up & Equity Fund)</option>
-                  <option value="Agricultural Production & Inputs Fund">Agricultural Production & Inputs Fund</option>
+                  <option value="LGU Tuburan Agriculture Assistance Fund">LGU Tuburan Agriculture Assistance Fund</option>
                 </select>
               </div>
 

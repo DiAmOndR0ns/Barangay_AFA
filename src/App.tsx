@@ -158,20 +158,7 @@ export default function App() {
       
       const parsedUsers = storedUsers ? JSON.parse(storedUsers) : OFFICIAL_OFFICERS;
       // Filter out any dummy members from users and strip any plain-text passwords
-      const rawUserList = Array.isArray(parsedUsers) ? parsedUsers : OFFICIAL_OFFICERS;
-      
-      // Ensure all official roster officers (including Assistant Secretary and Assistant Treasurer) exist in user list
-      const mergedUsers = [...rawUserList];
-      OFFICIAL_OFFICERS.forEach(off => {
-        const alreadyExists = mergedUsers.some(
-          (u: any) => u.username?.toLowerCase() === off.username.toLowerCase() || u.role === off.role || u.id === off.id
-        );
-        if (!alreadyExists) {
-          mergedUsers.push(off);
-        }
-      });
-
-      const sanitizedUsers = mergedUsers
+      const sanitizedUsers = (Array.isArray(parsedUsers) ? parsedUsers : OFFICIAL_OFFICERS)
         .filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'))
         .map((u: any) => {
           const copy = { ...u };
@@ -335,9 +322,7 @@ export default function App() {
       case 'President': return 'Zenaida A. Elbiña';
       case 'Vice_President': return 'Anselna B Arnado';
       case 'Secretary': return 'Jennylyn S Lumactao';
-      case 'Assistant_Secretary': return 'Joan A. Cebas';
       case 'Treasurer': return 'Gracelyn P Asendiente';
-      case 'Assistant_Treasurer': return 'Ana Lourdes D. Pasaylo';
       case 'Auditor': return 'Lorena B Pinote';
       case 'PIO': return 'Ida S Manera';
       default: return 'AFA Officer';
@@ -1012,12 +997,10 @@ export default function App() {
 
   // HOG RAISING IGP HANDLERS
   const handleAddPigExpense = (expData: Omit<IgpExpense, 'id' | 'recordedBy'>) => {
-    const chosenFundSource = expData.fundSource || 'Association Livelihood & Livestock Fund';
     const newExp: IgpExpense = {
       ...expData,
-      fundSource: chosenFundSource,
       id: `pig-exp-${Date.now()}`,
-      recordedBy: currentUser ? `${currentUser.role} (${currentUser.name})` : 'Treasurer (Gracelyn P. Asendiente)'
+      recordedBy: currentUser ? `${currentUser.role} (${currentUser.name})` : 'Treasurer (Rodolfo Climaco)'
     };
     const updatedState: HogRaisingState = {
       ...hogRaising,
@@ -1026,21 +1009,19 @@ export default function App() {
     setHogRaising(updatedState);
     updateStorage('bafa_hog_raising', updatedState);
 
-    // Also register in general ledger for complete co-op records with material category and fund source!
-    const materialCategory = expData.category === 'Piglets' ? 'Livestock Acquisition (Hogs/Piglets)' : expData.category === 'Feeds' ? 'Feeds & Nutrition' : 'Hog Raising Project';
+    // Also register in general ledger for complete co-op records!
     handleAddTransaction({
       type: 'expense',
-      category: materialCategory,
+      category: 'Hog Raising Project',
       amount: expData.amount,
       date: expData.date,
-      fundSource: chosenFundSource,
-      description: `[Hog Raising IGP - ${expData.category}] ${expData.description}`,
-      recordedBy: currentUser ? `Treasurer (${currentUser.name})` : 'Treasurer (Gracelyn P. Asendiente)'
+      description: `[Hog Raising IGP] ${expData.category}: ${expData.description}`,
+      recordedBy: currentUser ? `Treasurer (${currentUser.name})` : 'Treasurer (Rodolfo Climaco)'
     });
 
     if (isOnline) {
-      logAction('Recorded Material Expense', `Logged PHP ${newExp.amount.toLocaleString()} expense for "${newExp.category}" (${chosenFundSource})`);
-      showToastMessage(`Material expense recorded (PHP ${newExp.amount.toLocaleString()}) and deducted from ${chosenFundSource}.`, 'success');
+      logAction('Recorded Pig Expense', `Logged PHP ${newExp.amount.toLocaleString()} piggery expense for "${newExp.category}"`);
+      showToastMessage('Hog raising expense recorded and linked to general ledger.');
     } else {
       addToSyncQueue('create', 'hog_expense', newExp);
     }
@@ -1202,8 +1183,8 @@ export default function App() {
     updateStorage('bafa_hog_raising', updatedState);
 
     if (isOnline) {
-      logAction('Updated Working Capital', `Modified Hog Raising IGP project working capital to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
-      showToastMessage(`Successfully updated Project Working Capital to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}!`, 'success');
+      logAction('Updated Capital Grant', `Modified Hog Raising IGP LGU capital grant to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+      showToastMessage(`Successfully updated LGU Capital Grant to PHP ${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}!`, 'success');
       pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
       fetch('/api/db/capital-grant', {
         method: 'POST',
@@ -1231,7 +1212,7 @@ export default function App() {
   };
 
   const handleCloseDecemberBook = (year: number) => {
-    const closedList = hogRaising.closedYears || [];
+    const closedList = hogRaising.closedYears || [2025];
     if (closedList.includes(year)) return;
     const updatedState: HogRaisingState = {
       ...hogRaising,
@@ -1246,24 +1227,6 @@ export default function App() {
       pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
     } else {
       addToSyncQueue('update', 'hog_expense', { id: `close-book-${year}`, year });
-    }
-  };
-
-  const handleReopenDecemberBook = (year: number) => {
-    const closedList = hogRaising.closedYears || [];
-    const updatedState: HogRaisingState = {
-      ...hogRaising,
-      closedYears: closedList.filter(y => y !== year)
-    };
-    setHogRaising(updatedState);
-    updateStorage('bafa_hog_raising', updatedState);
-
-    if (isOnline) {
-      logAction('Reopened Financial Book', `Reopened the Hog Raising IGP financial book for ${year} for data recording.`);
-      showToastMessage(`Financial book for ${year} is now OPEN. You can record historical expenses and sales!`, 'success');
-      pushAllDataToCloud({ hogRaising: updatedState }, { silent: true });
-    } else {
-      addToSyncQueue('update', 'hog_expense', { id: `reopen-book-${year}`, year });
     }
   };
 
@@ -1450,7 +1413,7 @@ export default function App() {
     if (!targetUser) return;
 
     const roleName = targetUser.role.replace('_', ' ');
-    const isOfficer = targetUser.role !== 'Member';
+    const isOfficer = ['President', 'Vice_President', 'Secretary', 'Treasurer', 'Auditor', 'PIO'].includes(targetUser.role);
 
     const updatedUsers = users.filter(u => u.id !== id);
     setUsers(updatedUsers);
@@ -1572,7 +1535,7 @@ export default function App() {
     newPresidentId: string,
     electionDate: string,
     turnoverNotes: string,
-    outgoingNewRole: 'Member' | 'Vice_President' | 'Secretary' | 'Assistant_Secretary' | 'Treasurer' | 'Assistant_Treasurer' | 'Auditor' | 'PIO' | 'None'
+    outgoingNewRole: 'Member' | 'Vice_President' | 'Secretary' | 'Treasurer' | 'Auditor' | 'PIO' | 'None'
   ) => {
     const currentPresident = users.find(u => u.role === 'President');
     if (!currentPresident) {
@@ -1991,8 +1954,8 @@ export default function App() {
               />
             )}
 
-            {/* Secretary & Assistant Secretary View */}
-            {(currentRole === 'Secretary' || currentRole === 'Assistant_Secretary') && (
+            {/* Secretary View */}
+            {currentRole === 'Secretary' && (
               <SecretaryView 
                 members={members}
                 users={users}
@@ -2013,8 +1976,8 @@ export default function App() {
               />
             )}
 
-            {/* Treasurer, Assistant Treasurer & Auditor View */}
-            {(currentRole === 'Treasurer' || currentRole === 'Assistant_Treasurer' || currentRole === 'Auditor') && (
+            {/* Treasurer & Auditor View */}
+            {(currentRole === 'Treasurer' || currentRole === 'Auditor') && (
               <TreasurerView 
                 transactions={transactions}
                 funds={funds}
@@ -2056,12 +2019,11 @@ export default function App() {
                 onAddChoreLog={handleAddPigChore}
                 onUpdateCapitalGrant={handleUpdateCapitalGrant}
                 onAddProduce={handleAddProduce}
-                isTreasurerOrOfficer={currentRole === 'Treasurer' || currentRole === 'Assistant_Treasurer' || currentRole === 'Auditor' || currentRole === 'President'}
+                isTreasurerOrOfficer={currentRole === 'Treasurer' || currentRole === 'Auditor' || currentRole === 'President'}
                 currentUser={currentUser!}
                 isOfficerMode={true}
-                closedYears={hogRaising.closedYears || []}
+                closedYears={hogRaising.closedYears || [2025]}
                 onCloseDecemberBook={handleCloseDecemberBook}
-                onReopenDecemberBook={handleReopenDecemberBook}
               />
             </div>
           )}
