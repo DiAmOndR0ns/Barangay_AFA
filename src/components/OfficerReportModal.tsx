@@ -92,7 +92,9 @@ export default function OfficerReportModal({
       case 'President': return 'Zenaida A. Elbiña';
       case 'Vice_President': return 'Anselna B. Arnado';
       case 'Secretary': return 'Jennylyn S. Lumactao';
+      case 'Assistant_Secretary': return 'Joan A. Cebas';
       case 'Treasurer': return 'Gracelyn P. Asendiente';
+      case 'Assistant_Treasurer': return 'Ana Lourdes D. Pasaylo';
       case 'Auditor': return 'Lorena B. Pinote';
       case 'PIO': return 'Ida S. Manera';
       default: return 'AFA Officer';
@@ -109,8 +111,10 @@ export default function OfficerReportModal({
 
     const titleMap: Record<OfficerRole, string> = {
       Treasurer: "TREASURER'S OFFICIAL FINANCIAL & CASH FLOW REPORT",
+      Assistant_Treasurer: "ASSISTANT TREASURER'S FINANCIAL & CASH FLOW REPORT",
       Auditor: "AUDITOR'S FINANCIAL OVERSIGHT & COMPLIANCE REPORT",
       Secretary: "SECRETARY'S MEMBERSHIP & LEGISLATIVE MINUTES REPORT",
+      Assistant_Secretary: "ASSISTANT SECRETARY'S MEMBERSHIP & LEGISLATIVE MINUTES REPORT",
       President: "PRESIDENT'S CONSOLIDATED EXECUTIVE SUMMARY OF ALL OFFICER REPORTS",
       Vice_President: "VICE PRESIDENT'S EXECUTIVE ADMINISTRATION REPORT",
       PIO: "PUBLIC INFORMATION OFFICER (PIO) COMMUNITY COMMUNICATIONS REPORT"
@@ -120,7 +124,7 @@ export default function OfficerReportModal({
 
     let contentHtml = '';
 
-    if (activeReportRole === 'Treasurer') {
+    if (activeReportRole === 'Treasurer' || activeReportRole === 'Assistant_Treasurer') {
       contentHtml = `
         <div class="section-title">1. FINANCIAL OVERVIEW & GENERAL CASH BALANCE</div>
         <table>
@@ -296,7 +300,7 @@ export default function OfficerReportModal({
           </tbody>
         </table>
       `;
-    } else if (activeReportRole === 'Secretary') {
+    } else if (activeReportRole === 'Secretary' || activeReportRole === 'Assistant_Secretary') {
       contentHtml = `
         <div class="section-title">1. MEMBERSHIP ROSTER & RSBSA REGISTRATION STATISTICS</div>
         <table>
@@ -586,10 +590,10 @@ export default function OfficerReportModal({
   const handleExportCSV = () => {
     const csvRows: string[] = [];
 
-    if (activeReportRole === 'Treasurer') {
+    if (activeReportRole === 'Treasurer' || activeReportRole === 'Assistant_Treasurer') {
       csvRows.push('AFA OFFICIAL TREASURER FINANCIAL REPORT');
       csvRows.push(`Date Generated,${reportDate}`);
-      csvRows.push(`Prepared By,${getOfficerNameByRole('Treasurer')}`);
+      csvRows.push(`Prepared By,${getOfficerNameByRole(activeReportRole)}`);
       csvRows.push('');
       csvRows.push('1. FINANCIAL SUMMARY');
       csvRows.push(`Total Income (PHP),${totalIncome.toFixed(2)}`);
@@ -669,10 +673,10 @@ export default function OfficerReportModal({
           `"${(t.auditNotes || '').replace(/"/g, '""')}"`
         ].join(','));
       });
-    } else if (activeReportRole === 'Secretary') {
+    } else if (activeReportRole === 'Secretary' || activeReportRole === 'Assistant_Secretary') {
       csvRows.push('AFA OFFICIAL SECRETARY ROSTER & LEGISLATIVE REPORT');
       csvRows.push(`Date Generated,${reportDate}`);
-      csvRows.push(`Secretary,${getOfficerNameByRole('Secretary')}`);
+      csvRows.push(`Officer,${getOfficerNameByRole(activeReportRole)}`);
       csvRows.push('');
       csvRows.push('MEMBERSHIP ROSTER');
       csvRows.push('ID,Name,Member ID,RSBSA Number,Sitio Location,Primary Crops,Status,Joined Date');
@@ -908,9 +912,9 @@ export default function OfficerReportModal({
               <div>
                 <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Official Document Preview</span>
                 <h3 className="text-sm font-black text-white mt-0.5">
-                  {activeReportRole === 'Treasurer' && "Treasurer's Official Financial & Cash Flow Statement (With Budget Sources)"}
+                  {(activeReportRole === 'Treasurer' || activeReportRole === 'Assistant_Treasurer') && "Treasurer's Official Financial & Cash Flow Statement (With Budget Sources)"}
                   {activeReportRole === 'Auditor' && "Auditor's Financial Oversight & Grant Compliance Inspection Report"}
-                  {activeReportRole === 'Secretary' && "Secretary's Membership Roster & Legislative Assembly Report"}
+                  {(activeReportRole === 'Secretary' || activeReportRole === 'Assistant_Secretary') && "Secretary's Membership Roster & Legislative Assembly Report"}
                   {activeReportRole === 'President' && "President's Executive Consolidated Summary of All Officer Reports & Grant Portfolios"}
                   {activeReportRole === 'Vice_President' && "Vice President's Administration & Oversight Report"}
                   {activeReportRole === 'PIO' && "Public Information Officer Community Communications Report"}
@@ -924,7 +928,7 @@ export default function OfficerReportModal({
 
             {/* QUICK PREVIEW METRICS */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-              {activeReportRole === 'Treasurer' && (
+              {(activeReportRole === 'Treasurer' || activeReportRole === 'Assistant_Treasurer') && (
                 <>
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold">Total Income</span>
@@ -966,7 +970,7 @@ export default function OfficerReportModal({
                 </>
               )}
 
-              {activeReportRole === 'Secretary' && (
+              {(activeReportRole === 'Secretary' || activeReportRole === 'Assistant_Secretary') && (
                 <>
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold">Active Roster</span>

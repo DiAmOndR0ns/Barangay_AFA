@@ -27,7 +27,7 @@ interface ExecutiveViewProps {
     newPresidentId: string,
     electionDate: string,
     turnoverNotes: string,
-    outgoingNewRole: 'Member' | 'Vice_President' | 'Secretary' | 'Treasurer' | 'Auditor' | 'PIO' | 'None'
+    outgoingNewRole: 'Member' | 'Vice_President' | 'Secretary' | 'Assistant_Secretary' | 'Treasurer' | 'Assistant_Treasurer' | 'Auditor' | 'PIO' | 'None'
   ) => void;
   onOpenReportModal?: () => void;
   onDownloadBackup?: () => void;
@@ -70,7 +70,7 @@ export default function ExecutiveView({
   // Presidential Turnover Form State
   const [turnoverNewPresId, setTurnoverNewPresId] = useState<string>('');
   const [turnoverDate, setTurnoverDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [turnoverOutgoingRole, setTurnoverOutgoingRole] = useState<'Member' | 'Vice_President' | 'Secretary' | 'Treasurer' | 'Auditor' | 'PIO' | 'None'>('Member');
+  const [turnoverOutgoingRole, setTurnoverOutgoingRole] = useState<'Member' | 'Vice_President' | 'Secretary' | 'Assistant_Secretary' | 'Treasurer' | 'Assistant_Treasurer' | 'Auditor' | 'PIO' | 'None'>('Member');
   const [turnoverNotes, setTurnoverNotes] = useState<string>(
     '1. Formal turnover of the AFA general registry and resolutions book.\n2. Turned over bank accounts and the PHP balance.\n3. Turned over community keys and the hog-raising IGP ledger.'
   );
@@ -398,11 +398,11 @@ export default function ExecutiveView({
           {/* Officers Roster List */}
           <div className="space-y-3">
             <h4 className="text-xs font-extrabold text-[#4F5E46] uppercase tracking-wider">
-              Association Officers ({users.filter(u => ['President', 'Vice_President', 'Secretary', 'Treasurer', 'Auditor', 'PIO'].includes(u.role)).length})
+              Association Officers ({users.filter(u => u.role !== 'Member').length})
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {users.filter(u => ['President', 'Vice_President', 'Secretary', 'Treasurer', 'Auditor', 'PIO'].includes(u.role)).map((officer) => {
+              {users.filter(u => u.role !== 'Member').map((officer) => {
                 const isEditingRole = editingRoleOfficerId === officer.id;
                 const isEditingPass = editingUserId === officer.id;
                 const isPresident = officer.role === 'President';
@@ -439,7 +439,9 @@ export default function ExecutiveView({
                           >
                             <option value="Vice_President">Vice President</option>
                             <option value="Secretary">Secretary</option>
+                            <option value="Assistant_Secretary">Assistant Secretary</option>
                             <option value="Treasurer">Treasurer</option>
+                            <option value="Assistant_Treasurer">Assistant Treasurer</option>
                             <option value="Auditor">Auditor</option>
                             <option value="PIO">PIO</option>
                             <option value="Member">Demote to Member</option>
@@ -877,10 +879,12 @@ export default function ExecutiveView({
                   >
                     <option value="Vice_President">Vice President (Anselna)</option>
                     <option value="Member">Miyembro (Regular Member)</option>
-                    <option value="Secretary">Secretary</option>
-                    <option value="Treasurer">Treasurer</option>
-                    <option value="Auditor">Auditor</option>
-                    <option value="PIO">PIO</option>
+                    <option value="Secretary">Secretary (Jennylyn)</option>
+                    <option value="Assistant_Secretary">Assistant Secretary (Joan)</option>
+                    <option value="Treasurer">Treasurer (Gracelyn)</option>
+                    <option value="Assistant_Treasurer">Assistant Treasurer (Ana Lourdes)</option>
+                    <option value="Auditor">Auditor (Lorena)</option>
+                    <option value="PIO">PIO (Ida)</option>
                     <option value="None">Step Down / Member</option>
                   </select>
                 </div>

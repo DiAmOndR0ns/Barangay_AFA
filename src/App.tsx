@@ -158,7 +158,20 @@ export default function App() {
       
       const parsedUsers = storedUsers ? JSON.parse(storedUsers) : OFFICIAL_OFFICERS;
       // Filter out any dummy members from users and strip any plain-text passwords
-      const sanitizedUsers = (Array.isArray(parsedUsers) ? parsedUsers : OFFICIAL_OFFICERS)
+      const rawUserList = Array.isArray(parsedUsers) ? parsedUsers : OFFICIAL_OFFICERS;
+      
+      // Ensure all official roster officers (including Assistant Secretary and Assistant Treasurer) exist in user list
+      const mergedUsers = [...rawUserList];
+      OFFICIAL_OFFICERS.forEach(off => {
+        const alreadyExists = mergedUsers.some(
+          (u: any) => u.username?.toLowerCase() === off.username.toLowerCase() || u.role === off.role || u.id === off.id
+        );
+        if (!alreadyExists) {
+          mergedUsers.push(off);
+        }
+      });
+
+      const sanitizedUsers = mergedUsers
         .filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'))
         .map((u: any) => {
           const copy = { ...u };
@@ -322,7 +335,9 @@ export default function App() {
       case 'President': return 'Zenaida A. Elbiña';
       case 'Vice_President': return 'Anselna B Arnado';
       case 'Secretary': return 'Jennylyn S Lumactao';
+      case 'Assistant_Secretary': return 'Joan A. Cebas';
       case 'Treasurer': return 'Gracelyn P Asendiente';
+      case 'Assistant_Treasurer': return 'Ana Lourdes D. Pasaylo';
       case 'Auditor': return 'Lorena B Pinote';
       case 'PIO': return 'Ida S Manera';
       default: return 'AFA Officer';
@@ -1435,7 +1450,7 @@ export default function App() {
     if (!targetUser) return;
 
     const roleName = targetUser.role.replace('_', ' ');
-    const isOfficer = ['President', 'Vice_President', 'Secretary', 'Treasurer', 'Auditor', 'PIO'].includes(targetUser.role);
+    const isOfficer = targetUser.role !== 'Member';
 
     const updatedUsers = users.filter(u => u.id !== id);
     setUsers(updatedUsers);
@@ -1557,7 +1572,7 @@ export default function App() {
     newPresidentId: string,
     electionDate: string,
     turnoverNotes: string,
-    outgoingNewRole: 'Member' | 'Vice_President' | 'Secretary' | 'Treasurer' | 'Auditor' | 'PIO' | 'None'
+    outgoingNewRole: 'Member' | 'Vice_President' | 'Secretary' | 'Assistant_Secretary' | 'Treasurer' | 'Assistant_Treasurer' | 'Auditor' | 'PIO' | 'None'
   ) => {
     const currentPresident = users.find(u => u.role === 'President');
     if (!currentPresident) {
@@ -1976,8 +1991,8 @@ export default function App() {
               />
             )}
 
-            {/* Secretary View */}
-            {currentRole === 'Secretary' && (
+            {/* Secretary & Assistant Secretary View */}
+            {(currentRole === 'Secretary' || currentRole === 'Assistant_Secretary') && (
               <SecretaryView 
                 members={members}
                 users={users}
@@ -1998,8 +2013,8 @@ export default function App() {
               />
             )}
 
-            {/* Treasurer & Auditor View */}
-            {(currentRole === 'Treasurer' || currentRole === 'Auditor') && (
+            {/* Treasurer, Assistant Treasurer & Auditor View */}
+            {(currentRole === 'Treasurer' || currentRole === 'Assistant_Treasurer' || currentRole === 'Auditor') && (
               <TreasurerView 
                 transactions={transactions}
                 funds={funds}
@@ -2041,7 +2056,7 @@ export default function App() {
                 onAddChoreLog={handleAddPigChore}
                 onUpdateCapitalGrant={handleUpdateCapitalGrant}
                 onAddProduce={handleAddProduce}
-                isTreasurerOrOfficer={currentRole === 'Treasurer' || currentRole === 'Auditor' || currentRole === 'President'}
+                isTreasurerOrOfficer={currentRole === 'Treasurer' || currentRole === 'Assistant_Treasurer' || currentRole === 'Auditor' || currentRole === 'President'}
                 currentUser={currentUser!}
                 isOfficerMode={true}
                 closedYears={hogRaising.closedYears || []}

@@ -46,8 +46,12 @@ export default function ProductManagementModal({
     switch (role) {
       case 'President': return 'President Zenaida A. Elbiña';
       case 'Vice_President': return 'Vice President Anselna B. Arnado';
+      case 'Secretary': return 'Secretary Jennylyn S. Lumactao';
+      case 'Assistant_Secretary': return 'Assistant Secretary Joan A. Cebas';
       case 'Treasurer': return 'Treasurer Gracelyn P. Asendiente';
+      case 'Assistant_Treasurer': return 'Assistant Treasurer Ana Lourdes D. Pasaylo';
       case 'Auditor': return 'Auditor Lorena B. Pinote';
+      case 'PIO': return 'PIO Ida S. Manera';
       default: return `${role} Officer`;
     }
   };

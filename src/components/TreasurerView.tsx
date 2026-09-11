@@ -297,7 +297,7 @@ export default function TreasurerView({
       date: txDate,
       description: txDesc,
       fundSource: txFundSource,
-      recordedBy: 'Treasurer (Gracelyn P Asendiente)'
+      recordedBy: currentRole === 'Assistant_Treasurer' ? 'Assistant Treasurer (Ana Lourdes D. Pasaylo)' : 'Treasurer (Gracelyn P Asendiente)'
     });
     setTxAmount('');
     setTxDesc('');
@@ -328,6 +328,7 @@ export default function TreasurerView({
   });
 
   const isAuditor = currentRole === 'Auditor';
+  const isAssistantTreasurer = currentRole === 'Assistant_Treasurer';
 
   return (
     <div id="treasurer-view-container" className="space-y-6">
@@ -778,11 +779,19 @@ export default function TreasurerView({
         <div>
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Coins className="w-5 h-5 text-emerald-400" />
-            <span>{isAuditor ? 'Auditor Financial Oversight' : 'Treasurer Financial Ledger'}</span>
+            <span>
+              {isAuditor 
+                ? 'Auditor Financial Oversight' 
+                : isAssistantTreasurer 
+                ? 'Assistant Treasurer Financial Operations' 
+                : 'Treasurer Financial Ledger'}
+            </span>
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
             {isAuditor 
               ? 'Verify association transaction records and highlight any financial discrepancies.' 
+              : isAssistantTreasurer
+              ? 'Assist the Treasurer in recording amot, fees, dues, equipment rental, and ledger disbursements.'
               : 'Record all incoming payments, member dues, and association expenses.'}
           </p>
         </div>
@@ -796,7 +805,7 @@ export default function TreasurerView({
               className="flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold bg-slate-900 hover:bg-slate-850 text-emerald-400 border border-emerald-500/30 rounded-xl shadow-sm transition-all w-full md:w-auto cursor-pointer"
             >
               <FileText className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>{isAuditor ? 'Export Auditor Report' : 'Export Financial Report'}</span>
+              <span>{isAuditor ? 'Export Auditor Report' : isAssistantTreasurer ? 'Export Asst. Treasurer Report' : 'Export Financial Report'}</span>
             </button>
           )}
 

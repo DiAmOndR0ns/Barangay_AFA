@@ -77,48 +77,96 @@ export function getPool(): pg.Pool {
   return poolInstance;
 }
 
+let schemaEnsured = false;
+
+/**
+ * High-performance batched bulk upsert utility.
+ * Replaces hundreds of slow sequential roundtrips with single multi-row parameterized queries.
+ */
+async function batchUpsert<T>(
+  client: pg.PoolClient,
+  tableName: string,
+  columns: string[],
+  conflictKey: string,
+  items: T[],
+  rowMapper: (item: T) => any[],
+  batchSize: number = 40
+) {
+  if (!items || !Array.isArray(items) || items.length === 0) return;
+
+  for (let i = 0; i < items.length; i += batchSize) {
+    const chunk = items.slice(i, i + batchSize);
+    const valuePlaceholders: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    for (const item of chunk) {
+      const rowValues = rowMapper(item);
+      const rowPlaceholders: string[] = [];
+      for (const val of rowValues) {
+        rowPlaceholders.push(`$${paramIndex++}`);
+        values.push(val);
+      }
+      valuePlaceholders.push(`(${rowPlaceholders.join(', ')})`);
+    }
+
+    const updateSet = columns
+      .filter(col => col !== conflictKey)
+      .map(col => `${col} = EXCLUDED.${col}`)
+      .join(', ');
+
+    const sql = `
+      INSERT INTO ${tableName} (${columns.join(', ')})
+      VALUES ${valuePlaceholders.join(', ')}
+      ON CONFLICT (${conflictKey}) DO UPDATE SET
+        ${updateSet};
+    `;
+
+    await client.query(sql, values);
+  }
+}
+
 export async function runSchemaMigrations(client: pg.PoolClient) {
-  const statements = [
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS member_id_number VARCHAR(100);`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS rsbsa_number VARCHAR(100);`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS is_rsbsa_registered BOOLEAN DEFAULT FALSE;`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS avatar_url TEXT;`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS gender VARCHAR(20);`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS birth_date VARCHAR(50);`,
+  const migrationSql = `
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS member_id_number VARCHAR(100);
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS rsbsa_number VARCHAR(100);
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS is_rsbsa_registered BOOLEAN DEFAULT FALSE;
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS gender VARCHAR(20);
+    ALTER TABLE members ADD COLUMN IF NOT EXISTS birth_date VARCHAR(50);
 
-    `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;`,
-    `ALTER TABLE users ADD COLUMN IF NOT EXISTS member_id_number VARCHAR(100);`,
-    `ALTER TABLE users ADD COLUMN IF NOT EXISTS rsbsa_number VARCHAR(100);`,
-    `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_rsbsa_registered BOOLEAN DEFAULT FALSE;`,
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS member_id_number VARCHAR(100);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS rsbsa_number VARCHAR(100);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_rsbsa_registered BOOLEAN DEFAULT FALSE;
 
-    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS fund_source TEXT;`,
-    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_status VARCHAR(50) DEFAULT 'Unaudited';`,
-    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_by TEXT;`,
-    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_date VARCHAR(50);`,
-    `ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audit_notes TEXT;`,
+    ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS fund_source TEXT;
+    ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_status VARCHAR(50) DEFAULT 'Unaudited';
+    ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_by TEXT;
+    ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audited_date VARCHAR(50);
+    ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS audit_notes TEXT;
 
-    `ALTER TABLE meetings ADD COLUMN IF NOT EXISTS attendance_record JSONB;`,
+    ALTER TABLE meetings ADD COLUMN IF NOT EXISTS attendance_record JSONB;
 
-    `ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;`,
-    `ALTER TABLE products ADD COLUMN IF NOT EXISTS ceb_name TEXT;`,
-    `ALTER TABLE products ADD COLUMN IF NOT EXISTS quantity_available VARCHAR(100);`,
-    `ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_name TEXT;`,
-    `ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_sitio TEXT;`,
-    `ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_phone VARCHAR(50);`,
-    `ALTER TABLE products ADD COLUMN IF NOT EXISTS contact_person TEXT;`,
-    `ALTER TABLE products ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT TRUE;`,
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS ceb_name TEXT;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS quantity_available VARCHAR(100);
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_name TEXT;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_sitio TEXT;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS farmer_phone VARCHAR(50);
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS contact_person TEXT;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT TRUE;
 
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS ceb_title TEXT;`,
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS date_scheduled VARCHAR(50);`,
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS scheduled_time VARCHAR(100);`,
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS time_scheduled VARCHAR(100);`,
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS target_audience TEXT;`,
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS image_url TEXT;`,
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS attendees_count INTEGER DEFAULT 0;`,
-    `ALTER TABLE activities ADD COLUMN IF NOT EXISTS documented_notes TEXT;`,
+    ALTER TABLE activities ADD COLUMN IF NOT EXISTS ceb_title TEXT;
+    ALTER TABLE activities ADD COLUMN IF NOT EXISTS date_scheduled VARCHAR(50);
+    ALTER TABLE activities ADD COLUMN IF NOT EXISTS scheduled_time VARCHAR(100);
+    ALTER TABLE activities ADD COLUMN IF NOT EXISTS time_scheduled VARCHAR(100);
+    ALTER TABLE activities ADD COLUMN IF NOT EXISTS target_audience TEXT;
+    ALTER TABLE activities ADD COLUMN IF NOT EXISTS image_url TEXT;
+    ALTER TABLE activities ADD COLUMN IF NOT EXISTS attendees_count INTEGER DEFAULT 0;
+    ALTER TABLE activities ADD COLUMN IF NOT EXISTS documented_notes TEXT;
 
-    // Formal Auditor Reports (Proposal Requirement)
-    `CREATE TABLE IF NOT EXISTS auditor_reports (
+    CREATE TABLE IF NOT EXISTS auditor_reports (
       id VARCHAR(100) PRIMARY KEY,
       report_period VARCHAR(100) NOT NULL,
       report_type VARCHAR(50) NOT NULL,
@@ -132,10 +180,9 @@ export async function runSchemaMigrations(client: pg.PoolClient) {
       status VARCHAR(50) DEFAULT 'Submitted',
       date_submitted VARCHAR(50),
       date_certified VARCHAR(50)
-    );`,
+    );
 
-    // Executive Delegation Requests (Proposal Requirement: President to VP delegation)
-    `CREATE TABLE IF NOT EXISTS delegation_requests (
+    CREATE TABLE IF NOT EXISTS delegation_requests (
       id VARCHAR(100) PRIMARY KEY,
       requested_by TEXT NOT NULL,
       reason TEXT NOT NULL,
@@ -146,25 +193,22 @@ export async function runSchemaMigrations(client: pg.PoolClient) {
       reviewed_by TEXT,
       reviewed_date VARCHAR(50),
       remarks TEXT
-    );`,
+    );
 
-    // Sync Queue Audit Table
-    `CREATE TABLE IF NOT EXISTS sync_queue (
+    CREATE TABLE IF NOT EXISTS sync_queue (
       id VARCHAR(100) PRIMARY KEY,
       timestamp VARCHAR(100),
       action VARCHAR(50),
       entity_type VARCHAR(50),
       payload JSONB,
       status VARCHAR(50) DEFAULT 'synced'
-    );`
-  ];
+    );
+  `;
 
-  for (const stmt of statements) {
-    try {
-      await client.query(stmt);
-    } catch (e: any) {
-      console.warn('[Schema Migration Warning]:', e?.message || e);
-    }
+  try {
+    await client.query(migrationSql);
+  } catch (e: any) {
+    console.warn('[Schema Migration Warning]:', e?.message || e);
   }
 }
 

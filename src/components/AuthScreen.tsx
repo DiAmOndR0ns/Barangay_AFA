@@ -43,10 +43,22 @@ const OFFICER_ROLES_INFO: {
     desc: 'Tigtipig sa mga opisyal nga rekord, minutes sa panagtigom, resolusyon, ug listahan sa miyembro.'
   },
   { 
+    role: 'Assistant_Secretary', 
+    label: 'Assistant Secretary', 
+    cebLabel: 'Tigtabang nga Kalihim',
+    desc: 'Motabang sa Kalihim sa pagtala sa minutes, attendance sa panagtagbo, ug listahan sa mga mag-uuma.'
+  },
+  { 
     role: 'Treasurer', 
     label: 'Treasurer', 
     cebLabel: 'Mamahandi',
     desc: 'Tigtipig sa pundo, koleksyon sa amot, disbursements, ug pinansyal nga libro sa AFA.'
+  },
+  { 
+    role: 'Assistant_Treasurer', 
+    label: 'Assistant Treasurer', 
+    cebLabel: 'Tigtabang nga Mamahandi',
+    desc: 'Motabang sa Mamahandi sa pag-ihap sa amot, mga resibo, collection tracking, ug abang sa gamit.'
   },
   { 
     role: 'Auditor', 
