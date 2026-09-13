@@ -209,64 +209,7 @@ export default function MemberDashboard({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 no-print">
-          <button
-            id="member-hog-raising-tab-btn"
-            onClick={() => setActiveTab('hog-raising')}
-            className={`shrink-0 min-w-max px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black transition-all flex items-center gap-2 border-b-4 cursor-pointer whitespace-nowrap rounded-t-xl ${
-              activeTab === 'hog-raising'
-                ? 'border-[#1B4332] text-[#1B4332] bg-[#D8F3DC] scale-[1.01] shadow-xs'
-                : 'border-transparent text-[#2D3A22] hover:text-[#1B4332] hover:bg-white hover:border-[#1B4332]/40'
-            }`}
-          >
-            <Sprout className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-            <span>Project IGP</span>
-          </button>
-
-          <button
-            id="member-products-tab-btn"
-            onClick={() => setActiveTab('products')}
-            className={`shrink-0 min-w-max px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black transition-all flex items-center gap-2 border-b-4 cursor-pointer whitespace-nowrap rounded-t-xl ${
-              activeTab === 'products'
-                ? 'border-[#1B4332] text-[#1B4332] bg-[#D8F3DC] scale-[1.01] shadow-xs'
-                : 'border-transparent text-[#2D3A22] hover:text-[#1B4332] hover:bg-white hover:border-[#1B4332]/40'
-            }`}
-          >
-            <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-            <span>Products & Marketplace</span>
-          </button>
-
-          <button
-            id="member-activities-tab-btn"
-            onClick={() => setActiveTab('activities')}
-            className={`shrink-0 min-w-max px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black transition-all flex items-center gap-2 border-b-4 cursor-pointer whitespace-nowrap rounded-t-xl ${
-              activeTab === 'activities'
-                ? 'border-[#1B4332] text-[#1B4332] bg-[#D8F3DC] scale-[1.01] shadow-xs'
-                : 'border-transparent text-[#2D3A22] hover:text-[#1B4332] hover:bg-white hover:border-[#1B4332]/40'
-            }`}
-          >
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-            <span>Activities & Events</span>
-          </button>
-
-          <button
-            id="member-announcements-tab-btn"
-            onClick={() => setActiveTab('announcements')}
-            className={`shrink-0 min-w-max px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black transition-all flex items-center gap-2 border-b-4 cursor-pointer whitespace-nowrap rounded-t-xl relative ${
-              activeTab === 'announcements'
-                ? 'border-[#1B4332] text-[#1B4332] bg-[#D8F3DC] scale-[1.01] shadow-xs'
-                : 'border-transparent text-[#2D3A22] hover:text-[#1B4332] hover:bg-white hover:border-[#1B4332]/40'
-            }`}
-          >
-            <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
-            <span>Announcements & Bulletins</span>
-            {announcements.filter(ann => !readAnnouncements.includes(ann.id)).length > 0 && (
-              <span className="bg-rose-600 text-white font-black text-xs px-2 py-0.5 rounded-full flex items-center justify-center animate-pulse min-w-5 h-5">
-                {announcements.filter(ann => !readAnnouncements.includes(ann.id)).length}
-              </span>
-            )}
-          </button>
-        </div>
+        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 no-print" />
 
         {/* Right Arrow Indicator */}
         <div className="hidden sm:flex absolute right-0 z-10 p-1 bg-gradient-to-l from-[#FAF8F5] via-[#FAF8F5] to-transparent items-center text-[#1B4332]">
@@ -989,7 +932,7 @@ export default function MemberDashboard({
             <div>
               <h3 className="text-xl font-black text-[#1B4332] font-display flex items-center gap-2">
                 <Calendar className="w-6 h-6 text-[#1B4332]" />
-                <span>Mga Katilingbanong Kalihokan (Association Activities & Events)</span>
+                <span>Mga Katilingbanong Kalihokan (Activities)</span>
               </h3>
               <p className="text-xs text-slate-600 mt-1 font-semibold">
                 Susiha ang mga gieskedyul nga bayanihan, tigum, pagbansay, ug mga aktibidad sa atong asosasyon sa Tuburan.

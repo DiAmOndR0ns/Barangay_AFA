@@ -240,7 +240,7 @@ export default function PioView({
           }`}
         >
           <Megaphone className="w-4 h-4" />
-          <span>Announcements & Advisories ({announcements.length})</span>
+          <span>Announcements ({announcements.length})</span>
         </button>
 
         <button
@@ -252,7 +252,7 @@ export default function PioView({
           }`}
         >
           <Calendar className="w-4 h-4" />
-          <span>Association Activities & Events ({activities.length})</span>
+          <span>Activities ({activities.length})</span>
         </button>
       </div>
 

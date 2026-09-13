@@ -2172,7 +2172,7 @@ export default function App() {
                   }`}
                 >
                   <Megaphone className="w-4 h-4 text-[#1B4332]" />
-                  <span>All Bulletins & Announcements Board</span>
+                  <span>Announcements Board</span>
                   <span className="bg-[#1B4332]/10 text-[#1B4332] border border-[#1B4332]/20 text-[9px] px-2 py-0.5 rounded-full font-black ml-1">
                     Dashboard
                   </span>
