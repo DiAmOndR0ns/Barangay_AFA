@@ -92,9 +92,10 @@ export default function SyncQueuePanel({
                 ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/30'
                 : 'bg-emerald-600 hover:bg-emerald-500 text-white border-transparent shadow-md'
             }`}
+            title="Manual sync pulse (Optional — system auto-syncs continuously)"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Synchronizing...' : 'Sync Queued Data'}</span>
+            <span>{isSyncing ? 'Synchronizing...' : 'Force Sync Now (Optional)'}</span>
           </button>
         </div>
       </div>
@@ -102,10 +103,10 @@ export default function SyncQueuePanel({
       {/* QUEUE MAIN STATE DISPLAY */}
       {queue.length > 0 ? (
         <div className="space-y-3">
-          <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-300 leading-relaxed flex items-start gap-2">
-            <CloudOff className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-xl p-3 text-xs text-emerald-300 leading-relaxed flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Queue Active:</span> {queue.length} operation(s) are stored in client state. When connected online, click <strong>Sync Queued Data</strong> to automatically flush these items into the active record system.
+              <span className="font-bold">Automated Sync Active:</span> {queue.length} pending change(s) are stored offline. They will automatically synchronize directly to the cloud database the moment connection is detected. Manual clicking is not required.
             </div>
           </div>
 
@@ -156,9 +157,9 @@ export default function SyncQueuePanel({
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-slate-400">
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3.5 py-2.5 text-xs text-slate-300">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span><strong className="text-emerald-300">Sync queue clear.</strong> Offline changes will appear here when needed.</span>
+          <span><strong className="text-emerald-300">All data synchronized.</strong> Real-time changes auto-sync to the PostgreSQL cloud database continuously.</span>
         </div>
       )}
     </div>

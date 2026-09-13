@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   OfficerRole, Member, Meeting, Resolution, 
   FinancialTransaction, Announcement, SyncQueueItem, SystemLog, User, HogRaisingState,
@@ -100,6 +100,39 @@ export default function App() {
   const [activities, setActivities] = useState<AssociationActivity[]>([]);
   const [funds, setFunds] = useState<OrganizationFund[]>([]);
   const [logs, setLogs] = useState<SystemLog[]>([]);
+
+  // Ref to prevent overlapping push requests and track synchronization status
+  const isSyncingRef = useRef<boolean>(false);
+  const appDataRef = useRef({
+    users: [] as User[],
+    members: [] as Member[],
+    meetings: [] as Meeting[],
+    resolutions: [] as Resolution[],
+    transactions: [] as FinancialTransaction[],
+    announcements: [] as Announcement[],
+    products: [] as Product[],
+    activities: [] as AssociationActivity[],
+    hogRaising: INITIAL_HOG_RAISING,
+    funds: [] as OrganizationFund[],
+    logs: [] as SystemLog[]
+  });
+
+  // Keep appDataRef up-to-date synchronously with current states
+  useEffect(() => {
+    appDataRef.current = {
+      users,
+      members,
+      meetings,
+      resolutions,
+      transactions,
+      announcements,
+      products,
+      activities,
+      hogRaising,
+      funds,
+      logs
+    };
+  }, [users, members, meetings, resolutions, transactions, announcements, products, activities, hogRaising, funds, logs]);
 
   // Feedback State (Toasts)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'warning' | 'info' | 'error' } | null>(null);
@@ -596,21 +629,29 @@ export default function App() {
     options?: { silent?: boolean; source?: string }
   ): Promise<boolean> => {
     if (!navigator.onLine) return false;
+    if (isSyncingRef.current) {
+      console.log('[Auto-Sync]: Synchronization already in-flight, skipping duplicate dispatch.');
+      return false;
+    }
+
+    isSyncingRef.current = true;
+    setIsSyncing(true);
 
     try {
       const currentDeletedIds = overrides?.deletedIds || getStoredDeletedIds();
+      const snap = appDataRef.current;
       const payload = {
-        users: overrides?.users || users,
-        members: overrides?.members || members,
-        meetings: overrides?.meetings || meetings,
-        resolutions: overrides?.resolutions || resolutions,
-        financialTransactions: overrides?.financialTransactions || transactions,
-        announcements: overrides?.announcements || announcements,
-        products: overrides?.products || products,
-        activities: overrides?.activities || activities,
-        hogRaising: overrides?.hogRaising || hogRaising,
-        funds: overrides?.funds || funds,
-        systemLogs: overrides?.systemLogs || logs,
+        users: overrides?.users || snap.users,
+        members: overrides?.members || snap.members,
+        meetings: overrides?.meetings || snap.meetings,
+        resolutions: overrides?.resolutions || snap.resolutions,
+        financialTransactions: overrides?.financialTransactions || snap.transactions,
+        announcements: overrides?.announcements || snap.announcements,
+        products: overrides?.products || snap.products,
+        activities: overrides?.activities || snap.activities,
+        hogRaising: overrides?.hogRaising || snap.hogRaising,
+        funds: overrides?.funds || snap.funds,
+        systemLogs: overrides?.systemLogs || snap.logs,
         deletedIds: currentDeletedIds
       };
 
@@ -648,13 +689,15 @@ export default function App() {
     } catch (err: any) {
       console.warn('[Cloud DB Sync Warning]:', err?.message || err);
       return false;
+    } finally {
+      isSyncingRef.current = false;
+      setIsSyncing(false);
     }
   };
 
   // Flush Queue / Synchronize
   const handleSynchronize = async () => {
     if (!isOnline || isSyncing) return;
-    setIsSyncing(true);
     showToastMessage('Syncing all local contributions & records with PostgreSQL Cloud DB...', 'info');
 
     try {
@@ -665,8 +708,6 @@ export default function App() {
     } catch (err) {
       console.error('Sync error:', err);
       showToastMessage('Failed to reach PostgreSQL server. Changes stored locally.', 'error');
-    } finally {
-      setIsSyncing(false);
     }
   };
 
@@ -804,22 +845,22 @@ export default function App() {
     window.addEventListener('offline', handleOffline);
     window.addEventListener('focus', handleWindowFocus);
 
-    // Fast reactive sync: If online and there are pending items or deletions, trigger auto-sync after brief debounce
+    // Fast reactive sync: If online and there are pending items or deletions, trigger auto-sync after ultra-fast debounce
     let reactiveTimer: any = null;
-    if (navigator.onLine && (syncQueue.length > 0 || hasPendingDeletions())) {
+    if (isOnline && (syncQueue.length > 0 || hasPendingDeletions())) {
       reactiveTimer = setTimeout(() => {
         console.log('[Auto-Sync Reactive]: Detected pending queue while online. Automatically syncing to database...');
         pushAllDataToCloud(undefined, { silent: true, source: 'Auto-Sync (Reactive)' });
-      }, 800);
+      }, 150);
     }
 
-    // Periodic auto-sync heartbeat every 10 seconds: ensures officers never have to push a button
+    // Periodic auto-sync heartbeat every 5 seconds: ensures officers never have to push a button
     const intervalId = setInterval(() => {
       if (navigator.onLine && (syncQueue.length > 0 || hasPendingDeletions() || logs.some(l => l.syncStatus === 'pending'))) {
         console.log('[Auto-Sync Heartbeat]: Automatically synchronizing pending items to database...');
         pushAllDataToCloud(undefined, { silent: true, source: 'Auto-Sync (Heartbeat)' });
       }
-    }, 10000);
+    }, 5000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -828,7 +869,7 @@ export default function App() {
       if (reactiveTimer) clearTimeout(reactiveTimer);
       clearInterval(intervalId);
     };
-  }, [syncQueue.length, logs, members, meetings, resolutions, transactions, announcements, products, activities, hogRaising, funds, users]);
+  }, [isOnline, syncQueue.length]);
 
   // SECRETARY ACTION HANDLERS
   const handleAddMember = (
