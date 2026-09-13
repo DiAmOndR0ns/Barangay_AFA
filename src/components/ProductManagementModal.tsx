@@ -167,16 +167,9 @@ export default function ProductManagementModal({
               <ShoppingBag className="w-6 h-6" />
             </div>
             <div>
-<<<<<<< Updated upstream
               <h2 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
                 <span>AFA Product Management Module</span>
-                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full">
-=======
-              <h2 className="text-base font-black text-[#1B4332] uppercase tracking-wider flex items-center gap-2">
-                <span>BAFA Product Management Module</span>
-                <span className="bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full">
->>>>>>> Stashed changes
-                  Pres., Treas. & Auditor Access
+                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full">                  Pres., Treas. & Auditor Access
                 </span>
               </h2>
               <p className="text-xs text-[#4A5F57] font-medium">
@@ -312,16 +305,9 @@ export default function ProductManagementModal({
                           <span><strong>Kadaghanon (Quantity):</strong> {product.quantityAvailable}</span>
                         </div>
                       )}
-<<<<<<< Updated upstream
                       <div className="flex items-center gap-1.5 text-amber-300 font-semibold">
                         <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span><strong>Mag-uuma (Selling Farmer):</strong> {product.farmerName || product.contactPerson || 'AFA Member'}</span>
-=======
-                      <div className="flex items-center gap-1.5 text-amber-800 font-semibold">
-                        <User className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                        <span><strong>Mag-uuma (Selling Farmer):</strong> {product.farmerName || product.contactPerson || 'BAFA Member'}</span>
->>>>>>> Stashed changes
-                      </div>
+                        <span><strong>Mag-uuma (Selling Farmer):</strong> {product.farmerName || product.contactPerson || 'AFA Member'}</span>                      </div>
                       {(product.farmerSitio || product.farmerPhone) && (
                         <div className="flex items-center gap-3 text-[11px] text-[#4A5F57] pl-5">
                           {product.farmerSitio && (
@@ -367,14 +353,8 @@ export default function ProductManagementModal({
         </div>
 
         {/* MODAL FOOTER */}
-<<<<<<< Updated upstream
         <div className="p-4 bg-slate-950 border-t border-slate-800 text-[10px] text-slate-500 text-center font-mono">
-          Alegria Farmers Association (AFA) • Product Registry System
-=======
-        <div className="p-4 bg-[#F0EDE7] border-t border-[#D5CFC1] text-[10px] text-[#4A5F57] text-center font-mono">
-          Barangay Alegria Farmers Association (BAFA) • Product Registry System
->>>>>>> Stashed changes
-        </div>
+          Alegria Farmers Association (AFA) • Product Registry System        </div>
       </div>
 
       {/* ADD / EDIT PRODUCT SUB-MODAL */}
@@ -506,7 +486,6 @@ export default function ProductManagementModal({
                   <select
                     value={farmerSitio}
                     onChange={(e) => setFarmerSitio(e.target.value)}
-<<<<<<< Updated upstream
                     className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500 text-xs"
                   >
                     <option value="">Pilia ang Sitio (Official 4 Sitios)</option>
@@ -514,12 +493,7 @@ export default function ProductManagementModal({
                     <option value="Sitio Pundok 1">Sitio Pundok 1</option>
                     <option value="Sitio Pundok 2">Sitio Pundok 2</option>
                     <option value="Sitio Lamak">Sitio Lamak</option>
-                  </select>
-=======
-                    className="bg-white border border-[#D5CFC1] rounded-lg px-2.5 py-1.5 text-[#1B4332] focus:outline-none focus:border-amber-500 text-xs"
-                  />
->>>>>>> Stashed changes
-                  <input
+                  </select>                  <input
                     type="text"
                     required
                     placeholder="Numero sa Telepono (Phone)"

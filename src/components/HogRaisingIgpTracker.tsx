@@ -3,12 +3,7 @@ import {
   HogRaisingState, IgpExpense, IgpSale, IgpChoreLog, IgpGroup, Member, User, Meeting 
 } from '../types';
 import { 
-<<<<<<< Updated upstream
-  Briefcase, Boxes, Package, Plus, ArrowUpRight, ArrowDownRight, Calendar, Users, 
-=======
-  BriefcaseBusiness, Plus, ArrowUpRight, ArrowDownRight, Calendar, Users, 
->>>>>>> Stashed changes
-  Activity, Trash2, Printer, CheckCircle, Info, DollarSign, 
+  Briefcase, Boxes, Package, Plus, ArrowUpRight, ArrowDownRight, Calendar, Users,   Activity, Trash2, Printer, CheckCircle, Info, DollarSign, 
   Tag, ShieldCheck, Heart, Sparkles, Filter, FileText, Check, Award, Calculator
 } from 'lucide-react';
 import AttendanceDividendCalculatorModal from './AttendanceDividendCalculatorModal';
@@ -596,26 +591,16 @@ export default function HogRaisingIgpTracker({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 text-left">
         <div>
           <h2 className={`text-xl font-black ${theme.headerText} flex items-center gap-2.5 font-display`}>
-<<<<<<< Updated upstream
             {selectedProduce.includes('Rental') || selectedProduce.includes('Lingkoranan') || selectedProduce.includes('Sako') ? (
               <Boxes className={`w-6 h-6 ${isOfficerMode ? 'text-amber-400' : 'text-amber-600'}`} />
             ) : (
               <Briefcase className={`w-6 h-6 ${isOfficerMode ? 'text-emerald-400' : 'text-[#2D6A4F]'}`} />
-            )}
-=======
-            <BriefcaseBusiness className={`w-6 h-6 ${isOfficerMode ? 'text-emerald-400' : 'text-[#2D6A4F]'}`} />
->>>>>>> Stashed changes
-            <span>
+            )}            <span>
               {getProduceProjectName(selectedProduce)}
             </span>
           </h2>
           <p className={`text-xs ${theme.subText} mt-1 font-medium`}>
-<<<<<<< Updated upstream
-            Track the capital grant, expenses, rental & sales logs, and member dividends for <strong>{selectedProduce}</strong>.
-=======
-            Monitor project costs, activity logs, and member dividends for <strong>{selectedProduce}</strong>.
->>>>>>> Stashed changes
-          </p>
+            Track the capital grant, expenses, rental & sales logs, and member dividends for <strong>{selectedProduce}</strong>.          </p>
         </div>
 
         {/* Dynamic Badge */}
@@ -690,14 +675,8 @@ export default function HogRaisingIgpTracker({
                 &times;
               </button>
             </div>
-<<<<<<< Updated upstream
             <p className="text-xs text-slate-400 mb-4 font-semibold leading-relaxed">
-              I-register ang bag-ong livelihood project o kagamitan nga abangan (e.g., Poultry Raising, Sound System Rental, Tent Rental, Mushrooms). Kini makapahimo sa asosasyon nga dynamic ug makasulod og daghang matang sa income projects.
-=======
-            <p className="text-xs text-[#4A5F57] mb-4 font-semibold leading-relaxed">
-              I-register ang bag-ong pamaagi sa pag-uma o pagbuhi og hayop (e.g., Poultry Raising, Tilapia Breeding, Mushrooms). Kini makapahimo sa asosasyon nga dynamic ug makasulod og daghang matang sa livelihood projects.
->>>>>>> Stashed changes
-            </p>
+              I-register ang bag-ong livelihood project o kagamitan nga abangan (e.g., Poultry Raising, Sound System Rental, Tent Rental, Mushrooms). Kini makapahimo sa asosasyon nga dynamic ug makasulod og daghang matang sa income projects.            </p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -873,21 +852,11 @@ export default function HogRaisingIgpTracker({
       {/* NAVIGATION TABS FOR IGP PORTAL */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 gap-1 select-none overflow-x-auto no-print">
         {[
-<<<<<<< Updated upstream
-          { id: 'overview', label: 'Summary & Breakdown', icon: selectedProduce.includes('Rental') ? Boxes : Briefcase },
-=======
-          { id: 'overview', label: 'Summary & Breakdown', icon: BriefcaseBusiness },
->>>>>>> Stashed changes
-          { id: 'schedule', label: 'Rotational Group Schedule', icon: Calendar },
+          { id: 'overview', label: 'Summary & Breakdown', icon: selectedProduce.includes('Rental') ? Boxes : Briefcase },          { id: 'schedule', label: 'Rotational Group Schedule', icon: Calendar },
           { id: 'chores', label: 'Daily Care Check-in', icon: Activity },
           { id: 'dividends', label: 'Interest Dividends', icon: Award },
           { id: 'reports', label: 'Quarterly & December Closing', icon: ShieldCheck },
-<<<<<<< Updated upstream
-          { id: 'ledger', label: 'IGP Financial Ledger', icon: FileText, adminOnly: true },
-=======
-          { id: 'ledger', label: 'IGP Livestock Ledger', icon: FileText, adminOnly: true },
->>>>>>> Stashed changes
-        ].map((tab) => {
+          { id: 'ledger', label: 'IGP Financial Ledger', icon: FileText, adminOnly: true },        ].map((tab) => {
           if (tab.adminOnly && !isTreasurerOrOfficer) return null;
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
@@ -1375,14 +1344,8 @@ export default function HogRaisingIgpTracker({
               {/* Actions Header Row */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-<<<<<<< Updated upstream
                   <h3 className="font-extrabold text-base text-slate-800 dark:text-white">IGP Financial Ledger (Gasto, Abang ug Halin)</h3>
-                  <p className="text-xs text-slate-400 mt-1">Isulat ang mga gasto sa {selectedProduce}, lakip ang kita o halin gikan sa abang ug benta.</p>
-=======
-                  <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Livestock Financial Ledger (Gasto ug Halin)</h3>
-                  <p className="text-xs text-slate-400 mt-1">Isulat ang mga gasto sa baboyan sama sa pagkaon, bakuna, ug liso, lakip usab ang halin sa baboy.</p>
->>>>>>> Stashed changes
-                </div>
+                  <p className="text-xs text-slate-400 mt-1">Isulat ang mga gasto sa {selectedProduce}, lakip ang kita o halin gikan sa abang ug benta.</p>                </div>
 
                 <div className="flex gap-2 w-full sm:w-auto shrink-0 font-bold">
                   <button
@@ -1391,24 +1354,14 @@ export default function HogRaisingIgpTracker({
                     className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2 text-xs bg-rose-100 hover:bg-rose-200 text-[#1B4332] rounded-xl shadow-sm transition-all cursor-pointer border border-rose-300 font-black"
                   >
                     <Plus className="w-3.5 h-3.5" />
-<<<<<<< Updated upstream
-                    <span>Log IGP Expense</span>
-=======
-                    <span className="text-[#1B4332]">Log Livestock Expense</span>
->>>>>>> Stashed changes
-                  </button>
+                    <span>Log IGP Expense</span>                  </button>
                   <button
                     id="add-hog-sale-btn"
                     onClick={() => setShowSaleModal(true)}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm transition-all cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-<<<<<<< Updated upstream
-                    <span>{selectedProduce.includes('Rental') || selectedProduce.includes('Lingkoranan') || selectedProduce.includes('Sako') ? 'Record Rental Income' : 'Record Sale / Income'}</span>
-=======
-                    <span>Record Livestock Sale</span>
->>>>>>> Stashed changes
-                  </button>
+                    <span>{selectedProduce.includes('Rental') || selectedProduce.includes('Lingkoranan') || selectedProduce.includes('Sako') ? 'Record Rental Income' : 'Record Sale / Income'}</span>                  </button>
                 </div>
               </div>
 
@@ -1632,16 +1585,9 @@ export default function HogRaisingIgpTracker({
       {/* MODAL 1: ADD PIG EXPENSE */}
       {showExpenseModal && (
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-<<<<<<< Updated upstream
           <div className="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden text-left">
             <div className="bg-slate-900 px-5 py-4 border-b border-slate-700 flex justify-between items-center">
-              <h3 className="font-bold text-white text-base">Record Expense ({selectedProduce})</h3>
-=======
-          <div className="bg-[#F7F4EF] border border-[#D5CFC1] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden text-left">
-            <div className="bg-[#F0EAE1] px-5 py-4 border-b border-[#D5CFC1] flex justify-between items-center">
-              <h3 className="font-bold text-[#1B4332] text-base">Record Piggery Expense</h3>
->>>>>>> Stashed changes
-              <button 
+              <h3 className="font-bold text-white text-base">Record Expense ({selectedProduce})</h3>              <button 
                 onClick={() => setShowExpenseModal(false)}
                 className="text-[#1B4332] hover:text-[#143326] text-lg font-bold cursor-pointer"
               >

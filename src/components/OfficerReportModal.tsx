@@ -811,14 +811,8 @@ export default function OfficerReportModal({
             <div className="min-w-0">
               <h2 className="text-sm sm:text-base font-black text-[#1B4332] uppercase tracking-wider flex flex-wrap items-center gap-2">
                 <span className="truncate">{isPresident ? "President's Executive Summary & Export Center" : `${currentRole.replace('_', ' ')} Official Report Center`}</span>
-<<<<<<< Updated upstream
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full shrink-0 font-mono">
-                  AFA Tuburan
-=======
-                <span className="bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full shrink-0 font-mono">
-                  BAFA Tuburan
->>>>>>> Stashed changes
-                </span>
+                  AFA Tuburan                </span>
               </h2>
               <p className="text-xs text-[#4A5F57] font-medium truncate">
                 {isPresident 
@@ -1002,16 +996,9 @@ export default function OfficerReportModal({
                     <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Net Fund</span>
                     <p className="text-sm font-mono font-bold text-emerald-700">PHP {netBalance.toLocaleString()}</p>
                   </div>
-<<<<<<< Updated upstream
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold">Capital Grant</span>
-                    <p className="text-sm font-mono font-bold text-amber-400">PHP {hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-=======
-                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
-                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Capital Grant</span>
-                    <p className="text-sm font-mono font-bold text-amber-700">PHP {hogCapital.toLocaleString()}</p>
->>>>>>> Stashed changes
-                  </div>
+                    <p className="text-sm font-mono font-bold text-amber-400">PHP {hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>                  </div>
                   <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
                     <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Audit Rate</span>
                     <p className="text-sm font-mono font-bold text-emerald-700">{auditComplianceRate}%</p>
@@ -1065,14 +1052,8 @@ export default function OfficerReportModal({
                 rows={2}
                 value={customRemarks}
                 onChange={(e) => setCustomRemarks(e.target.value)}
-<<<<<<< Updated upstream
                 placeholder="e.g., Reports compiled for Tuburan LGU Municipal Agriculture Audit & Annual AFA General Assembly."
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500 font-sans"
-=======
-                placeholder="e.g., Reports compiled for Tuburan LGU Municipal Agriculture Audit & Annual BAFA General Assembly."
-                className="w-full px-3 py-2 bg-white border border-[#D5CFC1] rounded-xl text-[#1B4332] text-xs focus:outline-none focus:border-emerald-500 font-sans"
->>>>>>> Stashed changes
-              />
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500 font-sans"              />
             </div>
           </div>
         </div>

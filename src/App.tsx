@@ -23,18 +23,11 @@ import GuestPortal from './components/GuestPortal';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import OfficerReportModal from './components/OfficerReportModal';
 import ProductManagementModal from './components/ProductManagementModal';
-<<<<<<< Updated upstream
+import DashboardSkeleton from './components/DashboardSkeleton';
 import { buildAuditChain, hashPassword, sanitizeUserForStorage } from './utils/audit';
 import { 
   Building, ShieldCheck, Megaphone, Users, Coins, 
   Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, Briefcase, FileText, ShoppingBag,
-=======
-import DashboardSkeleton from './components/DashboardSkeleton';
-import { buildAuditChain } from './utils/audit';
-import { 
-  Building, ShieldCheck, Megaphone, Users, Coins, 
-  Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, BriefcaseBusiness, FileText, ShoppingBag,
->>>>>>> Stashed changes
   ChevronLeft, ChevronRight, Download
 } from 'lucide-react';
 
@@ -2163,12 +2156,7 @@ export default function App() {
                       : 'border-transparent text-slate-700 hover:text-[#1B4332] hover:bg-[#F2EFE9]'
                   }`}
                 >
-<<<<<<< Updated upstream
-                  <Briefcase className="w-4 h-4 text-[#1B4332]" />
-=======
-                  <BriefcaseBusiness className="w-4 h-4 text-[#1B4332]" />
->>>>>>> Stashed changes
-                  <span>IGP Tracker</span>
+                  <Briefcase className="w-4 h-4 text-[#1B4332]" />                  <span>IGP Tracker</span>
                   <span className="bg-[#1B4332]/10 text-[#1B4332] border border-[#1B4332]/20 text-[9px] px-2 py-0.5 rounded-full font-black ml-1">
                     Active
                   </span>
