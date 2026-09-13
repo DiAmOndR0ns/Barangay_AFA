@@ -1,10 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { User, Announcement, HogRaisingState, IgpChoreLog, Member, Product, AssociationActivity } from '../types';
 import { 
   User as UserIcon, MapPin, Smartphone, Layers, Tag, Calendar, 
   Printer, Upload, LogOut, FileText, CheckCircle, CreditCard, 
   AlertCircle, Award, ShieldCheck, Trash2, Image as ImageIcon, Check, Sprout, Landmark, Building,
+<<<<<<< Updated upstream
   Megaphone, Search, Bell, ChevronDown, ChevronUp, Briefcase, ShoppingBag, Clock, Coffee,
+=======
+  Megaphone, Search, Bell, ChevronDown, ChevronUp, BriefcaseBusiness, ShoppingBag, Clock, Coffee,
+>>>>>>> Stashed changes
   ChevronLeft, ChevronRight
 } from 'lucide-react';
 import AnnouncementDashboard from './AnnouncementDashboard';
@@ -74,6 +78,9 @@ export default function MemberDashboard({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [expandedAnnouncementId, setExpandedAnnouncementId] = useState<string | null>(null);
+  const [collapsedProductIds, setCollapsedProductIds] = useState<string[]>(() => 
+    products.filter(p => p.isPublished).map(p => p.id)
+  );
   const [readAnnouncements, setReadAnnouncements] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('bafa_read_announcements');
@@ -177,15 +184,28 @@ export default function MemberDashboard({
     }, 1000);
   };
 
+  useEffect(() => {
+    const productIds = products.filter(p => p.isPublished).map(p => p.id);
+    setCollapsedProductIds((current) => {
+      if (current.length === 0) return productIds;
+      return productIds.filter((id) => current.includes(id) || productIds.includes(id));
+    });
+  }, [products]);
+
   return (
     <div id="member-dashboard-root" className="space-y-4 text-[#2D3A22]">
       
       {/* HEADER ACTION AREA */}
-      <div className="bg-[#1B4332] text-[#F4EFE6] p-5 rounded-3xl border border-[#143326] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print text-left shadow-sm">
+      <div className="bg-bafa-800 text-bafa-50 p-5 rounded-3xl border border-bafa-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print text-left shadow-sm">
         <div>
           <div className="flex items-center gap-2">
+<<<<<<< Updated upstream
             <span className="bg-[#D8F3DC] text-[#1B4332] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
               AFA Regular Member
+=======
+            <span className="bg-bafa-100 text-bafa-700 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              BAFA Regular Member
+>>>>>>> Stashed changes
             </span>
             <span className="bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
               <ShieldCheck className="w-3 h-3" />
@@ -195,14 +215,17 @@ export default function MemberDashboard({
           <h2 className="text-xl sm:text-2xl font-black text-white mt-2 font-display">
             Welcome, {currentUser.name}!
           </h2>
+<<<<<<< Updated upstream
           <p className="text-xs sm:text-sm text-[#B7E4C7] mt-1 max-w-xl font-medium">
             This is your official member portal. You can update your profile photo, register farm parcels, view attendance dividends, and print your certified AFA membership ID.
           </p>
+=======
+>>>>>>> Stashed changes
         </div>
 
         <button
           onClick={onLogout}
-          className="flex items-center gap-1.5 px-4.5 py-2.5 bg-[#FAF8F5] hover:bg-[#F2ECE0] text-[#1B4332] text-xs font-bold rounded-xl transition-all border border-[#D5CFC1] cursor-pointer self-start md:self-center shadow-sm shrink-0"
+          className="flex items-center gap-1.5 px-4.5 py-2.5 bg-bafa-neutral-50 hover:bg-bafa-neutral-100 text-bafa-700 text-xs font-bold rounded-xl transition-all border border-bafa-neutral-300 cursor-pointer self-start md:self-center shadow-sm shrink-0"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>
@@ -210,11 +233,11 @@ export default function MemberDashboard({
       </div>
 
       {/* TAB NAVIGATION FOR MEMBERS WITH SCROLL INDICATORS */}
-      <div className="bg-[#FAF8F5] border-b-2 border-[#D5CFC1] rounded-2xl p-2 no-print space-y-1.5 shadow-xs">
+      <div className="bg-bafa-neutral-50 border-b-2 border-bafa-neutral-300 rounded-2xl p-2 no-print space-y-1.5 shadow-xs">
         {/* Mobile Phone Scroll Hint Indicator */}
-        <div className="flex sm:hidden items-center justify-between w-full px-2.5 py-1 text-[11px] font-black text-[#1B4332] bg-[#EAF4EC] rounded-lg border border-emerald-800/20 shadow-xs">
+        <div className="flex sm:hidden items-center justify-between w-full px-2.5 py-1 text-[11px] font-black text-bafa-700 bg-bafa-100 rounded-lg border border-bafa-300 shadow-xs">
           <span className="flex items-center gap-1">
-            <ChevronLeft className="w-3.5 h-3.5 text-[#BF360C] animate-pulse" />
+            <ChevronLeft className="w-3.5 h-3.5 text-bafa-coral-600 animate-pulse" />
             Scroll menu to browse all sections →
           </span>
           <ChevronRight className="w-3.5 h-3.5 text-[#BF360C] animate-pulse" />
@@ -249,7 +272,11 @@ export default function MemberDashboard({
                   : 'border-transparent text-[#2D3A22] hover:text-[#1B4332] hover:bg-white hover:border-[#1B4332]/40'
               }`}
             >
+<<<<<<< Updated upstream
               <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
+=======
+              <BriefcaseBusiness className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B4332]" />
+>>>>>>> Stashed changes
               <span>Project IGP</span>
             </button>
 
@@ -769,7 +796,7 @@ export default function MemberDashboard({
 
                     <div className="flex items-start justify-between border-b border-white/10 pb-1.5 relative z-10">
                       <div className="flex items-center gap-1">
-                        <Building className="w-4.5 h-4.5 text-[#D8F3DC]" />
+                        <img src="/logo.svg" alt="Alegria Farmers Association logo" className="w-4.5 h-4.5 object-cover rounded-sm shrink-0" />
                         <div>
                           <span className="text-[7px] font-black uppercase text-white block tracking-wider leading-none">Alegria Farmers</span>
                           <span className="text-[6px] text-[#B7E4C7] font-bold uppercase block leading-none">Association (AFA)</span>
@@ -922,21 +949,17 @@ export default function MemberDashboard({
 
           {products.filter(p => p.isPublished).length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {products.filter(p => p.isPublished).map((prod) => (
-                <div key={prod.id} className="bg-[#FAF8F5] border-2 border-[#D5CFC1] rounded-2xl p-5 space-y-4 hover:border-[#1B4332] transition-all flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-start gap-2">
-                      <div>
-                        <h4 className="text-base font-black text-[#1B4332] font-display">{prod.name}</h4>
-                        {prod.cebName && (
-                          <span className="text-xs text-slate-600 font-bold block">{prod.cebName}</span>
-                        )}
-                      </div>
-                      <span className="bg-[#1B4332] text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase">
-                        {prod.category}
-                      </span>
-                    </div>
+              {products.filter(p => p.isPublished).map((prod) => {
+                const isCollapsed = collapsedProductIds.includes(prod.id);
+                const toggleProduct = () => {
+                  setCollapsedProductIds((current) =>
+                    current.includes(prod.id)
+                      ? current.filter((id) => id !== prod.id)
+                      : [...current, prod.id]
+                  );
+                };
 
+<<<<<<< Updated upstream
                     <p className="text-xs text-slate-700 leading-relaxed font-semibold">{prod.description}</p>
                   </div>
 
@@ -967,12 +990,75 @@ export default function MemberDashboard({
                       {(prod.farmerPhone || prod.contactPerson) && (
                         <div className="text-xs font-mono font-black text-[#BF360C] pt-0.5">
                           📞 Kontak: {prod.farmerPhone || prod.contactPerson}
+=======
+                return (
+                  <div
+                    key={prod.id}
+                    className={`bg-[#FAF8F5] border-2 border-[#D5CFC1] rounded-2xl p-5 transition-all flex flex-col justify-between ${isCollapsed ? 'max-h-[210px] overflow-hidden' : 'max-h-none'}`}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <h4 className="text-base font-black text-[#1B4332] font-display">{prod.name}</h4>
+                          {prod.cebName && (
+                            <span className="text-xs text-slate-600 font-bold block">{prod.cebName}</span>
+                          )}
+>>>>>>> Stashed changes
                         </div>
-                      )}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="bg-[#1B4332] text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase">
+                            {prod.category}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={toggleProduct}
+                            className="bg-[#EAF4EC] border border-[#1B4332]/20 text-[#1B4332] text-[10px] font-black px-2 py-1 rounded-lg uppercase cursor-pointer"
+                          >
+                            {isCollapsed ? 'Maximize' : 'Minimize'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={`transition-all duration-200 overflow-hidden ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[260px] opacity-100'}`}>
+                        <p className="text-xs text-slate-700 leading-relaxed font-semibold">{prod.description}</p>
+                      </div>
+                    </div>
+
+                    <div className={`transition-all duration-200 overflow-hidden ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[320px] opacity-100'}`}>
+                      <div className="pt-3 border-t border-[#D5CFC1] space-y-3 mt-3">
+                        <div className="flex items-center justify-between text-xs font-black">
+                          <div>
+                            <span className="text-[10px] text-slate-500 uppercase font-extrabold block">Presyo / Yunit:</span>
+                            <span className="text-[#BF360C] font-black font-mono text-base">
+                              PHP {prod.price.toLocaleString()} / {prod.unit}
+                            </span>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-500 uppercase font-extrabold block">Magamit nga Kadaghanon:</span>
+                            <span className="text-[#1B4332] font-black text-xs">{prod.quantityAvailable || 'In Stock'}</span>
+                          </div>
+                        </div>
+
+                        <div className="bg-[#EAF4EC] border border-[#1B4332]/20 p-2.5 rounded-xl space-y-1 text-xs">
+                          <span className="block text-[10px] text-[#1B4332] uppercase font-black tracking-wider">
+                            Mag-uuma nga Nagbaligya (Selling Farmer):
+                          </span>
+                          <div className="font-extrabold text-[#1B4332] flex items-center justify-between flex-wrap gap-1">
+                            <span>{prod.farmerName || prod.contactPerson || 'BAFA Member Farmer'}</span>
+                            {prod.farmerSitio && <span className="text-[11px] text-slate-600 font-bold">📍 {prod.farmerSitio}</span>}
+                          </div>
+                          {(prod.farmerPhone || prod.contactPerson) && (
+                            <div className="text-xs font-mono font-black text-[#BF360C] pt-0.5">
+                              📞 Kontak: {prod.farmerPhone || prod.contactPerson}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12 bg-[#FAF8F5] border-2 border-dashed border-[#D5CFC1] rounded-2xl">
@@ -1070,7 +1156,7 @@ export default function MemberDashboard({
         <div className="border-4 border-double border-emerald-800 p-[10mm] text-center space-y-6 flex flex-col justify-between min-h-[135mm]">
           
           <div className="flex justify-between items-center border-b-2 border-slate-800 pb-4">
-            <Building className="w-12 h-12 text-slate-700 shrink-0" />
+            <img src="/logo.svg" alt="Alegria Farmers Association logo" className="w-12 h-12 object-cover rounded-md border border-slate-300 shrink-0" />
             <div className="text-center flex-1">
               <p className="text-[10px] tracking-[0.2em] font-sans text-slate-500 uppercase leading-normal">Republic of the Philippines</p>
               <p className="text-[10px] tracking-[0.15em] font-sans text-slate-500 uppercase leading-normal">Province of Cebu • Municipality of Tuburan</p>
@@ -1142,7 +1228,7 @@ export default function MemberDashboard({
           <div className="border-2 border-emerald-800 bg-white p-4 h-[54mm] flex flex-col justify-between font-sans relative overflow-hidden text-slate-900 rounded-lg shadow-sm">
             <div className="flex items-start justify-between border-b border-emerald-800 pb-1.5">
               <div className="flex items-center gap-1">
-                <Building className="w-5 h-5 text-emerald-800 shrink-0" />
+                <img src="/logo.svg" alt="Alegria Farmers Association logo" className="w-5 h-5 object-cover rounded-sm border border-emerald-800/20 shrink-0" />
                 <div>
                   <h4 className="text-[8px] font-black uppercase text-emerald-800 leading-none">Alegria Farmers</h4>
                   <span className="text-[6.5px] text-slate-600 block leading-none">Association (AFA)</span>

@@ -23,10 +23,18 @@ import GuestPortal from './components/GuestPortal';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import OfficerReportModal from './components/OfficerReportModal';
 import ProductManagementModal from './components/ProductManagementModal';
+<<<<<<< Updated upstream
 import { buildAuditChain, hashPassword, sanitizeUserForStorage } from './utils/audit';
 import { 
   Building, ShieldCheck, Megaphone, Users, Coins, 
   Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, Briefcase, FileText, ShoppingBag,
+=======
+import DashboardSkeleton from './components/DashboardSkeleton';
+import { buildAuditChain } from './utils/audit';
+import { 
+  Building, ShieldCheck, Megaphone, Users, Coins, 
+  Layers, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, LogOut, BriefcaseBusiness, FileText, ShoppingBag,
+>>>>>>> Stashed changes
   ChevronLeft, ChevronRight, Download
 } from 'lucide-react';
 
@@ -100,6 +108,7 @@ export default function App() {
   const [activities, setActivities] = useState<AssociationActivity[]>([]);
   const [funds, setFunds] = useState<OrganizationFund[]>([]);
   const [logs, setLogs] = useState<SystemLog[]>([]);
+  const [isHydrating, setIsHydrating] = useState(true);
 
   // Ref to prevent overlapping push requests and track synchronization status
   const isSyncingRef = useRef<boolean>(false);
@@ -228,6 +237,7 @@ export default function App() {
 
       // Initial database status check
       checkDatabaseConnection();
+      setIsHydrating(false);
 
       // Attempt pulling fresh data from PostgreSQL Cloud Database if online
       fetch('/api/sync/pull')
@@ -1902,6 +1912,10 @@ export default function App() {
     return <PrivacyPolicy />;
   }
 
+  if (isHydrating) {
+    return <DashboardSkeleton variant={guestMode ? 'guest' : 'officer'} />;
+  }
+
   if (!currentUser) {
     if (guestMode) {
       return (
@@ -1917,7 +1931,7 @@ export default function App() {
     }
 
     return (
-      <div id="auth-screen-wrapper" className="min-h-screen bg-[#FAF8F5]">
+      <div id="auth-screen-wrapper" className="min-h-screen bg-bafa-50">
         <AuthScreen 
           users={users}
           onLogin={handleLogin}
@@ -1930,12 +1944,12 @@ export default function App() {
           <div className="fixed bottom-6 right-6 z-50">
             <div className={`flex items-center gap-2 px-4.5 py-3 rounded-2xl shadow-2xl border-2 text-sm font-extrabold max-w-sm ${
               toast.type === 'success' 
-                ? 'bg-[#1B4332] text-[#D8F3DC] border-[#2D6A4F]' 
+                ? 'bg-bafa-700 text-bafa-100 border-bafa-600' 
                 : toast.type === 'warning'
                 ? 'bg-amber-900 text-amber-100 border-amber-600'
                 : toast.type === 'error'
                 ? 'bg-rose-950 text-rose-100 border-rose-600'
-                : 'bg-slate-900 text-slate-100 border-slate-700'
+                : 'bg-[#F7F4EF] text-[#1B4332] border-[#D5CFC1]'
             }`}>
               {toast.type === 'success' && <CheckCircle className="w-5 h-5 text-emerald-300 shrink-0" />}
               {toast.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-300 shrink-0" />}
@@ -1971,7 +1985,7 @@ export default function App() {
                 ? 'bg-amber-900 text-amber-100 border-amber-600'
                 : toast.type === 'error'
                 ? 'bg-rose-950 text-rose-100 border-rose-600'
-                : 'bg-slate-900 text-slate-100 border-slate-700'
+                : 'bg-slate-100 text-slate-900 border-slate-300'
             }`}>
               {toast.type === 'success' && <CheckCircle className="w-5 h-5 text-emerald-300 shrink-0" />}
               {toast.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-300 shrink-0" />}
@@ -1996,7 +2010,7 @@ export default function App() {
               ? 'bg-amber-900 text-amber-100 border-amber-600'
               : toast.type === 'error'
               ? 'bg-rose-950 text-rose-100 border-rose-600'
-              : 'bg-slate-900 text-slate-100 border-slate-700'
+              : 'bg-slate-100 text-slate-900 border-slate-300'
           }`}>
             {toast.type === 'success' && <CheckCircle className="w-5 h-5 text-emerald-300 shrink-0" />}
             {toast.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-300 shrink-0" />}
@@ -2009,13 +2023,13 @@ export default function App() {
       <header className="bg-[#1B4332] border-b-2 border-[#122E22] py-3 sm:py-4 px-3.5 sm:px-6 shrink-0 shadow-md text-white">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 max-w-full">
-            <div className="bg-[#D8F3DC] p-2 sm:p-2.5 rounded-2xl shadow-inner text-[#1B4332] shrink-0">
-              <Building className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="bg-[#D8F3DC] rounded-2xl shadow-inner text-[#1B4332] shrink-0 overflow-hidden border border-[#a8d5b0]">
+              <img src="/logo.svg" alt="Alegria Farmers Association logo" className="w-10 h-10 sm:w-12 sm:h-12 object-cover block" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-white uppercase font-display break-words">Alegria Farmers Association</h1>
-                <span className="text-[9px] sm:text-[10px] bg-[#2D6A4F] text-[#D8F3DC] px-2 py-0.5 rounded-full border border-[#40916C] font-black font-mono shrink-0">
+                <span className="text-[9px] sm:text-[10px] bg-bafa-600 text-bafa-100 px-2 py-0.5 rounded-full border border-bafa-500 font-black font-mono shrink-0">
                   Barangay Portal
                 </span>
               </div>
@@ -2136,7 +2150,7 @@ export default function App() {
                       : 'border-transparent text-slate-700 hover:text-[#1B4332] hover:bg-[#F2EFE9]'
                   }`}
                 >
-                  <Building className="w-4 h-4 text-[#1B4332]" />
+                  <img src="/logo.svg" alt="Alegria Farmers Association logo" className="w-4 h-4 object-cover rounded-sm shrink-0" />
                   <span>Officer Task Panel</span>
                 </button>
 
@@ -2149,7 +2163,11 @@ export default function App() {
                       : 'border-transparent text-slate-700 hover:text-[#1B4332] hover:bg-[#F2EFE9]'
                   }`}
                 >
+<<<<<<< Updated upstream
                   <Briefcase className="w-4 h-4 text-[#1B4332]" />
+=======
+                  <BriefcaseBusiness className="w-4 h-4 text-[#1B4332]" />
+>>>>>>> Stashed changes
                   <span>IGP Tracker</span>
                   <span className="bg-[#1B4332]/10 text-[#1B4332] border border-[#1B4332]/20 text-[9px] px-2 py-0.5 rounded-full font-black ml-1">
                     Active
@@ -2304,7 +2322,7 @@ export default function App() {
             <div id="officer-announcements-window" className="bg-white border-2 border-[#D5CFC1] p-5 sm:p-6 rounded-3xl shadow-sm text-slate-900">
               <AnnouncementDashboard 
                 announcements={announcements}
-                isOfficerMode={true}
+                isOfficerMode={false}
               />
             </div>
           )}
@@ -2328,7 +2346,7 @@ export default function App() {
                   onClick={() => setOfficerTab('tasks')}
                   className="px-4 py-2 bg-[#1B4332] hover:bg-[#122e22] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
-                  <Building className="w-4 h-4" />
+                  <img src="/logo.svg" alt="Alegria Farmers Association logo" className="w-4 h-4 object-cover rounded-sm shrink-0" />
                   <span>Back to Officer Suite</span>
                 </button>
               </div>

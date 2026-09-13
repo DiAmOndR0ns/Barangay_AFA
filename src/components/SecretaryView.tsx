@@ -269,13 +269,13 @@ export default function SecretaryView({
   return (
     <div id="secretary-view-container" className="space-y-6">
       {/* Header and Switch Tabs */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800 p-4 rounded-2xl border border-slate-700/65">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#F7F4EF] p-4 rounded-2xl border border-[#D5CFC1]">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-xl font-bold text-[#1B4332] flex items-center gap-2">
+            <Users className="w-5 h-5 text-emerald-600" />
             <span>Secretary Administration</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#4A5F57] mt-1">
             Register members, draft resolutions, and compile meeting minutes.
           </p>
         </div>
@@ -389,11 +389,11 @@ export default function SecretaryView({
             </button>
           </div>
 
-          <div className="bg-slate-800 border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
+          <div className="bg-[#F7F4EF] border border-[#D5CFC1] rounded-2xl overflow-hidden shadow-lg">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-900 border-b border-slate-700 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                  <tr className="bg-[#F0EAE1] border-b border-[#D5CFC1] text-[#4A5F57] text-xs font-semibold uppercase tracking-wider">
                     <th className="px-5 py-3">Farmer Name & ID</th>
                     <th className="px-5 py-3">RSBSA Status</th>
                     <th className="px-5 py-3">Sitio / Location</th>
@@ -403,7 +403,7 @@ export default function SecretaryView({
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-750 text-slate-200 text-sm">
+                <tbody className="divide-y divide-[#D5CFC1] text-[#1B4332] text-sm">
                   {filteredMembers.length > 0 ? (
                     filteredMembers.map((member) => {
                       const linkedUser = users.find(u => 

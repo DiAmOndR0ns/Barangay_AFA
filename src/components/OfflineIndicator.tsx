@@ -62,7 +62,7 @@ export default function OfflineIndicator({
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70 animate-ping" />
             )}
           </div>
-          <span className="text-[11px] font-medium text-slate-300 hidden md:inline">
+          <span className="text-[11px] font-medium text-white hidden md:inline">
             {isOnline ? 'Online' : 'Offline'}
           </span>
         </div>
@@ -106,8 +106,8 @@ export default function OfflineIndicator({
             </>
           ) : (
             <>
-              <HardDrive className="w-3 h-3 text-slate-400" />
-              <span className="text-slate-300">Local Storage</span>
+              <HardDrive className="w-3 h-3 text-slate-200" />
+              <span className="text-white font-bold">Local Storage</span>
             </>
           )}
         </button>

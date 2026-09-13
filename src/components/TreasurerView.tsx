@@ -5,7 +5,11 @@ import {
   Coins, ArrowUpRight, ArrowDownRight, Plus, 
   Search, ShieldCheck, AlertTriangle, CheckCircle, 
   XCircle, Filter, FileText, Info, Building2, Wallet, Database,
+<<<<<<< Updated upstream
   Briefcase, TrendingUp, BarChart3, Calendar, Sparkles, Trash2
+=======
+  BriefcaseBusiness, TrendingUp, BarChart3, Calendar, Sparkles
+>>>>>>> Stashed changes
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -274,62 +278,62 @@ export default function TreasurerView({
       {/* FINANCIAL OVERVIEW CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total General Funds */}
-        <div className="bg-slate-800 border border-slate-700/50 p-5 rounded-2xl shadow-md relative overflow-hidden">
+        <div className="bg-[#F7F4EF] border border-[#D5CFC1] p-5 rounded-2xl shadow-md relative overflow-hidden">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Association General Fund</span>
+            <span className="text-xs font-semibold text-[#4A5F57] uppercase tracking-wider">Association General Fund</span>
             <Coins className="w-5 h-5 text-amber-500" />
           </div>
-          <div className="text-2xl font-black text-white font-mono">
+          <div className="text-2xl font-black text-[#1B4332] font-mono">
             PHP {currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1 font-medium">
+          <p className="text-[10px] text-emerald-700 mt-1 flex items-center gap-1 font-medium">
             <span>● Account active</span>
-            <span className="text-slate-500 font-normal">| Barangay Alegria, Tuburan</span>
+            <span className="text-[#4A5F57] font-normal">| Barangay Alegria, Tuburan</span>
           </p>
         </div>
 
         {/* Total Income */}
-        <div className="bg-slate-800 border border-slate-700/50 p-5 rounded-2xl shadow-md relative overflow-hidden">
+        <div className="bg-[#F7F4EF] border border-[#D5CFC1] p-5 rounded-2xl shadow-md relative overflow-hidden">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Income</span>
+            <span className="text-xs font-semibold text-[#4A5F57] uppercase tracking-wider">Total Income</span>
             <div className="bg-emerald-500/10 p-1.5 rounded-lg border border-emerald-500/10">
-              <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+              <ArrowUpRight className="w-4 h-4 text-emerald-600" />
             </div>
           </div>
-          <div className="text-xl font-bold text-emerald-400 font-mono">
+          <div className="text-xl font-bold text-emerald-700 font-mono">
             + PHP {totalIncome.toLocaleString('en-US')}
           </div>
-          <p className="text-[10px] text-slate-500 mt-2">Dues, donations, sales & grants</p>
+          <p className="text-[10px] text-[#4A5F57] mt-2">Dues, donations, sales & grants</p>
         </div>
 
         {/* Total Expenses */}
-        <div className="bg-slate-800 border border-slate-700/50 p-5 rounded-2xl shadow-md relative overflow-hidden">
+        <div className="bg-[#F7F4EF] border border-[#D5CFC1] p-5 rounded-2xl shadow-md relative overflow-hidden">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Expenditures</span>
+            <span className="text-xs font-semibold text-[#4A5F57] uppercase tracking-wider">Total Expenditures</span>
             <div className="bg-rose-500/10 p-1.5 rounded-lg border border-rose-500/10">
-              <ArrowDownRight className="w-4 h-4 text-rose-400" />
+              <ArrowDownRight className="w-4 h-4 text-rose-600" />
             </div>
           </div>
-          <div className="text-xl font-bold text-rose-400 font-mono">
+          <div className="text-xl font-bold text-rose-600 font-mono">
             - PHP {totalExpenses.toLocaleString('en-US')}
           </div>
-          <p className="text-[10px] text-slate-500 mt-2">Equipment, snacks, maintenance & seeds</p>
+          <p className="text-[10px] text-[#4A5F57] mt-2">Equipment, snacks, maintenance & seeds</p>
         </div>
       </div>
 
       {/* REGISTERED ORGANIZATION FUNDS & TREASURY ACCOUNTS */}
-      <div className="bg-slate-800 border border-slate-700/70 p-5 rounded-2xl space-y-4 shadow-md">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-700/60">
+      <div className="bg-[#F7F4EF] border border-[#D5CFC1] p-5 rounded-2xl space-y-4 shadow-md">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-[#D5CFC1]">
           <div>
-            <h3 className="text-sm font-black text-white uppercase tracking-wide flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-black text-[#1B4332] uppercase tracking-wide flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-emerald-600" />
               <span>Registered Organization Fund Accounts & Database Audits</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-[#4A5F57] mt-0.5">
               Live organizational treasury allocations & capital grant accounts recorded in PostgreSQL Cloud Database
             </p>
           </div>
-          <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-xl text-xs font-semibold">
+          <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-3 py-1 rounded-xl text-xs font-semibold">
             <Database className="w-3.5 h-3.5" />
             <span>PostgreSQL Synchronized</span>
           </div>
@@ -337,33 +341,33 @@ export default function TreasurerView({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {funds.map((fund) => (
-            <div key={fund.id} className="bg-slate-900/80 border border-slate-700/60 p-4 rounded-xl space-y-2 relative overflow-hidden">
+            <div key={fund.id} className="bg-white border border-[#D5CFC1] p-4 rounded-xl space-y-2 relative overflow-hidden">
               <div className="flex justify-between items-start gap-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-700 border border-emerald-500/30 px-2 py-0.5 rounded">
                       {fund.code}
                     </span>
-                    <h4 className="font-bold text-white text-sm">{fund.name}</h4>
+                    <h4 className="font-bold text-[#1B4332] text-sm">{fund.name}</h4>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">{fund.description}</p>
+                  <p className="text-xs text-[#4A5F57] mt-1">{fund.description}</p>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs">
+              <div className="pt-2 border-t border-[#D5CFC1] grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="text-[10px] uppercase font-semibold text-slate-500 block">Allocated Capital</span>
-                  <span className="font-mono font-bold text-slate-300">PHP {fund.allocatedAmount.toLocaleString('en-US')}</span>
+                  <span className="text-[10px] uppercase font-semibold text-[#4A5F57] block">Allocated Capital</span>
+                  <span className="font-mono font-bold text-[#1B4332]">PHP {fund.allocatedAmount.toLocaleString('en-US')}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase font-semibold text-slate-500 block">Audited Live Balance</span>
-                  <span className="font-mono font-black text-emerald-400">PHP {fund.currentBalance.toLocaleString('en-US')}</span>
+                  <span className="text-[10px] uppercase font-semibold text-[#4A5F57] block">Audited Live Balance</span>
+                  <span className="font-mono font-black text-emerald-700">PHP {fund.currentBalance.toLocaleString('en-US')}</span>
                 </div>
               </div>
 
-              <div className="pt-1.5 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                <span className="truncate">Custodian: <strong className="text-slate-200">{fund.custodian}</strong></span>
-                <span className="text-slate-500 shrink-0">Updated: {fund.lastUpdated}</span>
+              <div className="pt-1.5 flex items-center justify-between text-[11px] text-[#4A5F57] font-medium">
+                <span className="truncate">Custodian: <strong className="text-[#1B4332]">{fund.custodian}</strong></span>
+                <span className="text-[#4A5F57] shrink-0">Updated: {fund.lastUpdated}</span>
               </div>
             </div>
           ))}
@@ -376,7 +380,11 @@ export default function TreasurerView({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+<<<<<<< Updated upstream
                 <Briefcase className="w-5 h-5 text-emerald-400" />
+=======
+                <BriefcaseBusiness className="w-5 h-5 text-emerald-400" />
+>>>>>>> Stashed changes
               </div>
               <div>
                 <h3 className="text-base font-black text-white flex items-center gap-2">

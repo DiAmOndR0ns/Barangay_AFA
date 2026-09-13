@@ -26,14 +26,14 @@ export default function SyncQueuePanel({
   isPopulating = false
 }: SyncQueuePanelProps) {
   return (
-    <div id="sync-queue-panel-container" className="bg-slate-800 border border-slate-700/50 rounded-2xl p-4 shadow-lg space-y-3">
+    <div id="sync-queue-panel-container" className="bg-[#F7F4EF] border border-[#D5CFC1] rounded-2xl p-4 shadow-lg space-y-3">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-700/60 pb-3.5">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#D5CFC1] pb-3.5">
         <div className="flex items-center gap-2">
           <Layers className="w-5 h-5 text-amber-500 shrink-0" />
           <div>
-            <h3 className="font-bold text-white text-sm">Offline PWA Sync Engine</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Queue tracking pending mutations while server is disconnected</p>
+            <h3 className="font-bold text-[#1B4332] text-sm">Offline PWA Sync Engine</h3>
+            <p className="text-xs text-[#1B4332] mt-0.5 font-semibold">Queue tracking pending mutations while server is disconnected</p>
           </div>
         </div>
 
@@ -62,12 +62,12 @@ export default function SyncQueuePanel({
               className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all w-full sm:w-auto cursor-pointer ${
                 !isOnline || isPopulating || isSyncing
                   ? 'bg-slate-900 text-slate-500 border border-slate-750 cursor-not-allowed'
-                  : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-xs'
+                  : 'bg-amber-500/20 hover:bg-amber-500/30 text-[#1B4332] border border-amber-500/40 shadow-xs'
               }`}
               title="Push entire current dataset to PostgreSQL Cloud Database"
             >
               <Server className={`w-3.5 h-3.5 ${isPopulating ? 'animate-spin' : 'text-amber-400'}`} />
-              <span>{isPopulating ? 'Populating DB...' : 'Populate All Data to DB'}</span>
+              <span className="text-[#1B4332] font-black">{isPopulating ? 'Populating DB...' : 'Populate All Data to DB'}</span>
             </button>
           )}
 

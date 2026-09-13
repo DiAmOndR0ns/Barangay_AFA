@@ -2,9 +2,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Segoe UI", "Arial", "Helvetica Neue", sans-serif;
+  --font-display: "Segoe UI", "Arial", "Helvetica Neue", sans-serif;
+  --font-mono: "Consolas", "Courier New", ui-monospace, monospace;
 
   --color-afa-50: #f5faf6;
   --color-afa-100: #eaf6ee;
@@ -43,6 +43,14 @@
   --color-bafa-coral-400: #f7a57a;
   --color-bafa-coral-500: #e87d5d;
   --color-bafa-coral-600: #d75d3e;
+
+  --color-bafa-neutral-50: #faf8f5;
+  --color-bafa-neutral-100: #f5f2eb;
+  --color-bafa-neutral-200: #e9e4d9;
+  --color-bafa-neutral-300: #d5cfc1;
+  --color-bafa-neutral-500: #85947e;
+  --color-bafa-neutral-700: #4f5e46;
+  --color-bafa-neutral-800: #2d3a22;
 }
 
 :root {
@@ -90,6 +98,7 @@
     background: var(--bafa-bg);
     color: var(--bafa-text);
     font-family: var(--font-sans);
+    font-size: 16px;
   }
 
   body {
@@ -98,11 +107,42 @@
     background: var(--bafa-bg);
     color: var(--bafa-text);
     font-family: var(--font-sans);
-    line-height: 1.6;
-    letter-spacing: 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
     overflow-x: hidden;
     overflow-wrap: break-word;
     word-break: normal;
+  }
+
+  body .text-slate-300,
+  body .text-slate-400,
+  body .text-slate-500,
+  body .text-slate-600,
+  body .text-slate-700,
+  body .text-slate-800,
+  body .text-slate-900 {
+    color: #1b4332 !important;
+  }
+
+  body .bg-slate-800,
+  body .bg-slate-900,
+  body .bg-slate-950,
+  body .dark\:bg-slate-800,
+  body .dark\:bg-slate-900,
+  body .dark\:bg-slate-950,
+  body .bg-slate-700 {
+    background-color: #f5f2eb !important;
+  }
+
+  body .border-slate-700,
+  body .border-slate-800,
+  body .border-slate-750,
+  body .border-slate-850,
+  body .dark\:border-slate-700,
+  body .dark\:border-slate-800,
+  body .dark\:border-slate-850 {
+    border-color: #d5cfc1 !important;
   }
 
   #root {
@@ -156,6 +196,13 @@
 #member-screen-wrapper #hog-raising-igp-container [class~="dark:border-slate-800"],
 #member-screen-wrapper #hog-raising-igp-container [class~="dark:border-slate-850"] {
   border-color: #e9e4d9;
+}
+
+#member-screen-wrapper #hog-raising-igp-container select,
+#member-screen-wrapper #hog-raising-igp-container option,
+#member-screen-wrapper #hog-raising-igp-container input,
+#member-screen-wrapper #hog-raising-igp-container textarea {
+  color: #1b4332 !important;
 }
 
 @media print {

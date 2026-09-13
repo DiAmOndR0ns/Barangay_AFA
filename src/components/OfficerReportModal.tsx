@@ -801,21 +801,26 @@ export default function OfficerReportModal({
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-[90] animate-fade-in text-left">
-      <div className="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-[#F7F4EF] border border-[#D5CFC1] w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-[#1B4332]">
         {/* MODAL HEADER */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center gap-3">
+        <div className="p-4 sm:p-5 bg-[#F0EDE7] border-b border-[#D5CFC1] flex justify-between items-center gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 shrink-0">
               <FileText className="w-6 h-6" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex flex-wrap items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black text-[#1B4332] uppercase tracking-wider flex flex-wrap items-center gap-2">
                 <span className="truncate">{isPresident ? "President's Executive Summary & Export Center" : `${currentRole.replace('_', ' ')} Official Report Center`}</span>
+<<<<<<< Updated upstream
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full shrink-0 font-mono">
                   AFA Tuburan
+=======
+                <span className="bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full shrink-0 font-mono">
+                  BAFA Tuburan
+>>>>>>> Stashed changes
                 </span>
               </h2>
-              <p className="text-xs text-slate-400 font-medium truncate">
+              <p className="text-xs text-[#4A5F57] font-medium truncate">
                 {isPresident 
                   ? "Generate and export the consolidated summary of all executive officer reports with budget origins."
                   : `Generate, export, or print the official ${currentRole.replace('_', ' ')} department report with full budget source traceability.`}
@@ -825,7 +830,7 @@ export default function OfficerReportModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-900 border border-slate-800 transition-all cursor-pointer shrink-0"
+            className="text-[#4A5F57] hover:text-[#1B4332] p-2 rounded-xl bg-white border border-[#D5CFC1] transition-all cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -869,16 +874,16 @@ export default function OfficerReportModal({
           {/* REPORT TYPE SELECTOR FOR PRESIDENT */}
           {isPresident && (
             <div className="space-y-2">
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider">
+              <label className="block text-xs font-black text-[#4A5F57] uppercase tracking-wider">
                 Select View / Report Scope:
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {[
-                  { role: 'President' as OfficerRole, label: 'Consolidated Summary', icon: FileText, color: 'text-purple-400' },
-                  { role: 'Treasurer' as OfficerRole, label: 'Treasurer (Funds)', icon: Coins, color: 'text-amber-400' },
-                  { role: 'Auditor' as OfficerRole, label: 'Auditor (Oversight)', icon: ShieldCheck, color: 'text-emerald-400' },
-                  { role: 'Secretary' as OfficerRole, label: 'Secretary', icon: Users, color: 'text-blue-400' },
-                  { role: 'PIO' as OfficerRole, label: 'PIO Board', icon: Megaphone, color: 'text-pink-400' }
+                  { role: 'President' as OfficerRole, label: 'Consolidated Summary', icon: FileText, color: 'text-purple-600' },
+                  { role: 'Treasurer' as OfficerRole, label: 'Treasurer (Funds)', icon: Coins, color: 'text-amber-700' },
+                  { role: 'Auditor' as OfficerRole, label: 'Auditor (Oversight)', icon: ShieldCheck, color: 'text-emerald-700' },
+                  { role: 'Secretary' as OfficerRole, label: 'Secretary', icon: Users, color: 'text-blue-700' },
+                  { role: 'PIO' as OfficerRole, label: 'PIO Board', icon: Megaphone, color: 'text-pink-700' }
                 ].map((item) => {
                   const Icon = item.icon;
                   const isSelected = activeReportRole === item.role;
@@ -889,8 +894,8 @@ export default function OfficerReportModal({
                       onClick={() => setSelectedReportType(item.role)}
                       className={`p-3 rounded-2xl border text-center flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-emerald-600/20 border-emerald-500 text-white shadow-md'
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                          ? 'bg-emerald-100 border-emerald-500 text-[#1B4332] shadow-md'
+                          : 'bg-white border-[#D5CFC1] text-[#1B4332] hover:bg-[#F0EDE7] hover:border-[#C9BDAE]'
                       }`}
                     >
                       <Icon className={`w-5 h-5 ${item.color}`} />
@@ -903,11 +908,11 @@ export default function OfficerReportModal({
           )}
 
           {/* REPORT PREVIEW CARD */}
-          <div className="bg-slate-950/80 border border-slate-800 p-5 rounded-2xl space-y-4 text-xs">
-            <div className="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-3">
+          <div className="bg-[#F7F4EF] border border-[#D5CFC1] p-5 rounded-2xl space-y-4 text-xs text-[#1B4332]">
+            <div className="flex flex-wrap justify-between items-center gap-2 border-b border-[#D5CFC1] pb-3">
               <div>
-                <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Official Document Preview</span>
-                <h3 className="text-sm font-black text-white mt-0.5">
+                <span className="text-[10px] font-black uppercase text-emerald-700 tracking-wider">Official Document Preview</span>
+                <h3 className="text-sm font-black text-[#1B4332] mt-0.5">
                   {activeReportRole === 'Treasurer' && "Treasurer's Official Financial & Cash Flow Statement (With Budget Sources)"}
                   {activeReportRole === 'Auditor' && "Auditor's Financial Oversight & Grant Compliance Inspection Report"}
                   {activeReportRole === 'Secretary' && "Secretary's Membership Roster & Legislative Assembly Report"}
@@ -917,8 +922,8 @@ export default function OfficerReportModal({
                 </h3>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-slate-400">Signing Officer:</span>
-                <p className="font-extrabold text-white">{getOfficerNameByRole(activeReportRole)}</p>
+                <span className="text-[10px] text-[#4A5F57]">Signing Officer:</span>
+                <p className="font-extrabold text-[#1B4332]">{getOfficerNameByRole(activeReportRole)}</p>
               </div>
             </div>
 
@@ -926,120 +931,126 @@ export default function OfficerReportModal({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
               {activeReportRole === 'Treasurer' && (
                 <>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Total Income</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">PHP {totalIncome.toLocaleString()}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Total Income</span>
+                    <p className="text-sm font-mono font-bold text-emerald-700">PHP {totalIncome.toLocaleString()}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Total Expenses</span>
-                    <p className="text-sm font-mono font-bold text-rose-400">PHP {totalExpense.toLocaleString()}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Total Expenses</span>
+                    <p className="text-sm font-mono font-bold text-rose-600">PHP {totalExpense.toLocaleString()}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Net Fund</span>
-                    <p className="text-sm font-mono font-bold text-white">PHP {netBalance.toLocaleString()}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Net Fund</span>
+                    <p className="text-sm font-mono font-bold text-[#1B4332]">PHP {netBalance.toLocaleString()}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Fund Accounts</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">{funds.length} Active Budgets</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Fund Accounts</span>
+                    <p className="text-sm font-mono font-bold text-emerald-700">{funds.length} Active Budgets</p>
                   </div>
                 </>
               )}
 
               {activeReportRole === 'Auditor' && (
                 <>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Evaluated</span>
-                    <p className="text-sm font-mono font-bold text-slate-200">{transactions.length} Tx</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Evaluated</span>
+                    <p className="text-sm font-mono font-bold text-[#1B4332]">{transactions.length} Tx</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Audited OK</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">{auditedCount} Verified</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Audited OK</span>
+                    <p className="text-sm font-mono font-bold text-emerald-700">{auditedCount} Verified</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Flagged</span>
-                    <p className="text-sm font-mono font-bold text-rose-400">{flaggedCount} Discrepancies</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Flagged</span>
+                    <p className="text-sm font-mono font-bold text-rose-600">{flaggedCount} Discrepancies</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Compliance Rate</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">{auditComplianceRate}%</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Compliance Rate</span>
+                    <p className="text-sm font-mono font-bold text-emerald-700">{auditComplianceRate}%</p>
                   </div>
                 </>
               )}
 
               {activeReportRole === 'Secretary' && (
                 <>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Active Roster</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">{activeMembers.length} Members</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Active Roster</span>
+                    <p className="text-sm font-mono font-bold text-emerald-700">{activeMembers.length} Members</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Sitios Covered</span>
-                    <p className="text-sm font-mono font-bold text-blue-400">{Object.keys(sitioCounts).length} Locations</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Sitios Covered</span>
+                    <p className="text-sm font-mono font-bold text-blue-700">{Object.keys(sitioCounts).length} Locations</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Resolutions</span>
-                    <p className="text-sm font-mono font-bold text-white">{resolutions.length} Passed</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Resolutions</span>
+                    <p className="text-sm font-mono font-bold text-[#1B4332]">{resolutions.length} Passed</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Meetings Logged</span>
-                    <p className="text-sm font-mono font-bold text-amber-400">{meetings.length} Sessions</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Meetings Logged</span>
+                    <p className="text-sm font-mono font-bold text-amber-700">{meetings.length} Sessions</p>
                   </div>
                 </>
               )}
 
               {activeReportRole === 'President' && (
                 <>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Active Farmers</span>
-                    <p className="text-sm font-mono font-bold text-white">{activeMembers.length} / {members.length}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Active Farmers</span>
+                    <p className="text-sm font-mono font-bold text-[#1B4332]">{activeMembers.length} / {members.length}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Net Fund</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">PHP {netBalance.toLocaleString()}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Net Fund</span>
+                    <p className="text-sm font-mono font-bold text-emerald-700">PHP {netBalance.toLocaleString()}</p>
                   </div>
+<<<<<<< Updated upstream
                   <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold">Capital Grant</span>
                     <p className="text-sm font-mono font-bold text-amber-400">PHP {hogCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+=======
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Capital Grant</span>
+                    <p className="text-sm font-mono font-bold text-amber-700">PHP {hogCapital.toLocaleString()}</p>
+>>>>>>> Stashed changes
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Audit Rate</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">{auditComplianceRate}%</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Audit Rate</span>
+                    <p className="text-sm font-mono font-bold text-emerald-700">{auditComplianceRate}%</p>
                   </div>
                 </>
               )}
 
               {(activeReportRole === 'Vice_President' || activeReportRole === 'PIO') && (
                 <>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Total Members</span>
-                    <p className="text-sm font-mono font-bold text-white">{members.length}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Total Members</span>
+                    <p className="text-sm font-mono font-bold text-[#1B4332]">{members.length}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">General Fund</span>
-                    <p className="text-sm font-mono font-bold text-emerald-400">PHP {netBalance.toLocaleString()}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">General Fund</span>
+                    <p className="text-sm font-mono font-bold text-emerald-700">PHP {netBalance.toLocaleString()}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Approved Res.</span>
-                    <p className="text-sm font-mono font-bold text-purple-400">{resolutions.filter(r => r.status === 'Approved').length}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Approved Res.</span>
+                    <p className="text-sm font-mono font-bold text-purple-700">{resolutions.filter(r => r.status === 'Approved').length}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Bulletins Published</span>
-                    <p className="text-sm font-mono font-bold text-pink-400">{announcements.length}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#D5CFC1]">
+                    <span className="text-[10px] text-[#4A5F57] uppercase font-bold">Bulletins Published</span>
+                    <p className="text-sm font-mono font-bold text-pink-700">{announcements.length}</p>
                   </div>
                 </>
               )}
             </div>
 
             {/* REGISTERED BUDGET SOURCES CARD PREVIEW */}
-            <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-800 space-y-2">
-              <span className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1.5">
-                <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="bg-white p-3.5 rounded-xl border border-[#D5CFC1] space-y-2">
+              <span className="text-[10px] font-black uppercase text-[#4A5F57] flex items-center gap-1.5">
+                <Wallet className="w-3.5 h-3.5 text-emerald-700" />
                 <span>Source of Funds & Budget Allocations Included in Report:</span>
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {funds.map(f => (
-                  <span key={f.id} className="text-[10px] bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300 font-medium flex items-center gap-1">
-                    <strong className="text-emerald-400 font-mono">{f.code}</strong>: {f.name.split('/')[0]} (PHP {f.currentBalance.toLocaleString()})
+                  <span key={f.id} className="text-[10px] bg-[#F7F4EF] px-2.5 py-1 rounded-lg border border-[#D5CFC1] text-[#1B4332] font-medium flex items-center gap-1">
+                    <strong className="text-emerald-700 font-mono">{f.code}</strong>: {f.name.split('/')[0]} (PHP {f.currentBalance.toLocaleString()})
                   </span>
                 ))}
               </div>
@@ -1047,15 +1058,20 @@ export default function OfficerReportModal({
 
             {/* CUSTOM REMARKS INPUT */}
             <div className="space-y-1.5 pt-1">
-              <label className="block text-[10px] font-black text-slate-400 uppercase">
+              <label className="block text-[10px] font-black text-[#4A5F57] uppercase">
                 Dugang nga Mubo nga Pahayag / Special Remarks (Optional):
               </label>
               <textarea
                 rows={2}
                 value={customRemarks}
                 onChange={(e) => setCustomRemarks(e.target.value)}
+<<<<<<< Updated upstream
                 placeholder="e.g., Reports compiled for Tuburan LGU Municipal Agriculture Audit & Annual AFA General Assembly."
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500 font-sans"
+=======
+                placeholder="e.g., Reports compiled for Tuburan LGU Municipal Agriculture Audit & Annual BAFA General Assembly."
+                className="w-full px-3 py-2 bg-white border border-[#D5CFC1] rounded-xl text-[#1B4332] text-xs focus:outline-none focus:border-emerald-500 font-sans"
+>>>>>>> Stashed changes
               />
             </div>
           </div>
@@ -1083,9 +1099,9 @@ export default function OfficerReportModal({
             <button
               type="button"
               onClick={handleExportCSV}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all cursor-pointer shadow-sm whitespace-nowrap"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-[#D5CFC1] bg-white hover:bg-[#F0EDE7] text-[#1B4332] text-xs font-bold transition-all cursor-pointer shadow-sm whitespace-nowrap"
             >
-              <Download className="w-4 h-4 text-emerald-400 shrink-0" />
+              <Download className="w-4 h-4 text-emerald-700 shrink-0" />
               <span>Export CSV (Excel)</span>
             </button>
 

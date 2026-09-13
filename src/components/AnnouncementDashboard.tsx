@@ -115,15 +115,15 @@ export default function AnnouncementDashboard({
   // Colors based on theme mode
   const theme = {
     bg: isOfficerMode ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900',
-    cardBg: isOfficerMode ? 'bg-slate-800 border-slate-700/80' : 'bg-[#FAF8F5] border-[#E9E4D9]',
-    cardHover: isOfficerMode ? 'hover:border-slate-600 hover:bg-slate-800/80' : 'hover:border-[#1B4332] hover:bg-white',
-    inputBg: isOfficerMode ? 'bg-slate-950 border-slate-750 text-white' : 'bg-white border-[#D5CFC1] text-[#2D3A22]',
-    headerText: isOfficerMode ? 'text-white' : 'text-[#1B4332]',
-    subText: isOfficerMode ? 'text-slate-400' : 'text-[#5D6B54]',
-    accentText: isOfficerMode ? 'text-emerald-400' : 'text-[#E65100]',
-    accentBg: isOfficerMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[#FFF3E0] text-[#E65100]',
-    primaryButton: isOfficerMode ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-[#1B4332] hover:bg-[#143326] text-white',
-    badgeSecondary: isOfficerMode ? 'bg-slate-700 text-slate-200 border-slate-600' : 'bg-[#EAF4EC] text-[#1B4332] border-[#2D6A4F]/20'
+    cardBg: isOfficerMode ? 'bg-slate-800 border-slate-700/80' : 'bg-bafa-neutral-50 border-bafa-neutral-200',
+    cardHover: isOfficerMode ? 'hover:border-slate-600 hover:bg-slate-800/80' : 'hover:border-bafa-700 hover:bg-white',
+    inputBg: isOfficerMode ? 'bg-slate-950 border-slate-750 text-white' : 'bg-white border-bafa-neutral-300 text-bafa-neutral-800',
+    headerText: isOfficerMode ? 'text-white' : 'text-bafa-700',
+    subText: isOfficerMode ? 'text-slate-400' : 'text-bafa-neutral-700',
+    accentText: isOfficerMode ? 'text-emerald-400' : 'text-bafa-coral-600',
+    accentBg: isOfficerMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-bafa-gold-200 text-bafa-coral-600',
+    primaryButton: isOfficerMode ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-bafa-700 hover:bg-bafa-800 text-white',
+    badgeSecondary: isOfficerMode ? 'bg-slate-700 text-slate-200 border-slate-600' : 'bg-bafa-100 text-bafa-700 border-bafa-300'
   };
 
   const handlePrintAnnouncement = (ann: Announcement) => {
@@ -195,7 +195,7 @@ export default function AnnouncementDashboard({
             <span>Announcements</span>
           </h2>
           <p className={`text-xs ${theme.subText} mt-1 font-medium`}>
-            View notices, financial assistance updates, seed information, and market prices from the Public Information Officer (PIO).
+            View official updates, assistance notices, and market information from the Public Information Officer.
           </p>
         </div>
 
@@ -221,26 +221,26 @@ export default function AnnouncementDashboard({
         {/* Total Announcements block */}
         <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Tanan (Total Bulletins)</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Total</span>
             <BookOpen className="w-4 h-4 text-slate-400" />
           </div>
           <div>
             <span className="text-2xl font-black block leading-none">{totalCount}</span>
-            <span className="text-[9px] text-slate-400 block mt-1">Mga opisyal nga na-post</span>
+            <span className="text-[9px] text-slate-400 block mt-1">Official bulletins</span>
           </div>
         </div>
 
         {/* Unread block */}
         <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Bag-o (New / Unread)</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Unread</span>
             <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-amber-500 animate-swing' : 'text-slate-400'}`} />
           </div>
           <div>
             <span className={`text-2xl font-black block leading-none ${unreadCount > 0 ? theme.accentText : ''}`}>
               {unreadCount}
             </span>
-            <span className="text-[9px] text-slate-400 block mt-1">Wala pa nimo mabasahi</span>
+            <span className="text-[9px] text-slate-400 block mt-1">Not yet read</span>
           </div>
           {unreadCount > 0 && (
             <span className="absolute top-0 right-0 w-3 h-3 bg-amber-500 rounded-bl-xl" />
@@ -250,38 +250,38 @@ export default function AnnouncementDashboard({
         {/* Urgent Warnings block */}
         <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Dinalian (Urgent Bulletins)</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Urgent</span>
             <AlertTriangle className={`w-4 h-4 ${highPriorityCount > 0 ? 'text-rose-500' : 'text-slate-400'}`} />
           </div>
           <div>
             <span className={`text-2xl font-black block leading-none ${highPriorityCount > 0 ? 'text-rose-500' : ''}`}>
               {highPriorityCount}
             </span>
-            <span className="text-[9px] text-slate-400 block mt-1">Kinahanglan tagdon dayon</span>
+            <span className="text-[9px] text-slate-400 block mt-1">Needs attention</span>
           </div>
         </div>
 
         {/* Assistance programs block */}
         <div className={`p-4 rounded-2xl border ${theme.cardBg} flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Tabang (Subsidies & Seeds)</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Assistance</span>
             <Tag className="w-4 h-4 text-emerald-500" />
           </div>
           <div>
             <span className="text-2xl font-black text-emerald-600 block leading-none">{assistanceCount}</span>
-            <span className="text-[9px] text-slate-400 block mt-1">Liso, semento, abono, traktora</span>
+            <span className="text-[9px] text-slate-400 block mt-1">Seeds, materials, support</span>
           </div>
         </div>
 
         {/* Price Advisories block */}
         <div className={`p-4 rounded-2xl border ${theme.cardBg} col-span-2 lg:col-span-1 flex flex-col space-y-1.5 shadow-sm relative overflow-hidden`}>
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Presyo (Crop Price Updates)</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Market</span>
             <DollarSign className="w-4 h-4 text-blue-500" />
           </div>
           <div>
             <span className="text-2xl font-black text-blue-600 block leading-none">{priceAdvisoryCount}</span>
-            <span className="text-[9px] text-slate-400 block mt-1">Sumpay sa presyo sa merkado</span>
+            <span className="text-[9px] text-slate-400 block mt-1">Price updates</span>
           </div>
         </div>
 
