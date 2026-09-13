@@ -208,19 +208,46 @@ export default function App() {
         })
         .then(res => {
           if (res?.success && res.data) {
-            if (Array.isArray(res.data.members)) { setMembers(res.data.members); updateStorage('bafa_members', res.data.members); }
-            if (Array.isArray(res.data.meetings)) { setMeetings(res.data.meetings); updateStorage('bafa_meetings', res.data.meetings); }
-            if (Array.isArray(res.data.resolutions)) { setResolutions(res.data.resolutions); updateStorage('bafa_resolutions', res.data.resolutions); }
-            if (Array.isArray(res.data.financialTransactions)) { setTransactions(res.data.financialTransactions); updateStorage('bafa_transactions', res.data.financialTransactions); }
-            if (Array.isArray(res.data.announcements)) { setAnnouncements(res.data.announcements); updateStorage('bafa_announcements', res.data.announcements); }
-            if (Array.isArray(res.data.products)) { setProducts(res.data.products); updateStorage('bafa_products', res.data.products); }
-            if (Array.isArray(res.data.activities)) { setActivities(res.data.activities); updateStorage('bafa_activities', res.data.activities); }
-            if (Array.isArray(res.data.funds)) { setFunds(res.data.funds); updateStorage('bafa_funds', res.data.funds); }
+            // Check for any locally queued deleted IDs to prevent resurrecting deleted items before DB flush
+            let bootDeletedIds: Record<string, string[]> = {};
+            try {
+              const rawDel = localStorage.getItem('bafa_deleted_ids');
+              if (rawDel) bootDeletedIds = JSON.parse(rawDel);
+            } catch {}
+
+            const delUsers = new Set(bootDeletedIds.users || []);
+            const delMembers = new Set(bootDeletedIds.members || []);
+            const delMeetings = new Set(bootDeletedIds.meetings || []);
+            const delResolutions = new Set(bootDeletedIds.resolutions || []);
+            const delTx = new Set([...(bootDeletedIds.financialTransactions || []), ...(bootDeletedIds.transactions || [])]);
+            const delAnnouncements = new Set(bootDeletedIds.announcements || []);
+            const delProducts = new Set(bootDeletedIds.products || []);
+            const delActivities = new Set(bootDeletedIds.activities || []);
+            const delFunds = new Set(bootDeletedIds.funds || []);
+
+            const cleanMembers = Array.isArray(res.data.members) ? res.data.members.filter((m: any) => !delMembers.has(m.id)) : [];
+            const cleanMeetings = Array.isArray(res.data.meetings) ? res.data.meetings.filter((m: any) => !delMeetings.has(m.id)) : [];
+            const cleanResolutions = Array.isArray(res.data.resolutions) ? res.data.resolutions.filter((r: any) => !delResolutions.has(r.id)) : [];
+            const cleanTx = Array.isArray(res.data.financialTransactions) ? res.data.financialTransactions.filter((t: any) => !delTx.has(t.id)) : [];
+            const cleanAnnouncements = Array.isArray(res.data.announcements) ? res.data.announcements.filter((a: any) => !delAnnouncements.has(a.id)) : [];
+            const cleanProducts = Array.isArray(res.data.products) ? res.data.products.filter((p: any) => !delProducts.has(p.id)) : [];
+            const cleanActivities = Array.isArray(res.data.activities) ? res.data.activities.filter((a: any) => !delActivities.has(a.id)) : [];
+            const cleanFunds = Array.isArray(res.data.funds) ? res.data.funds.filter((f: any) => !delFunds.has(f.id)) : [];
+
+            if (Array.isArray(res.data.members)) { setMembers(cleanMembers); updateStorage('bafa_members', cleanMembers); }
+            if (Array.isArray(res.data.meetings)) { setMeetings(cleanMeetings); updateStorage('bafa_meetings', cleanMeetings); }
+            if (Array.isArray(res.data.resolutions)) { setResolutions(cleanResolutions); updateStorage('bafa_resolutions', cleanResolutions); }
+            if (Array.isArray(res.data.financialTransactions)) { setTransactions(cleanTx); updateStorage('bafa_transactions', cleanTx); }
+            if (Array.isArray(res.data.announcements)) { setAnnouncements(cleanAnnouncements); updateStorage('bafa_announcements', cleanAnnouncements); }
+            if (Array.isArray(res.data.products)) { setProducts(cleanProducts); updateStorage('bafa_products', cleanProducts); }
+            if (Array.isArray(res.data.activities)) { setActivities(cleanActivities); updateStorage('bafa_activities', cleanActivities); }
+            if (Array.isArray(res.data.funds)) { setFunds(cleanFunds); updateStorage('bafa_funds', cleanFunds); }
             if (res.data.hogRaising) { setHogRaising(res.data.hogRaising); updateStorage('bafa_hog_raising', res.data.hogRaising); }
             if (Array.isArray(res.data.users) && res.data.users.length > 0) {
-              const officersOnly = res.data.users.filter((u: any) => u.role !== 'Member' || !u.id.startsWith('user-m'));
-              setUsers(officersOnly.length > 0 ? officersOnly : OFFICIAL_OFFICERS);
-              updateStorage('bafa_users', officersOnly.length > 0 ? officersOnly : OFFICIAL_OFFICERS);
+              const officersOnly = res.data.users.filter((u: any) => !delUsers.has(u.id) && (u.role !== 'Member' || !u.id.startsWith('user-m')));
+              const cleanUsers = officersOnly.length > 0 ? officersOnly : OFFICIAL_OFFICERS;
+              setUsers(cleanUsers);
+              updateStorage('bafa_users', cleanUsers);
             }
             console.log('[Cloud DB] Successfully loaded fresh data from PostgreSQL Cloud DB');
             setDbStatus(prev => ({
@@ -230,37 +257,39 @@ export default function App() {
               checking: false,
             }));
 
-            // If there were pending offline operations/contributions queued in local storage, sync them immediately
-            if (storedQueue) {
+            // If there were pending offline operations or pending deletions queued in local storage, sync them immediately
+            const hasQueuedItems = storedQueue && JSON.parse(storedQueue || '[]').length > 0;
+            const hasQueuedDeletions = Object.values(bootDeletedIds).some(arr => Array.isArray(arr) && arr.length > 0);
+
+            if (hasQueuedItems || hasQueuedDeletions) {
               try {
-                const parsedQ = JSON.parse(storedQueue);
-                if (parsedQ.length > 0) {
-                  console.log(`[Auto-Sync]: Found ${parsedQ.length} pending offline contributions. Syncing to Supabase...`);
-                  fetch('/api/sync/push', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      users: res.data.users || sanitizedUsers,
-                      members: res.data.members || [],
-                      meetings: res.data.meetings || [],
-                      resolutions: res.data.resolutions || [],
-                      financialTransactions: res.data.financialTransactions || [],
-                      announcements: res.data.announcements || [],
-                      products: res.data.products || [],
-                      activities: res.data.activities || [],
-                      funds: res.data.funds || [],
-                      hogRaising: res.data.hogRaising || INITIAL_HOG_RAISING,
-                      systemLogs: activeLogs
-                    })
-                  }).then(r => r.json()).then(pushRes => {
-                    if (pushRes?.success) {
-                      setSyncQueue([]);
-                      localStorage.removeItem('bafa_sync_queue');
-                      updateStorage('bafa_sync_queue', []);
-                      console.log('[Auto-Sync]: Synced offline contributions on boot and purged local pending queue.');
-                    }
-                  }).catch(e => console.warn('[Boot sync push error]:', e));
-                }
+                console.log('[Auto-Sync]: Found pending offline contributions or deletions. Syncing to database...');
+                fetch('/api/sync/push', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    users: cleanMembers.length > 0 ? (res.data.users || sanitizedUsers) : sanitizedUsers,
+                    members: cleanMembers,
+                    meetings: cleanMeetings,
+                    resolutions: cleanResolutions,
+                    financialTransactions: cleanTx,
+                    announcements: cleanAnnouncements,
+                    products: cleanProducts,
+                    activities: cleanActivities,
+                    funds: cleanFunds,
+                    hogRaising: res.data.hogRaising || INITIAL_HOG_RAISING,
+                    systemLogs: activeLogs,
+                    deletedIds: bootDeletedIds
+                  })
+                }).then(r => r.json()).then(pushRes => {
+                  if (pushRes?.success) {
+                    setSyncQueue([]);
+                    localStorage.removeItem('bafa_sync_queue');
+                    localStorage.removeItem('bafa_deleted_ids');
+                    updateStorage('bafa_sync_queue', []);
+                    console.log('[Auto-Sync]: Synced offline items and deletions on boot and purged local pending queue.');
+                  }
+                }).catch(e => console.warn('[Boot sync push error]:', e));
               } catch {}
             }
           } else if (res?.offlineMode) {
@@ -336,6 +365,7 @@ export default function App() {
     meetings?: string[];
     resolutions?: string[];
     financialTransactions?: string[];
+    transactions?: string[];
     announcements?: string[];
     products?: string[];
     activities?: string[];
@@ -343,18 +373,54 @@ export default function App() {
   }
 
   const getStoredDeletedIds = (): StoredDeletedIds => {
+    let result: StoredDeletedIds = {};
     try {
       const raw = localStorage.getItem('bafa_deleted_ids');
-      return raw ? JSON.parse(raw) : {};
+      if (raw) result = JSON.parse(raw);
     } catch {
-      return {};
+      result = {};
     }
+
+    // Also inspect bafa_sync_queue to extract any pending offline 'delete' operations
+    try {
+      const rawQueue = localStorage.getItem('bafa_sync_queue');
+      if (rawQueue) {
+        const parsedQueue = JSON.parse(rawQueue);
+        if (Array.isArray(parsedQueue)) {
+          for (const item of parsedQueue) {
+            if (item.action === 'delete' && item.payload?.id) {
+              const entity = (item.entityType || '').toLowerCase();
+              const id = item.payload.id;
+              if (entity === 'member') result.members = Array.from(new Set([...(result.members || []), id]));
+              else if (entity === 'user' || entity === 'officer') result.users = Array.from(new Set([...(result.users || []), id]));
+              else if (entity === 'meeting') result.meetings = Array.from(new Set([...(result.meetings || []), id]));
+              else if (entity === 'resolution') result.resolutions = Array.from(new Set([...(result.resolutions || []), id]));
+              else if (entity === 'transaction' || entity === 'financialtransaction') {
+                result.financialTransactions = Array.from(new Set([...(result.financialTransactions || []), id]));
+                result.transactions = Array.from(new Set([...(result.transactions || []), id]));
+              }
+              else if (entity === 'announcement') result.announcements = Array.from(new Set([...(result.announcements || []), id]));
+              else if (entity === 'product') result.products = Array.from(new Set([...(result.products || []), id]));
+              else if (entity === 'activity') result.activities = Array.from(new Set([...(result.activities || []), id]));
+              else if (entity === 'fund') result.funds = Array.from(new Set([...(result.funds || []), id]));
+            }
+          }
+        }
+      }
+    } catch {}
+
+    return result;
   };
 
   const storeDeletedId = (entity: keyof StoredDeletedIds, id: string): StoredDeletedIds => {
     try {
       const current = getStoredDeletedIds();
       current[entity] = Array.from(new Set([...(current[entity] || []), id]));
+      if (entity === 'financialTransactions') {
+        current.transactions = Array.from(new Set([...(current.transactions || []), id]));
+      } else if (entity === 'transactions') {
+        current.financialTransactions = Array.from(new Set([...(current.financialTransactions || []), id]));
+      }
       localStorage.setItem('bafa_deleted_ids', JSON.stringify(current));
       return current;
     } catch {
@@ -373,6 +439,67 @@ export default function App() {
   const hasPendingDeletions = (): boolean => {
     const ids = getStoredDeletedIds();
     return Object.values(ids).some(arr => Array.isArray(arr) && arr.length > 0);
+  };
+
+  /**
+   * Immediately and permanently removes an item from PostgreSQL Cloud Database,
+   * falling back to offline deletion tracking if network is unavailable.
+   */
+  const deleteFromDatabase = async (entity: string, idOrIds: string | string[]): Promise<boolean> => {
+    const ids = Array.isArray(idOrIds) ? idOrIds.filter(Boolean) : [idOrIds].filter(Boolean);
+    if (ids.length === 0) return true;
+
+    // Track locally in bafa_deleted_ids so the delete is guaranteed even if offline
+    const entityKeyMap: Record<string, keyof StoredDeletedIds> = {
+      user: 'users',
+      users: 'users',
+      officer: 'users',
+      officers: 'users',
+      member: 'members',
+      members: 'members',
+      meeting: 'meetings',
+      meetings: 'meetings',
+      resolution: 'resolutions',
+      resolutions: 'resolutions',
+      transaction: 'financialTransactions',
+      transactions: 'financialTransactions',
+      financialTransaction: 'financialTransactions',
+      financialTransactions: 'financialTransactions',
+      announcement: 'announcements',
+      announcements: 'announcements',
+      product: 'products',
+      products: 'products',
+      activity: 'activities',
+      activities: 'activities',
+      fund: 'funds',
+      funds: 'funds',
+    };
+    const mappedKey = entityKeyMap[entity] || (entity as keyof StoredDeletedIds);
+    ids.forEach(id => storeDeletedId(mappedKey, id));
+
+    if (!navigator.onLine) {
+      console.log(`[Offline Delete Queue]: Queued ${entity} (${ids.join(', ')}) for deletion on connection`);
+      return false;
+    }
+
+    try {
+      const res = await fetch('/api/db/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity, ids })
+      });
+      const data = await res.json();
+      if (data?.success) {
+        console.log(`[Cloud DB Delete]: Successfully removed ${entity} (${ids.join(', ')}) directly from database`);
+        return true;
+      } else {
+        console.warn(`[Cloud DB Delete Warning]:`, data?.message);
+        return false;
+      }
+    } catch (err: any) {
+      console.warn(`[Cloud DB Delete Network Error]: Stored in pending deletion queue.`, err?.message || err);
+      return false;
+    }
   };
 
   const logAction = (action: string, details: string, syncStatus: 'synced' | 'pending' = 'synced', overrideLogs?: SystemLog[]) => {
@@ -820,10 +947,17 @@ export default function App() {
 
     // Also remove their portal user account so no orphan login accounts remain
     const updatedUsers = users.filter(u => u.id !== id && u.memberIdNumber !== targetMember?.memberIdNumber);
-    if (updatedUsers.length !== users.length) {
+    const userRemoved = updatedUsers.length !== users.length;
+    if (userRemoved) {
       setUsers(updatedUsers);
       updateStorage('bafa_users', updatedUsers);
       storeDeletedId('users', id);
+    }
+
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('member', id);
+    if (userRemoved) {
+      deleteFromDatabase('user', id);
     }
 
     if (isOnline) {
@@ -844,6 +978,9 @@ export default function App() {
     updateStorage('bafa_meetings', updated);
     storeDeletedId('meetings', id);
 
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('meeting', id);
+
     logAction('Deleted Assembly Minutes', `Removed assembly record: "${title}"`);
 
     if (isOnline) {
@@ -863,6 +1000,9 @@ export default function App() {
     updateStorage('bafa_resolutions', updated);
     storeDeletedId('resolutions', id);
 
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('resolution', id);
+
     logAction('Deleted Resolution', `Removed resolution: "${title}"`);
 
     if (isOnline) {
@@ -881,6 +1021,9 @@ export default function App() {
     setTransactions(updated);
     updateStorage('bafa_transactions', updated);
     storeDeletedId('financialTransactions', id);
+
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('transaction', id);
 
     logAction('Deleted Financial Transaction', `Removed transaction entry: "${desc}"`);
 
@@ -1095,11 +1238,15 @@ export default function App() {
     const updated = products.filter(p => p.id !== id);
     setProducts(updated);
     updateStorage('bafa_products', updated);
+    storeDeletedId('products', id);
+
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('product', id);
 
     if (isOnline) {
       logAction('Deleted Product', `Removed product: "${target?.name || id}"`);
       showToastMessage('Gipapas ang produkto!', 'info');
-      pushAllDataToCloud({ products: updated }, { silent: true });
+      pushAllDataToCloud({ products: updated }, { silent: true, source: 'Product Deletion' });
     } else {
       addToSyncQueue('delete', 'product', { id });
     }
@@ -1142,11 +1289,15 @@ export default function App() {
     const updated = activities.filter(a => a.id !== id);
     setActivities(updated);
     updateStorage('bafa_activities', updated);
+    storeDeletedId('activities', id);
+
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('activity', id);
 
     if (isOnline) {
       logAction('Deleted Activity', `Removed activity: "${target?.title || id}"`);
       showToastMessage('Gipapas ang kalihokan!', 'info');
-      pushAllDataToCloud({ activities: updated }, { silent: true });
+      pushAllDataToCloud({ activities: updated }, { silent: true, source: 'Activity Deletion' });
     } else {
       addToSyncQueue('delete', 'activity', { id });
     }
@@ -1257,11 +1408,15 @@ export default function App() {
     const updated = announcements.filter(a => a.id !== id);
     setAnnouncements(updated);
     updateStorage('bafa_announcements', updated);
+    storeDeletedId('announcements', id);
+
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('announcement', id);
 
     if (isOnline) {
       logAction('Deleted Announcement', `Removed board publication: "${titleStr}"`);
       showToastMessage(`Announcement removed from board.`, 'warning');
-      pushAllDataToCloud({ announcements: updated }, { silent: true });
+      pushAllDataToCloud({ announcements: updated }, { silent: true, source: 'Announcement Deletion' });
     } else {
       addToSyncQueue('delete', 'announcement', { id, title: titleStr });
     }
@@ -1403,9 +1558,19 @@ export default function App() {
     const updated = users.filter(u => u.id !== id);
     setUsers(updated);
     updateStorage('bafa_users', updated);
+    storeDeletedId('users', id);
+
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('user', id);
 
     logAction('Declined Registration', `Declined portal registration for ${targetUser.name} (${targetUser.role})`);
     showToastMessage(`Declined registration for ${targetUser.name}.`, 'warning');
+
+    if (isOnline) {
+      pushAllDataToCloud({ users: updated }, { silent: true, source: 'Decline Registration' });
+    } else {
+      addToSyncQueue('delete', 'user', { id, name: targetUser.name });
+    }
   };
 
   const handleDeleteUser = (id: string) => {
@@ -1422,10 +1587,17 @@ export default function App() {
 
     // Also remove from members roster if linked
     const updatedMembers = members.filter(m => m.id !== id && m.memberIdNumber !== targetUser.memberIdNumber);
-    if (updatedMembers.length !== members.length) {
+    const memberRemoved = updatedMembers.length !== members.length;
+    if (memberRemoved) {
       setMembers(updatedMembers);
       updateStorage('bafa_members', updatedMembers);
       storeDeletedId('members', id);
+    }
+
+    // Direct and permanent removal from PostgreSQL Cloud Database
+    deleteFromDatabase('user', id);
+    if (memberRemoved) {
+      deleteFromDatabase('member', id);
     }
 
     logAction(

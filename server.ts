@@ -9,6 +9,7 @@ import {
   isDatabaseConfigured, 
   fetchAllDataFromPostgres, 
   saveFullStateToPostgres,
+  deleteEntityFromPostgres,
   ensureDatabaseSchema,
   purgeAllDummyData,
   getTableStats,
@@ -233,6 +234,96 @@ async function startServer() {
         success: false,
         offlineMode: true,
         message: `Saved locally. Cloud sync pending reconnection: ${error?.message || 'Database unavailable'}`,
+      });
+    }
+  });
+
+  // API to Directly Delete One or Multiple Items from PostgreSQL Cloud DB
+  app.post(["/api/db/delete", "/api/sync/delete"], async (req, res) => {
+    if (!isDatabaseConfigured()) {
+      return res.json({
+        success: false,
+        offlineMode: true,
+        message: "DATABASE_URL is not configured. Stored in local offline deletion queue.",
+      });
+    }
+
+    try {
+      const pool = getPool();
+      const body = req.body || {};
+      let totalDeleted = 0;
+
+      // Handle batch deletedIds object e.g. { deletedIds: { members: ['id1'], products: ['id2'] } }
+      if (body.deletedIds && typeof body.deletedIds === 'object') {
+        for (const [entityKey, ids] of Object.entries(body.deletedIds)) {
+          if (Array.isArray(ids) && ids.length > 0) {
+            try {
+              const result = await deleteEntityFromPostgres(pool, entityKey, ids);
+              totalDeleted += result.deletedCount;
+            } catch (delErr: any) {
+              console.warn(`[Delete Batch Warning for ${entityKey}]:`, delErr?.message);
+            }
+          }
+        }
+        return res.json({
+          success: true,
+          deletedCount: totalDeleted,
+          message: `Successfully deleted ${totalDeleted} record(s) from database.`,
+        });
+      }
+
+      // Handle single or multiple entity deletion e.g. { entity: 'member', id: 'm-1' } or { entity: 'product', ids: ['p-1', 'p-2'] }
+      const entity = body.entity;
+      const ids = body.ids || (body.id ? [body.id] : []);
+
+      if (!entity || !ids || ids.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing 'entity' or 'id'/'ids' parameter in request body.",
+        });
+      }
+
+      const result = await deleteEntityFromPostgres(pool, entity, ids);
+      return res.json({
+        success: true,
+        deletedCount: result.deletedCount,
+        table: result.table,
+        message: `Successfully deleted ${result.deletedCount} record(s) from database table "${result.table}".`,
+      });
+    } catch (error: any) {
+      console.error("[Cloud DB Delete Error]:", error?.message || error);
+      return res.status(500).json({
+        success: false,
+        message: `Failed to delete from database: ${error?.message || 'Internal server error'}`,
+      });
+    }
+  });
+
+  // RESTful DELETE API endpoint: /api/db/:entity/:id
+  app.delete("/api/db/:entity/:id", async (req, res) => {
+    if (!isDatabaseConfigured()) {
+      return res.json({
+        success: false,
+        offlineMode: true,
+        message: "DATABASE_URL is not configured. Queued locally.",
+      });
+    }
+
+    try {
+      const pool = getPool();
+      const { entity, id } = req.params;
+      const result = await deleteEntityFromPostgres(pool, entity, id);
+      return res.json({
+        success: true,
+        deletedCount: result.deletedCount,
+        table: result.table,
+        message: `Successfully deleted ${result.deletedCount} record(s) from database table "${result.table}".`,
+      });
+    } catch (error: any) {
+      console.error(`[Cloud DB DELETE ${req.params.entity}/${req.params.id} Error]:`, error?.message || error);
+      return res.status(500).json({
+        success: false,
+        message: error?.message || "Failed to delete item from database.",
       });
     }
   });

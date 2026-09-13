@@ -464,6 +464,80 @@ export async function getTableStats(pool: pg.Pool): Promise<{
   }
 }
 
+let schemaInitialized = false;
+
+/**
+ * Directly and immediately deletes one or more entities from the PostgreSQL Cloud Database.
+ */
+export async function deleteEntityFromPostgres(
+  pool: pg.Pool,
+  entity: string,
+  ids: string | string[]
+): Promise<{ success: boolean; deletedCount: number; entity: string; table: string }> {
+  const tableMap: Record<string, string> = {
+    user: 'users',
+    users: 'users',
+    officer: 'users',
+    officers: 'users',
+    member: 'members',
+    members: 'members',
+    meeting: 'meetings',
+    meetings: 'meetings',
+    resolution: 'resolutions',
+    resolutions: 'resolutions',
+    transaction: 'financial_transactions',
+    transactions: 'financial_transactions',
+    financialtransaction: 'financial_transactions',
+    financialtransactions: 'financial_transactions',
+    financial_transaction: 'financial_transactions',
+    financial_transactions: 'financial_transactions',
+    announcement: 'announcements',
+    announcements: 'announcements',
+    product: 'products',
+    products: 'products',
+    activity: 'activities',
+    activities: 'activities',
+    fund: 'organization_funds',
+    funds: 'organization_funds',
+    organizationfund: 'organization_funds',
+    organizationfunds: 'organization_funds',
+    organization_fund: 'organization_funds',
+    organization_funds: 'organization_funds',
+    auditorreport: 'auditor_reports',
+    auditorreports: 'auditor_reports',
+    auditor_report: 'auditor_reports',
+    auditor_reports: 'auditor_reports',
+    delegationrequest: 'delegation_requests',
+    delegationrequests: 'delegation_requests',
+    delegation_request: 'delegation_requests',
+    delegation_requests: 'delegation_requests',
+    systemlog: 'system_logs',
+    systemlogs: 'system_logs',
+    log: 'system_logs',
+    logs: 'system_logs'
+  };
+
+  const normalized = (entity || '').toLowerCase().replace(/[-_]/g, '');
+  const tableName = tableMap[entity] || tableMap[(entity || '').toLowerCase()] || tableMap[normalized];
+  if (!tableName) {
+    throw new Error(`Unknown entity type for database deletion: ${entity}`);
+  }
+
+  const idList = Array.isArray(ids) ? ids.filter(Boolean) : [ids].filter(Boolean);
+  if (idList.length === 0) {
+    return { success: true, deletedCount: 0, entity, table: tableName };
+  }
+
+  const client = await pool.connect();
+  try {
+    const res = await client.query(`DELETE FROM ${tableName} WHERE id = ANY($1)`, [idList]);
+    console.log(`[DB DELETE] Removed ${res.rowCount || 0} record(s) from "${tableName}" (IDs: ${idList.join(', ')})`);
+    return { success: true, deletedCount: res.rowCount || 0, entity, table: tableName };
+  } finally {
+    client.release();
+  }
+}
+
 /**
  * Ensures the database tables and columns exist.
  * CRITICAL: NEVER auto-seeds dummy records.
@@ -471,6 +545,7 @@ export async function getTableStats(pool: pg.Pool): Promise<{
  * credentials using ON CONFLICT DO NOTHING, allowing officers to log in.
  */
 export async function ensureDatabaseSchema(pool: pg.Pool) {
+  if (schemaInitialized) return;
   const client = await pool.connect();
   try {
     console.log('[DB DEBUG] ensureDatabaseSchema: Checking tables...');
@@ -524,30 +599,7 @@ export async function ensureDatabaseSchema(pool: pg.Pool) {
       `);
     } catch {}
 
-    // Seed authentic Association community products (Chairs & Sacks Rental, Coffee, Corn, Coconut) if products table is empty
-    try {
-      const prodCounts = await client.query(`SELECT count(*) as count FROM products`);
-      const productsCount = Number(prodCounts.rows[0]?.count || 0);
-      if (productsCount === 0) {
-        for (const p of INITIAL_PRODUCTS) {
-          await client.query(`
-            INSERT INTO products (
-              id, name, ceb_name, category, description, unit, price, quantity_available, 
-              stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, 
-              is_published, updated_by, managed_by, date_updated
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-            ON CONFLICT (id) DO NOTHING;
-          `, [
-            p.id, p.name, p.cebName || null, p.category, p.description, p.unit, p.price,
-            p.quantityAvailable || null, p.stockStatus, p.farmerName || null, p.farmerSitio || null,
-            p.farmerPhone || null, p.contactPerson || null, p.isPublished, p.updatedBy,
-            p.managedBy || null, p.dateUpdated
-          ]);
-        }
-      }
-    } catch (prodErr) {
-      console.warn('[Auto-seed products warning]:', prodErr);
-    }
+    schemaInitialized = true;
   } catch (err: any) {
     console.error('[DB DEBUG] ensureDatabaseSchema failed:', {
       message: err?.message,
@@ -890,62 +942,132 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
   try {
     console.log('[DB DEBUG] Starting transaction...');
     await client.query('BEGIN');
-    await runSchemaMigrations(client);
 
-    // Handle Explicit Deletions if specified
+    // Track all deleted IDs across entities so they are NEVER re-inserted in this transaction
+    const deletedUserIds = new Set<string>();
+    const deletedMemberIds = new Set<string>();
+    const deletedMeetingIds = new Set<string>();
+    const deletedResolutionIds = new Set<string>();
+    const deletedTxIds = new Set<string>();
+    const deletedAnnouncementIds = new Set<string>();
+    const deletedProductIds = new Set<string>();
+    const deletedActivityIds = new Set<string>();
+    const deletedFundIds = new Set<string>();
+    const deletedAuditorIds = new Set<string>();
+    const deletedDelegationIds = new Set<string>();
+
+    // 1. Handle Explicit Batch Deletions
     if (state.deletedIds && typeof state.deletedIds === 'object') {
-      if (Array.isArray(state.deletedIds.users) && state.deletedIds.users.length > 0) {
-        await client.query('DELETE FROM users WHERE id = ANY($1)', [state.deletedIds.users]);
+      const d = state.deletedIds;
+      if (Array.isArray(d.users) && d.users.length > 0) {
+        d.users.forEach((id: string) => deletedUserIds.add(id));
+        await client.query('DELETE FROM users WHERE id = ANY($1)', [d.users]);
+        console.log('[DB DELETE] Batch deleted users:', d.users);
       }
-      if (Array.isArray(state.deletedIds.members) && state.deletedIds.members.length > 0) {
-        await client.query('DELETE FROM members WHERE id = ANY($1)', [state.deletedIds.members]);
+      if (Array.isArray(d.members) && d.members.length > 0) {
+        d.members.forEach((id: string) => deletedMemberIds.add(id));
+        await client.query('DELETE FROM members WHERE id = ANY($1)', [d.members]);
+        console.log('[DB DELETE] Batch deleted members:', d.members);
       }
-      if (Array.isArray(state.deletedIds.meetings) && state.deletedIds.meetings.length > 0) {
-        await client.query('DELETE FROM meetings WHERE id = ANY($1)', [state.deletedIds.meetings]);
+      if (Array.isArray(d.meetings) && d.meetings.length > 0) {
+        d.meetings.forEach((id: string) => deletedMeetingIds.add(id));
+        await client.query('DELETE FROM meetings WHERE id = ANY($1)', [d.meetings]);
+        console.log('[DB DELETE] Batch deleted meetings:', d.meetings);
       }
-      if (Array.isArray(state.deletedIds.resolutions) && state.deletedIds.resolutions.length > 0) {
-        await client.query('DELETE FROM resolutions WHERE id = ANY($1)', [state.deletedIds.resolutions]);
+      if (Array.isArray(d.resolutions) && d.resolutions.length > 0) {
+        d.resolutions.forEach((id: string) => deletedResolutionIds.add(id));
+        await client.query('DELETE FROM resolutions WHERE id = ANY($1)', [d.resolutions]);
+        console.log('[DB DELETE] Batch deleted resolutions:', d.resolutions);
       }
-      if (Array.isArray(state.deletedIds.financialTransactions) && state.deletedIds.financialTransactions.length > 0) {
-        await client.query('DELETE FROM financial_transactions WHERE id = ANY($1)', [state.deletedIds.financialTransactions]);
+      const txs = d.financialTransactions || d.transactions;
+      if (Array.isArray(txs) && txs.length > 0) {
+        txs.forEach((id: string) => deletedTxIds.add(id));
+        await client.query('DELETE FROM financial_transactions WHERE id = ANY($1)', [txs]);
+        console.log('[DB DELETE] Batch deleted transactions:', txs);
       }
-      if (Array.isArray(state.deletedIds.announcements) && state.deletedIds.announcements.length > 0) {
-        await client.query('DELETE FROM announcements WHERE id = ANY($1)', [state.deletedIds.announcements]);
+      if (Array.isArray(d.announcements) && d.announcements.length > 0) {
+        d.announcements.forEach((id: string) => deletedAnnouncementIds.add(id));
+        await client.query('DELETE FROM announcements WHERE id = ANY($1)', [d.announcements]);
+        console.log('[DB DELETE] Batch deleted announcements:', d.announcements);
       }
-      if (Array.isArray(state.deletedIds.products) && state.deletedIds.products.length > 0) {
-        await client.query('DELETE FROM products WHERE id = ANY($1)', [state.deletedIds.products]);
+      if (Array.isArray(d.products) && d.products.length > 0) {
+        d.products.forEach((id: string) => deletedProductIds.add(id));
+        await client.query('DELETE FROM products WHERE id = ANY($1)', [d.products]);
+        console.log('[DB DELETE] Batch deleted products:', d.products);
       }
-      if (Array.isArray(state.deletedIds.activities) && state.deletedIds.activities.length > 0) {
-        await client.query('DELETE FROM activities WHERE id = ANY($1)', [state.deletedIds.activities]);
+      if (Array.isArray(d.activities) && d.activities.length > 0) {
+        d.activities.forEach((id: string) => deletedActivityIds.add(id));
+        await client.query('DELETE FROM activities WHERE id = ANY($1)', [d.activities]);
+        console.log('[DB DELETE] Batch deleted activities:', d.activities);
       }
-      if (Array.isArray(state.deletedIds.funds) && state.deletedIds.funds.length > 0) {
-        await client.query('DELETE FROM organization_funds WHERE id = ANY($1)', [state.deletedIds.funds]);
+      const funds = d.funds || d.organizationFunds;
+      if (Array.isArray(funds) && funds.length > 0) {
+        funds.forEach((id: string) => deletedFundIds.add(id));
+        await client.query('DELETE FROM organization_funds WHERE id = ANY($1)', [funds]);
+        console.log('[DB DELETE] Batch deleted funds:', funds);
+      }
+      const auds = d.auditorReports || d.auditor_reports;
+      if (Array.isArray(auds) && auds.length > 0) {
+        auds.forEach((id: string) => deletedAuditorIds.add(id));
+        await client.query('DELETE FROM auditor_reports WHERE id = ANY($1)', [auds]);
+      }
+      const dels = d.delegationRequests || d.delegation_requests;
+      if (Array.isArray(dels) && dels.length > 0) {
+        dels.forEach((id: string) => deletedDelegationIds.add(id));
+        await client.query('DELETE FROM delegation_requests WHERE id = ANY($1)', [dels]);
       }
     }
 
-    // Single item deletion support
+    // 2. Single item deletion support
     if (state.deleteItem && state.deleteItem.entity && state.deleteItem.id) {
       const tableMap: Record<string, string> = {
         user: 'users',
+        users: 'users',
+        officer: 'users',
+        officers: 'users',
         member: 'members',
+        members: 'members',
         meeting: 'meetings',
+        meetings: 'meetings',
         resolution: 'resolutions',
+        resolutions: 'resolutions',
         transaction: 'financial_transactions',
+        transactions: 'financial_transactions',
+        financialtransaction: 'financial_transactions',
+        financialtransactions: 'financial_transactions',
+        financial_transaction: 'financial_transactions',
+        financial_transactions: 'financial_transactions',
         announcement: 'announcements',
+        announcements: 'announcements',
         product: 'products',
+        products: 'products',
         activity: 'activities',
-        fund: 'organization_funds'
+        activities: 'activities',
+        fund: 'organization_funds',
+        funds: 'organization_funds'
       };
-      const tbl = tableMap[state.deleteItem.entity];
+      const normEntity = state.deleteItem.entity.toLowerCase().replace(/[-_]/g, '');
+      const tbl = tableMap[state.deleteItem.entity] || tableMap[state.deleteItem.entity.toLowerCase()] || tableMap[normEntity];
       if (tbl) {
         await client.query(`DELETE FROM ${tbl} WHERE id = $1`, [state.deleteItem.id]);
+        if (tbl === 'users') deletedUserIds.add(state.deleteItem.id);
+        if (tbl === 'members') deletedMemberIds.add(state.deleteItem.id);
+        if (tbl === 'meetings') deletedMeetingIds.add(state.deleteItem.id);
+        if (tbl === 'resolutions') deletedResolutionIds.add(state.deleteItem.id);
+        if (tbl === 'financial_transactions') deletedTxIds.add(state.deleteItem.id);
+        if (tbl === 'announcements') deletedAnnouncementIds.add(state.deleteItem.id);
+        if (tbl === 'products') deletedProductIds.add(state.deleteItem.id);
+        if (tbl === 'activities') deletedActivityIds.add(state.deleteItem.id);
+        if (tbl === 'organization_funds') deletedFundIds.add(state.deleteItem.id);
+        console.log(`[DB DELETE] Single deleted ${tbl} ID: ${state.deleteItem.id}`);
       }
     }
 
-    // 1. Users
+    // 1. Users (filtered to never re-insert deleted users)
     if (state.users && Array.isArray(state.users)) {
-      console.log('[DB DEBUG] Saving', state.users.length, 'users...');
-      for (const u of state.users) {
+      const activeUsers = state.users.filter((u: any) => !deletedUserIds.has(u.id));
+      console.log('[DB DEBUG] Saving', activeUsers.length, 'users...');
+      for (const u of activeUsers) {
         await client.query(`
           INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status, avatar_url, member_id_number, rsbsa_number, is_rsbsa_registered)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
@@ -976,10 +1098,11 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       console.log('[DB DEBUG] Users saved');
     }
 
-    // 2. Members
+    // 2. Members (filtered to never re-insert deleted members)
     if (state.members && Array.isArray(state.members)) {
-      console.log('[DB DEBUG] Saving', state.members.length, 'members...');
-      for (const m of state.members) {
+      const activeMembers = state.members.filter((m: any) => !deletedMemberIds.has(m.id));
+      console.log('[DB DEBUG] Saving', activeMembers.length, 'members...');
+      for (const m of activeMembers) {
         await client.query(`
           INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date, member_id_number, rsbsa_number, is_rsbsa_registered, avatar_url, gender, birth_date)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
@@ -1008,9 +1131,10 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       console.log('[DB DEBUG] Members saved');
     }
 
-    // 3. Transactions
-    const txList = state.financialTransactions || state.transactions;
-    if (txList && Array.isArray(txList)) {
+    // 3. Transactions (filtered to never re-insert deleted transactions)
+    const rawTxList = state.financialTransactions || state.transactions;
+    if (rawTxList && Array.isArray(rawTxList)) {
+      const txList = rawTxList.filter((tx: any) => !deletedTxIds.has(tx.id));
       console.log('[DB DEBUG] Saving', txList.length, 'transactions...');
       for (const tx of txList) {
         await client.query(`
@@ -1037,10 +1161,11 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       console.log('[DB DEBUG] Transactions saved');
     }
 
-    // 4. Meetings
+    // 4. Meetings (filtered to never re-insert deleted meetings)
     if (state.meetings && Array.isArray(state.meetings)) {
-      console.log('[DB DEBUG] Saving', state.meetings.length, 'meetings...');
-      for (const mt of state.meetings) {
+      const activeMeetings = state.meetings.filter((mt: any) => !deletedMeetingIds.has(mt.id));
+      console.log('[DB DEBUG] Saving', activeMeetings.length, 'meetings...');
+      for (const mt of activeMeetings) {
         await client.query(`
           INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge, attendance_record)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -1119,10 +1244,11 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       console.log('[DB DEBUG] System logs saved');
     }
 
-    // 7. Products
+    // 7. Products (filtered to never re-insert deleted products)
     if (state.products && Array.isArray(state.products)) {
-      console.log('[DB DEBUG] Saving', state.products.length, 'products...');
-      for (const p of state.products) {
+      const activeProducts = state.products.filter((p: any) => !deletedProductIds.has(p.id));
+      console.log('[DB DEBUG] Saving', activeProducts.length, 'products...');
+      for (const p of activeProducts) {
         await client.query(`
           INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, image_url, is_published, updated_by, managed_by, date_updated)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
@@ -1155,10 +1281,11 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       console.log('[DB DEBUG] Products saved');
     }
 
-    // 8. Resolutions
+    // 8. Resolutions (filtered to never re-insert deleted resolutions)
     if (state.resolutions && Array.isArray(state.resolutions)) {
-      console.log('[DB DEBUG] Saving', state.resolutions.length, 'resolutions...');
-      for (const r of state.resolutions) {
+      const activeResolutions = state.resolutions.filter((r: any) => !deletedResolutionIds.has(r.id));
+      console.log('[DB DEBUG] Saving', activeResolutions.length, 'resolutions...');
+      for (const r of activeResolutions) {
         await client.query(`
           INSERT INTO resolutions (id, resolution_number, title, description, date_agreed, moved_by, seconded_by, vote_in_favor, vote_against, vote_abstain, status)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -1181,10 +1308,11 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       console.log('[DB DEBUG] Resolutions saved');
     }
 
-    // 9. Announcements
+    // 9. Announcements (filtered to never re-insert deleted announcements)
     if (state.announcements && Array.isArray(state.announcements)) {
-      console.log('[DB DEBUG] Saving', state.announcements.length, 'announcements...');
-      for (const a of state.announcements) {
+      const activeAnnouncements = state.announcements.filter((a: any) => !deletedAnnouncementIds.has(a.id));
+      console.log('[DB DEBUG] Saving', activeAnnouncements.length, 'announcements...');
+      for (const a of activeAnnouncements) {
         await client.query(`
           INSERT INTO announcements (id, title, category, content, date_posted, priority, posted_by)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -1200,10 +1328,11 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       console.log('[DB DEBUG] Announcements saved');
     }
 
-    // 10. Activities
+    // 10. Activities (filtered to never re-insert deleted activities)
     if (state.activities && Array.isArray(state.activities)) {
-      console.log('[DB DEBUG] Saving', state.activities.length, 'activities...');
-      for (const act of state.activities) {
+      const activeActivities = state.activities.filter((act: any) => !deletedActivityIds.has(act.id));
+      console.log('[DB DEBUG] Saving', activeActivities.length, 'activities...');
+      for (const act of activeActivities) {
         await client.query(`
           INSERT INTO activities (id, title, ceb_title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count, target_audience, image_url)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
@@ -1237,9 +1366,10 @@ export async function saveFullStateToPostgres(pool: pg.Pool, state: any) {
       console.log('[DB DEBUG] Activities saved');
     }
 
-    // 11. Organization Funds
-    const fundList = state.organizationFunds || state.funds;
-    if (fundList && Array.isArray(fundList)) {
+    // 11. Organization Funds (filtered to never re-insert deleted funds)
+    const rawFundList = state.organizationFunds || state.funds;
+    if (rawFundList && Array.isArray(rawFundList)) {
+      const fundList = rawFundList.filter((f: any) => !deletedFundIds.has(f.id));
       console.log('[DB DEBUG] Saving', fundList.length, 'organization funds...');
       for (const f of fundList) {
         await client.query(`
