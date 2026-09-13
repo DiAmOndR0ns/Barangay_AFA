@@ -25,14 +25,7 @@ export default function GuestPortal({
   activities = []
 }: GuestPortalProps) {
   const [activeTab, setActiveTab] = useState<'home' | 'announcements' | 'activities' | 'products' | 'history' | 'achievements'>('home');
-<<<<<<< Updated upstream
   const [selectedProductModal, setSelectedProductModal] = useState<any | null>(null);
-=======
-  const [collapsedProductIds, setCollapsedProductIds] = useState<string[]>(() =>
-    (products.length > 0 ? products : defaultProductsList).map((prod: any) => prod.id)
-  );
->>>>>>> Stashed changes
-
   // Dynamically calculate stats to accurately reflect the registered roster
   const registeredMembersCount = members.length;
   const activeMembersCount = members.filter(m => m.status === 'Active').length;
@@ -198,15 +191,9 @@ export default function GuestPortal({
           <h2 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight font-display break-words max-w-3xl mx-auto px-2 text-white">
             Magkauban sa Pag-uma ug Pagpalambo sa Atong Yutang Natawhan
           </h2>
-<<<<<<< Updated upstream
           <p className="text-xs sm:text-sm md:text-base text-[#D8F3DC] max-w-2xl mx-auto font-medium leading-relaxed break-words px-2">
             Kini ang public portal sa Alegria Farmers Association (AFA). 
-            Gidisenyo kini aron sayon ug daling matan-aw ang atong kasaysayan, mga kalamposan, ug ang lab-as nga mga produkto.
-=======
-          <p className="text-xs sm:text-sm md:text-base text-white max-w-2xl mx-auto font-medium leading-relaxed break-words px-2">
-            Kini ang public portal sa Barangay Alegria Farmers Association (BAFA). Gidisenyo kini aron sayon ug daling matan-aw ang atong kasaysayan, mga kalamposan, ug ang lab-as nga mga produkto.
->>>>>>> Stashed changes
-          </p>
+            Gidisenyo kini aron sayon ug daling matan-aw ang atong kasaysayan, mga kalamposan, ug ang lab-as nga mga produkto.          </p>
         </div>
       </section>
 
@@ -756,7 +743,6 @@ export default function GuestPortal({
 
             {/* Products Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0">
-<<<<<<< Updated upstream
               {((products.length > 0 ? products : defaultProductsList).filter(
                 (p: any) => !p.name?.toLowerCase().includes('baboy') && 
                             !p.name?.toLowerCase().includes('hog') && 
@@ -769,26 +755,7 @@ export default function GuestPortal({
                   <div 
                     key={prod.id} 
                     onClick={() => setSelectedProductModal(prod)}
-                    className="bg-white border-2 border-[#D5CFC1] hover:border-[#1B4332] hover:shadow-xl hover:-translate-y-1 hover:bg-[#F8FCF9] transition-all duration-300 rounded-3xl p-4 sm:p-6 flex flex-col justify-between min-w-0 cursor-pointer group"
-=======
-              {(products.length > 0 ? products : defaultProductsList).map((prod: any) => {
-                const Icon = prod.icon || Coffee;
-                const cardColor = prod.color || 'bg-emerald-100 border-emerald-300 text-emerald-900';
-                const isCollapsed = collapsedProductIds.includes(prod.id);
-                const toggleCollapse = () => {
-                  setCollapsedProductIds((current) =>
-                    current.includes(prod.id)
-                      ? current.filter((id) => id !== prod.id)
-                      : [...current, prod.id]
-                  );
-                };
-
-                return (
-                  <div
-                    key={prod.id}
-                    className={`bg-white border-2 border-[#D5CFC1] hover:border-[#1B4332] hover:shadow-xl hover:-translate-y-1 hover:bg-[#F8FCF9] transition-all duration-300 rounded-3xl p-4 sm:p-6 flex flex-col justify-between min-w-0 cursor-pointer group ${isCollapsed ? 'max-h-[210px] overflow-hidden' : 'max-h-none'}`}
->>>>>>> Stashed changes
-                  >
+                    className="bg-white border-2 border-[#D5CFC1] hover:border-[#1B4332] hover:shadow-xl hover:-translate-y-1 hover:bg-[#F8FCF9] transition-all duration-300 rounded-3xl p-4 sm:p-6 flex flex-col justify-between min-w-0 cursor-pointer group"                  >
                     <div className="space-y-3.5 min-w-0">
                       <div className="flex items-start sm:items-center gap-3 min-w-0">
                         <div className={`p-2.5 sm:p-3 rounded-2xl ${cardColor} border shadow-inner shrink-0 group-hover:scale-105 transition-transform`}>
@@ -826,7 +793,6 @@ export default function GuestPortal({
                           {prod.desc || prod.description}
                         </p>
                       </div>
-<<<<<<< Updated upstream
                       
                       <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words line-clamp-3">
                         {prod.desc || prod.description}
@@ -858,37 +824,8 @@ export default function GuestPortal({
                         {(prod.farmerPhone || prod.contactPerson) && (
                           <div className="text-xs font-mono font-bold text-[#BF360C] pt-0.5 flex items-center gap-1 flex-wrap break-all sm:break-words">
                             <span>📞 Kontak: {prod.farmerPhone || prod.contactPerson}</span>
-=======
-                    </div>
-
-                    <div className={`transition-all duration-200 overflow-hidden ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[260px] opacity-100'}`}>
-                      <div className="mt-4 pt-3 border-t border-[#F0EBE1] space-y-3 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-end justify-between text-xs font-black gap-2 min-w-0">
-                          <div className="space-y-0.5 min-w-0">
-                            <span className="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Magamit nga Kadaghanon (Quantity):</span>
-                            <span className="text-[#1B4332] font-bold text-xs break-words">{prod.quantityAvailable || prod.specs || prod.unit || 'Magamit sa tig-ani'}</span>
->>>>>>> Stashed changes
                           </div>
-                          <div className="sm:text-right space-y-0.5 min-w-0 shrink-0">
-                            <span className="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Standard Presyo (Price):</span>
-                            <span className="text-[#BF360C] font-mono font-black text-xs sm:text-sm break-words">{typeof prod.price === 'number' ? `PHP ${prod.price.toLocaleString()} / ${prod.unit}` : prod.price}</span>
-                          </div>
-                        </div>
-
-                        <div className="bg-[#FAF8F5] border border-[#E2DCCE] p-3 rounded-2xl space-y-1.5 min-w-0">
-                          <span className="block text-[10px] text-amber-900 uppercase font-extrabold tracking-wider break-words">
-                            Nalambigit nga Mag-uuma / Nagbaligya (Selling Farmer):
-                          </span>
-                          <div className="text-xs font-black text-[#1B4332] flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0">
-                            <span className="break-words min-w-0">{prod.farmerName || prod.contactPerson || 'Miyembro nga Mag-uuma sa BAFA'}</span>
-                            {prod.farmerSitio && <span className="text-[11px] text-slate-600 font-bold shrink-0">📍 {prod.farmerSitio}</span>}
-                          </div>
-                          {(prod.farmerPhone || prod.contactPerson) && (
-                            <div className="text-xs font-mono font-bold text-[#BF360C] pt-0.5 flex items-center gap-1 flex-wrap break-all sm:break-words">
-                              <span>📞 Kontak: {prod.farmerPhone || prod.contactPerson}</span>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
 
                       {/* Action Button */}

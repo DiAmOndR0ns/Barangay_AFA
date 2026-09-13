@@ -211,25 +211,18 @@ export default function AuthScreen({
   return (
     <div id="auth-screen-root" className="min-h-screen bg-bafa-50 text-bafa-800 flex flex-col items-center justify-center p-4 sm:p-6 font-sans antialiased">
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-stretch my-6">
-        
-        {/* LEFT COLUMN: HERO INFORMATION PANEL (5 Columns) */}
         <div className="md:col-span-5 flex flex-col justify-between bg-bafa-800 text-bafa-50 rounded-[28px] p-6 sm:p-7 shadow-[0_24px_60px_rgba(18,51,38,0.16)] border border-bafa-700 relative overflow-hidden">
           <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-bafa-600 rounded-full opacity-20 pointer-events-none" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(126,199,159,0.18),transparent_38%)]" />
-          
+
           <div className="relative space-y-6">
             <div className="flex items-center gap-3">
               <div className="bg-bafa-100 p-2 rounded-2xl text-bafa-700 shadow-inner overflow-hidden border border-bafa-300">
                 <img src="/logo.svg" alt="Alegria Farmers Association logo" className="w-11 h-11 sm:w-12 sm:h-12 object-cover block rounded-xl" />
               </div>
               <div>
-<<<<<<< Updated upstream
                 <h1 className="text-2xl sm:text-[2rem] font-black font-display tracking-tight text-white uppercase leading-none">AFA</h1>
                 <p className="text-[10px] text-[#D9F5E3] font-bold tracking-[0.18em] uppercase mt-1">Alegria, Tuburan, Cebu</p>
-=======
-                <h1 className="text-2xl sm:text-[2rem] font-black font-display tracking-tight text-white uppercase leading-none">BAFA</h1>
-                <p className="text-[10px] text-bafa-100 font-bold tracking-[0.18em] uppercase mt-1">Alegria, Tuburan, Cebu</p>
->>>>>>> Stashed changes
               </div>
             </div>
 
@@ -237,13 +230,10 @@ export default function AuthScreen({
               <h2 className="text-xl sm:text-2xl font-black font-display leading-tight text-white">
                 Farmer Access Portal
               </h2>
-<<<<<<< Updated upstream
               <p className="text-sm sm:text-[15px] text-[#D7F0DF] leading-relaxed font-medium">
                 Kini nga sistema gidisenyo aron mahimong yano, sayon gamiton, ug daling masabtan sa atong mga kaubang mag-uuma ug opisyal.
               </p>
-=======
->>>>>>> Stashed changes
-              
+
               <div className="space-y-3 pt-2 text-sm text-white">
                 <div className="flex items-start gap-3 rounded-2xl bg-bafa-700 border border-bafa-600 p-3">
                   <div className="bg-bafa-600 p-1.5 rounded-full mt-0.5 text-white shrink-0">
@@ -251,29 +241,17 @@ export default function AuthScreen({
                   </div>
                   <span><strong className="font-extrabold text-white">Quick sign in:</strong> Enter your username and password below to access your member or officer dashboard.</span>
                 </div>
-<<<<<<< Updated upstream
-                <div className="flex items-start gap-3 rounded-2xl bg-white/5 border border-white/10 p-3">
-                  <div className="bg-[#2D6A4F] p-1.5 rounded-full mt-0.5 text-white shrink-0">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                  </div>
-                  <span><strong className="font-extrabold text-white">Rehistro sa Opisyal:</strong> Ang mga bag-ong napili nga opisyal mahimong mag-rehistro dinhi alang sa pag-aprobar sa Presidente.</span>
-=======
                 <div className="flex items-start gap-3 rounded-2xl bg-bafa-700 border border-bafa-600 p-3">
                   <div className="bg-bafa-600 p-1.5 rounded-full mt-0.5 text-white shrink-0">
-                    <CheckCircle className="w-3.5 h-3.5" />
+                    <ShieldCheck className="w-3.5 h-3.5" />
                   </div>
-                  <span><strong className="font-extrabold text-white">Password help:</strong> If needed, ask the President for a password reset or confirmation.</span>
->>>>>>> Stashed changes
+                  <span><strong className="font-extrabold text-white">Officer registration:</strong> New elected officers can register here for President approval.</span>
                 </div>
                 <div className="flex items-start gap-3 rounded-2xl bg-bafa-700 border border-bafa-600 p-3">
                   <div className="bg-bafa-600 p-1.5 rounded-full mt-0.5 text-white shrink-0">
                     <CheckCircle className="w-3.5 h-3.5" />
                   </div>
-<<<<<<< Updated upstream
-                  <span><strong className="font-extrabold text-white">Pagpasakop sa Miyembro:</strong> Ang mga regular nga mag-uuma iparehistro sa Opisina sa Kalihim (Secretary Desk).</span>
-=======
-                  <span><strong className="font-extrabold text-white">Updates:</strong> View announcements, farm assistance notices, and current market information in one place.</span>
->>>>>>> Stashed changes
+                  <span><strong className="font-extrabold text-white">Member access:</strong> Regular farmers are enrolled via the Secretary desk and receive their login slip.</span>
                 </div>
               </div>
             </div>
@@ -288,12 +266,9 @@ export default function AuthScreen({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: INTERACTIVE FORM CONTAINER (7 Columns) */}
         <div className="md:col-span-7 bg-white rounded-[28px] p-5 sm:p-7 shadow-[0_24px_60px_rgba(19,39,31,0.10)] border-2 border-bafa-200 flex flex-col justify-between">
-          
-          {/* Form Header Tabs */}
           <div className="space-y-6">
-              <div className="flex justify-between items-center border-b border-bafa-100 pb-3">
+            <div className="flex justify-between items-center border-b border-bafa-100 pb-3">
               <div className="flex gap-3 sm:gap-5">
                 <button
                   type="button"
@@ -327,18 +302,13 @@ export default function AuthScreen({
                 </button>
               </div>
 
-<<<<<<< Updated upstream
               {!isLogin && (
                 <span className="hidden sm:inline bg-[#EAF6EE] text-[#1D5B42] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-[0.14em] border border-[#B7E3C4]">
                   Opisyal Lamang (Officers Only)
                 </span>
               )}
-=======
-              {!isLogin && null}
->>>>>>> Stashed changes
             </div>
 
-            {/* PASSWORD RESET APPLICATION BOX */}
             {showResetForm ? (
               <div className="space-y-4 animate-fade-in text-left">
                 <div className="bg-bafa-gold-200 border border-bafa-gold-400 rounded-2xl p-4 flex gap-3 text-bafa-neutral-800">
@@ -346,7 +316,7 @@ export default function AuthScreen({
                   <div className="text-xs space-y-1">
                     <strong className="font-extrabold block">Hangyo sa Bag-ong Password (Password Reset Request)</strong>
                     <p className="leading-relaxed text-bafa-neutral-700">
-                      Isulat ang imong Username sa ubos. Ang imong hangyo ipadala dayon ngadto kang Presidente Zenaida A. Elbiña. Siya ang muhatag kanimo og bag-ong password sa personal o pinaagi sa tawag.
+                      Isulat ang imong Username sa ubos. Ang imong hangyo ipadala dayon ngadto kang Presidente Zenaida A. Elbiña.
                     </p>
                   </div>
                 </div>
@@ -393,17 +363,13 @@ export default function AuthScreen({
                 </form>
               </div>
             ) : isLogin ? (
-              
-              /* STANDARD SIMPLE LOGIN FORM */
               <div className="space-y-6 text-left">
-                
-                {/* QUICK SAMPLE DEMO USER SELECTOR (Super easy for farmers to click and enter) */}
                 <div className="space-y-2">
                   <span className="flex items-center gap-1 text-xs font-extrabold text-bafa-neutral-800 uppercase tracking-wider">
                     <UserCheck className="w-4 h-4 text-bafa-700" />
                     <span>Quick Login</span>
                   </span>
-                  
+
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                     {approvedUsers.map((user) => (
                       <button
@@ -411,7 +377,7 @@ export default function AuthScreen({
                         type="button"
                         onClick={() => {
                           setUsername(user.username);
-                          setPassword('password123'); // seed preset
+                          setPassword('password123');
                           toast(`Nahi-select si ${user.name}! Pindota ang "Mosulod sa Portal" sa ubos aron makasulod.`, 'info');
                         }}
                         className={`p-2.5 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between min-h-[76px] h-20 relative group overflow-hidden ${
@@ -421,12 +387,11 @@ export default function AuthScreen({
                         }`}
                       >
                         <span className="block font-black text-[#18372d] text-sm leading-tight truncate group-hover:text-[#123326]">
-                          {user.name.split(' "')[0]}
+                          {user.name.split(' ')[0]}
                         </span>
                         <span className="block text-[9px] font-bold text-[#536A5D] uppercase tracking-[0.12em] truncate">
                           {user.role.replace('_', ' ')}
                         </span>
-                        
                         {user.resetRequested && (
                           <span className="absolute top-2 right-2 bg-amber-500 w-2 h-2 rounded-full" title="Forgot Password Request Pending" />
                         )}
@@ -503,9 +468,6 @@ export default function AuthScreen({
                 </form>
               </div>
             ) : showMemberGuide ? (
-              
-<<<<<<< Updated upstream
-              /* OPTIONAL SECRETARY-LED MEMBERSHIP ENROLLMENT INFO FOR REGULAR FARMERS */
               <div className="space-y-4 text-left animate-fade-in max-h-[64vh] overflow-y-auto pr-1">
                 <div className="bg-[#EAF6EE] border-2 border-[#52B788]/40 rounded-2xl p-4.5 space-y-3">
                   <div className="flex items-start gap-3">
@@ -522,79 +484,10 @@ export default function AuthScreen({
                       <p className="text-xs text-[#2D5A43] leading-relaxed mt-1">
                         Aron masiguro ang husto nga RSBSA verification ug audit trails, ang mga regular nga mag-uuma <strong>dili kinahanglan mag-sign up sa online form</strong>. Ang <strong>Kalihim (Jennylyn S. Lumactao)</strong> lamang ang awtorisado nga mopasakop ug mohatag og Login Slip credentials.
                       </p>
-=======
-              /* REGISTER SIGNUP FORM (RE-STYLED TO EARTH THEME) */
-              <form onSubmit={handleRegisterSubmit} className="space-y-4 text-left max-h-[62vh] overflow-y-auto pr-1">
-                
-                {/* Account Type Selector */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-bafa-neutral-800 uppercase tracking-wider">
-                    Account Type
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setRegisterRole('Member')}
-                      className={`py-3 px-3 rounded-xl border text-xs font-extrabold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                        registerRole === 'Member'
-                          ? 'bg-[#EAF4EC] border-[#1B4332] text-[#1B4332] shadow-sm'
-                          : 'bg-[#FAF8F5] border-[#D5CFC1] text-[#85947E] hover:text-[#2D3A22]'
-                      }`}
-                    >
-                      <Sprout className="w-4 h-4 text-[#1B4332]" />
-                      <span>Regular Member</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRegisterRole('Secretary')}
-                      className={`py-3 px-3 rounded-xl border text-xs font-extrabold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                        registerRole !== 'Member'
-                          ? 'bg-[#E3F2FD] border-[#0D47A1] text-[#0D47A1] shadow-sm'
-                          : 'bg-[#FAF8F5] border-[#D5CFC1] text-[#85947E] hover:text-[#2D3A22]'
-                      }`}
-                    >
-                      <Shield className="w-4 h-4 text-[#0D47A1]" />
-                      <span>Officer Account</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Personal Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-bafa-neutral-800 uppercase">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Vicente Sanchez"
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm bg-[#FAF8F5] border border-[#D5CFC1] rounded-xl text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold transition-colors"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-bafa-neutral-800 uppercase">
-                      Mobile Number
-                    </label>
-                    <div className="relative">
-                      <Smartphone className="absolute left-3 top-3 w-4 h-4 text-[#85947E]" />
-                      <input
-                        type="text"
-                        placeholder="e.g. 0917-000-0000"
-                        value={regContact}
-                        onChange={(e) => setRegContact(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2.5 text-sm bg-[#FAF8F5] border border-[#D5CFC1] rounded-xl text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold transition-colors"
-                      />
->>>>>>> Stashed changes
                     </div>
                   </div>
                 </div>
 
-<<<<<<< Updated upstream
-                {/* 4-STEP OFFICIAL PROCESS */}
                 <div className="bg-[#FAF8F5] border border-[#E2DDD3] rounded-2xl p-4 space-y-3">
                   <h5 className="text-xs font-black text-[#1B4332] uppercase tracking-wider flex items-center gap-1.5">
                     <CheckCircle className="w-4 h-4 text-[#1B4332]" />
@@ -644,7 +537,6 @@ export default function AuthScreen({
                   </div>
                 </div>
 
-                {/* SECRETARY OFFICE INFO CARD */}
                 <div className="bg-white border border-[#D5CFC1] rounded-2xl p-3.5 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2.5">
                     <Building className="w-5 h-5 text-[#1B4332] shrink-0" />
@@ -652,67 +544,12 @@ export default function AuthScreen({
                       <p className="font-extrabold text-[#123326]">Opisina sa Kalihim (Secretary Desk)</p>
                       <p className="text-[#556551] text-[11px]">Jennylyn S. Lumactao • Alegria Farmers Center, Tuburan, Cebu</p>
                     </div>
-=======
-                {/* Credentials */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-bafa-neutral-800 uppercase">
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. vicente"
-                      value={regUsername}
-                      onChange={(e) => setRegUsername(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm bg-[#FAF8F5] border border-[#D5CFC1] rounded-xl text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold transition-colors"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-bafa-neutral-800 uppercase">
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Paghimo og koda"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm bg-[#FAF8F5] border border-[#D5CFC1] rounded-xl text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {/* Role Specific details */}
-                {registerRole !== 'Member' ? (
-                  <div className="space-y-1 bg-[#F1F3F5] p-3 rounded-xl border border-[#D5CFC1]">
-                    <label className="block text-xs font-bold text-bafa-neutral-800 uppercase">
-                      Select Officer Role:
-                    </label>
-                    <select
-                      value={registerRole}
-                      onChange={(e) => setRegisterRole(e.target.value as OfficerRole)}
-                      className="w-full px-3 py-2 text-sm bg-white border border-[#D5CFC1] rounded-lg text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold"
-                    >
-                      <option value="Vice_President">Vice President (Bise Presidente)</option>
-                      <option value="Secretary">Secretary (Kalihim)</option>
-                      <option value="Treasurer">Treasurer (Tesorero)</option>
-                      <option value="Auditor">Auditor (Tagasusi sa Panalapi)</option>
-                      <option value="PIO">PIO (Public Information Officer / Tigpahayag)</option>
-                    </select>
-                    <p className="text-[10px] text-bafa-neutral-700 mt-1 italic">
-                      *Only the President can approve officer accounts.
-                    </p>
->>>>>>> Stashed changes
                   </div>
                   <span className="bg-[#FAF8F5] text-[#1B4332] text-[10px] font-bold px-2 py-1 rounded-lg border border-[#D5CFC1] shrink-0">
                     Lunes - Biyernes
                   </span>
                 </div>
 
-<<<<<<< Updated upstream
-                {/* BUTTON TO RETURN TO OFFICER SIGN UP */}
                 <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
                   <button
                     type="button"
@@ -736,11 +573,7 @@ export default function AuthScreen({
                 </div>
               </div>
             ) : (
-              
-              /* STRICTLY OFFICER REGISTRATION FORM */
               <div className="space-y-4 text-left animate-fade-in max-h-[64vh] overflow-y-auto pr-1">
-                
-                {/* OFFICER ONLY BANNER */}
                 <div className="bg-[#EAF6EE] border-2 border-[#52B788]/40 rounded-2xl p-4 space-y-2">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#1B4332] text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -754,23 +587,6 @@ export default function AuthScreen({
                         <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
                           Nagkinahanglan og Pag-aprobar
                         </span>
-=======
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="flex items-center gap-1 text-xs font-bold text-bafa-neutral-800 uppercase">
-                          <MapPin className="w-3.5 h-3.5 text-[#1B4332]" />
-                          <span>Sitio Location</span>
-                        </label>
-                        <select
-                          value={regSitio}
-                          onChange={(e) => setRegSitio(e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-[#FAF8F5] border border-[#D5CFC1] rounded-xl text-[#2D3A22] focus:outline-none focus:border-[#1B4332] font-semibold"
-                        >
-                          {SITIOS.map((s) => (
-                            <option key={s} value={s}>{s}</option>
-                          ))}
-                        </select>
->>>>>>> Stashed changes
                       </div>
                       <h4 className="text-sm sm:text-base font-extrabold text-[#123326] mt-1 font-display">
                         Rehistrasyon Alang sa mga Opisyal Lamang
@@ -781,7 +597,6 @@ export default function AuthScreen({
                     </div>
                   </div>
 
-<<<<<<< Updated upstream
                   <div className="pt-2 border-t border-[#B7E3C4] flex items-center justify-between text-xs">
                     <button
                       type="button"
@@ -795,8 +610,6 @@ export default function AuthScreen({
                 </div>
 
                 <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-                  
-                  {/* ROLE SELECTION */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
                       Pilia ang Katungdanan (Officer Position) *
@@ -811,8 +624,8 @@ export default function AuthScreen({
                             type="button"
                             onClick={() => setRegisterRole(item.role)}
                             className={`p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between min-h-[66px] ${
-                              isSelected 
-                                ? 'bg-[#EAF5EE] border-[#1B4332] shadow-sm' 
+                              isSelected
+                                ? 'bg-[#EAF5EE] border-[#1B4332] shadow-sm'
                                 : 'bg-[#F9FBF9] border-[#D8E7D9] hover:border-[#8EBDA2]'
                             }`}
                           >
@@ -834,7 +647,6 @@ export default function AuthScreen({
                       })}
                     </div>
 
-                    {/* Role Description Card */}
                     <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#E2DDD3] text-[11px] text-[#4F5E46] flex items-center gap-2">
                       <Shield className="w-4 h-4 text-[#1B4332] shrink-0" />
                       <span>
@@ -844,7 +656,6 @@ export default function AuthScreen({
                     </div>
                   </div>
 
-                  {/* NAME & USERNAME */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
@@ -852,13 +663,6 @@ export default function AuthScreen({
                       </label>
                       <div className="relative">
                         <UserIcon className="absolute left-3 top-3 w-4 h-4 text-[#4D615A]" />
-=======
-                      <div className="space-y-1">
-                        <label className="flex items-center gap-1 text-xs font-bold text-bafa-neutral-800 uppercase">
-                          <Layers className="w-3.5 h-3.5 text-[#1B4332]" />
-                          <span>Farm Size (Hectares)</span>
-                        </label>
->>>>>>> Stashed changes
                         <input
                           type="text"
                           required
@@ -870,7 +674,6 @@ export default function AuthScreen({
                       </div>
                     </div>
 
-<<<<<<< Updated upstream
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
                         <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
@@ -890,30 +693,10 @@ export default function AuthScreen({
                           onChange={(e) => setRegUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
                           className="w-full pl-9 pr-3 py-2.5 text-sm bg-[#F8FAF8] border-2 border-[#D8E7D9] rounded-xl text-[#1E352E] focus:outline-none focus:border-[#1B4332] focus:ring-2 focus:ring-[#D8F3DC] font-semibold font-mono"
                         />
-=======
-                    <div className="space-y-1.5">
-                      <label className="flex items-center gap-1 text-xs font-bold text-bafa-neutral-800 uppercase">
-                        <Tag className="w-3.5 h-3.5 text-[#1B4332]" />
-                        <span>Products Raised</span>
-                      </label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-[#FAF8F5] p-3 rounded-xl border border-[#D5CFC1] max-h-32 overflow-y-auto">
-                        {CROPS_AND_LIVESTOCK.map((crop) => (
-                          <label key={crop} className="flex items-center gap-2 cursor-pointer text-xs text-[#2D3A22] hover:text-[#1B4332] select-none font-medium">
-                            <input
-                              type="checkbox"
-                              checked={regSelectedCrops.includes(crop)}
-                              onChange={() => handleCropToggle(crop)}
-                              className="rounded border-[#D5CFC1] bg-white text-[#1B4332] focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5"
-                            />
-                            <span>{crop}</span>
-                          </label>
-                        ))}
->>>>>>> Stashed changes
                       </div>
                     </div>
                   </div>
 
-                  {/* PASSWORD & CONFIRM PASSWORD */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
@@ -975,7 +758,6 @@ export default function AuthScreen({
                     </div>
                   </div>
 
-                  {/* CONTACT NUMBER & SITIO */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="block text-xs font-black text-[#425A50] uppercase tracking-[0.12em]">
@@ -1013,7 +795,6 @@ export default function AuthScreen({
                     </div>
                   </div>
 
-                  {/* SUBMIT BUTTON */}
                   <div className="space-y-2 pt-2">
                     <button
                       type="submit"
@@ -1041,7 +822,6 @@ export default function AuthScreen({
                     </div>
                   </div>
                 </form>
-
               </div>
             )}
           </div>
@@ -1050,7 +830,6 @@ export default function AuthScreen({
             Sistemang AFA v1.1 • Gidisenyo alang sa kasayon sa matag mag-uuma ug opisyal.
           </div>
         </div>
-
       </div>
     </div>
   );

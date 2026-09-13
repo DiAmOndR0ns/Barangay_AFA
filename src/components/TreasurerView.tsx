@@ -5,12 +5,7 @@ import {
   Coins, ArrowUpRight, ArrowDownRight, Plus, 
   Search, ShieldCheck, AlertTriangle, CheckCircle, 
   XCircle, Filter, FileText, Info, Building2, Wallet, Database,
-<<<<<<< Updated upstream
-  Briefcase, TrendingUp, BarChart3, Calendar, Sparkles, Trash2
-=======
-  BriefcaseBusiness, TrendingUp, BarChart3, Calendar, Sparkles
->>>>>>> Stashed changes
-} from 'lucide-react';
+  Briefcase, TrendingUp, BarChart3, Calendar, Sparkles, Trash2} from 'lucide-react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -380,12 +375,7 @@ export default function TreasurerView({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-<<<<<<< Updated upstream
-                <Briefcase className="w-5 h-5 text-emerald-400" />
-=======
-                <BriefcaseBusiness className="w-5 h-5 text-emerald-400" />
->>>>>>> Stashed changes
-              </div>
+                <Briefcase className="w-5 h-5 text-emerald-400" />              </div>
               <div>
                 <h3 className="text-base font-black text-white flex items-center gap-2">
                   <span>Association IGP & Rentals - Monthly Expenses vs. Income Trends</span>
