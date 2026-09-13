@@ -26,6 +26,16 @@ export default function GuestPortal({
 }: GuestPortalProps) {
   const [activeTab, setActiveTab] = useState<'home' | 'announcements' | 'activities' | 'products' | 'history' | 'achievements'>('home');
   const [selectedProductModal, setSelectedProductModal] = useState<any | null>(null);
+  const [collapsedProductIds, setCollapsedProductIds] = useState<string[]>([]);
+
+  const toggleCollapse = (productId: string) => {
+    setCollapsedProductIds((current) =>
+      current.includes(productId)
+        ? current.filter((id) => id !== productId)
+        : [...current, productId]
+    );
+  };
+
   // Dynamically calculate stats to accurately reflect the registered roster
   const registeredMembersCount = members.length;
   const activeMembersCount = members.filter(m => m.status === 'Active').length;
@@ -779,21 +789,8 @@ export default function GuestPortal({
                             {prod.cebName}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={toggleCollapse}
-                          className="shrink-0 bg-[#EAF4EC] border border-[#1B4332]/20 text-[#1B4332] text-[10px] font-black px-2 py-1.5 rounded-lg uppercase cursor-pointer"
-                        >
-                          {isCollapsed ? 'Maximize' : 'Minimize'}
-                        </button>
                       </div>
 
-                      <div className={`transition-all duration-200 overflow-hidden ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[200px] opacity-100'}`}>
-                        <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words">
-                          {prod.desc || prod.description}
-                        </p>
-                      </div>
-                      
                       <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed break-words line-clamp-3">
                         {prod.desc || prod.description}
                       </p>
