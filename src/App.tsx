@@ -483,19 +483,47 @@ export default function App() {
     }
 
     try {
+      let isSuccess = false;
       const res = await fetch('/api/db/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entity, ids })
-      });
-      const data = await res.json();
-      if (data?.success) {
-        console.log(`[Cloud DB Delete]: Successfully removed ${entity} (${ids.join(', ')}) directly from database`);
-        return true;
-      } else {
-        console.warn(`[Cloud DB Delete Warning]:`, data?.message);
-        return false;
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        try {
+          const data = await res.json();
+          if (data?.success) {
+            console.log(`[Cloud DB Delete]: Successfully removed ${entity} (${ids.join(', ')}) directly from database`);
+            isSuccess = true;
+          }
+        } catch {}
       }
+
+      // If /api/db/delete failed or returned 404 (common on edge/Vercel before redeployment), fallback to /api/sync/push
+      if (!isSuccess) {
+        console.log(`[Cloud DB Delete Fallback]: Dispatching deletion to /api/sync/push for ${entity}...`);
+        const pushRes = await fetch('/api/sync/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deleteItem: { entity, id: ids[0] },
+            deletedIds: { [mappedKey]: ids }
+          })
+        }).catch(() => null);
+
+        if (pushRes && pushRes.ok) {
+          try {
+            const pushData = await pushRes.json();
+            if (pushData?.success) {
+              console.log(`[Cloud DB Delete Fallback]: Successfully processed deletion via /api/sync/push for ${entity}`);
+              isSuccess = true;
+            }
+          } catch {}
+        }
+      }
+
+      return isSuccess;
     } catch (err: any) {
       console.warn(`[Cloud DB Delete Network Error]: Stored in pending deletion queue.`, err?.message || err);
       return false;

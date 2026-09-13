@@ -211,7 +211,7 @@ var lastUsedConnectionString = null;
 function isDatabaseConfigured() {
   const dbUrl = process.env.DATABASE_URL?.trim().replace(/^["']|["']$/g, "");
   return Boolean(
-    dbUrl && dbUrl !== "" && !dbUrl.includes("[YOUR-PASSWORD]") && !dbUrl.includes("<password>") && !dbUrl.includes("YOUR_PASSWORD") && !dbUrl.includes("your_aiven_connection_string") && !dbUrl.includes("your_supabase_connection_string") && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://"))
+    dbUrl && dbUrl !== "" && !dbUrl.includes("[YOUR-PASSWORD]") && !dbUrl.includes("<password>") && !dbUrl.includes("YOUR_PASSWORD") && !dbUrl.includes("your_supabase_connection_string") && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://"))
   );
 }
 function cleanDatabaseUrl(rawUrl) {
@@ -337,6 +337,7 @@ async function runSchemaMigrations(client) {
     try {
       await client.query(stmt);
     } catch (e) {
+      console.warn("[Schema Migration Warning]:", e?.message || e);
     }
   }
 }
@@ -548,26 +549,35 @@ async function initDatabaseSchema(pool) {
       );
     `);
     await client.query("COMMIT");
+    console.log("[DB DEBUG] Database schema initialized successfully");
   } catch (err) {
     await client.query("ROLLBACK");
+    console.error("[DB DEBUG] Schema initialization failed:", err?.message || err);
     throw err;
   } finally {
     client.release();
   }
 }
+var schemaInitialized = false;
 async function ensureDatabaseSchema(pool) {
+  if (schemaInitialized) return;
   const client = await pool.connect();
   try {
+    console.log("[DB DEBUG] ensureDatabaseSchema: Checking tables...");
     const check = await client.query(`SELECT to_regclass('public.members') as members_table`);
+    console.log("[DB DEBUG] members table exists:", check.rows[0]?.members_table);
     if (!check.rows[0]?.members_table) {
+      console.log("[DB DEBUG] Creating database schema...");
       await initDatabaseSchema(pool);
     } else {
+      console.log("[DB DEBUG] Running schema migrations...");
       await runSchemaMigrations(client);
     }
     const counts = await client.query(`SELECT count(*) as count FROM users`);
     const usersCount = Number(counts.rows[0]?.count || 0);
+    console.log("[DB DEBUG] Current users count:", usersCount);
     if (usersCount === 0) {
-      console.log("[Supabase / PostgreSQL]: No users found. Provisioning the 6 official officer accounts...");
+      console.log("[DB DEBUG] No users found. Provisioning the 6 official officer accounts...");
       for (const u of OFFICIAL_OFFICERS) {
         await client.query(`
           INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
@@ -584,63 +594,159 @@ async function ensureDatabaseSchema(pool) {
           "Active"
         ]);
       }
+      console.log("[DB DEBUG] Officer accounts provisioned");
     }
+    try {
+      await client.query(`
+        DELETE FROM products 
+        WHERE name ILIKE '%baboy%' 
+           OR name ILIKE '%hog%' 
+           OR name ILIKE '%tilapia%' 
+           OR ceb_name ILIKE '%baboy%' 
+           OR ceb_name ILIKE '%hog%'
+           OR category = 'Livestock'
+      `);
+    } catch {
+    }
+    schemaInitialized = true;
   } catch (err) {
-    console.warn("[ensureDatabaseSchema warning]:", err?.message || err);
+    console.error("[DB DEBUG] ensureDatabaseSchema failed:", {
+      message: err?.message,
+      code: err?.code,
+      detail: err?.detail,
+      hint: err?.hint
+    });
+    throw err;
   } finally {
     client.release();
   }
 }
 async function saveFullStateToPostgres(pool, state) {
+  console.log("[DB DEBUG] saveFullStateToPostgres called");
+  console.log("[DB DEBUG] State keys:", Object.keys(state || {}));
   await ensureDatabaseSchema(pool);
   const client = await pool.connect();
   try {
+    console.log("[DB DEBUG] Starting transaction...");
     await client.query("BEGIN");
-    await runSchemaMigrations(client);
+    const deletedUserIds = /* @__PURE__ */ new Set();
+    const deletedMemberIds = /* @__PURE__ */ new Set();
+    const deletedMeetingIds = /* @__PURE__ */ new Set();
+    const deletedResolutionIds = /* @__PURE__ */ new Set();
+    const deletedTxIds = /* @__PURE__ */ new Set();
+    const deletedAnnouncementIds = /* @__PURE__ */ new Set();
+    const deletedProductIds = /* @__PURE__ */ new Set();
+    const deletedActivityIds = /* @__PURE__ */ new Set();
+    const deletedFundIds = /* @__PURE__ */ new Set();
+    const deletedAuditorIds = /* @__PURE__ */ new Set();
+    const deletedDelegationIds = /* @__PURE__ */ new Set();
     if (state.deletedIds && typeof state.deletedIds === "object") {
-      if (Array.isArray(state.deletedIds.members) && state.deletedIds.members.length > 0) {
-        await client.query("DELETE FROM members WHERE id = ANY($1)", [state.deletedIds.members]);
+      const d = state.deletedIds;
+      if (Array.isArray(d.users) && d.users.length > 0) {
+        d.users.forEach((id) => deletedUserIds.add(id));
+        await client.query("DELETE FROM users WHERE id = ANY($1)", [d.users]);
+        console.log("[DB DELETE] Batch deleted users:", d.users);
       }
-      if (Array.isArray(state.deletedIds.meetings) && state.deletedIds.meetings.length > 0) {
-        await client.query("DELETE FROM meetings WHERE id = ANY($1)", [state.deletedIds.meetings]);
+      if (Array.isArray(d.members) && d.members.length > 0) {
+        d.members.forEach((id) => deletedMemberIds.add(id));
+        await client.query("DELETE FROM members WHERE id = ANY($1)", [d.members]);
+        console.log("[DB DELETE] Batch deleted members:", d.members);
       }
-      if (Array.isArray(state.deletedIds.resolutions) && state.deletedIds.resolutions.length > 0) {
-        await client.query("DELETE FROM resolutions WHERE id = ANY($1)", [state.deletedIds.resolutions]);
+      if (Array.isArray(d.meetings) && d.meetings.length > 0) {
+        d.meetings.forEach((id) => deletedMeetingIds.add(id));
+        await client.query("DELETE FROM meetings WHERE id = ANY($1)", [d.meetings]);
+        console.log("[DB DELETE] Batch deleted meetings:", d.meetings);
       }
-      if (Array.isArray(state.deletedIds.financialTransactions) && state.deletedIds.financialTransactions.length > 0) {
-        await client.query("DELETE FROM financial_transactions WHERE id = ANY($1)", [state.deletedIds.financialTransactions]);
+      if (Array.isArray(d.resolutions) && d.resolutions.length > 0) {
+        d.resolutions.forEach((id) => deletedResolutionIds.add(id));
+        await client.query("DELETE FROM resolutions WHERE id = ANY($1)", [d.resolutions]);
+        console.log("[DB DELETE] Batch deleted resolutions:", d.resolutions);
       }
-      if (Array.isArray(state.deletedIds.announcements) && state.deletedIds.announcements.length > 0) {
-        await client.query("DELETE FROM announcements WHERE id = ANY($1)", [state.deletedIds.announcements]);
+      const txs = d.financialTransactions || d.transactions;
+      if (Array.isArray(txs) && txs.length > 0) {
+        txs.forEach((id) => deletedTxIds.add(id));
+        await client.query("DELETE FROM financial_transactions WHERE id = ANY($1)", [txs]);
+        console.log("[DB DELETE] Batch deleted transactions:", txs);
       }
-      if (Array.isArray(state.deletedIds.products) && state.deletedIds.products.length > 0) {
-        await client.query("DELETE FROM products WHERE id = ANY($1)", [state.deletedIds.products]);
+      if (Array.isArray(d.announcements) && d.announcements.length > 0) {
+        d.announcements.forEach((id) => deletedAnnouncementIds.add(id));
+        await client.query("DELETE FROM announcements WHERE id = ANY($1)", [d.announcements]);
+        console.log("[DB DELETE] Batch deleted announcements:", d.announcements);
       }
-      if (Array.isArray(state.deletedIds.activities) && state.deletedIds.activities.length > 0) {
-        await client.query("DELETE FROM activities WHERE id = ANY($1)", [state.deletedIds.activities]);
+      if (Array.isArray(d.products) && d.products.length > 0) {
+        d.products.forEach((id) => deletedProductIds.add(id));
+        await client.query("DELETE FROM products WHERE id = ANY($1)", [d.products]);
+        console.log("[DB DELETE] Batch deleted products:", d.products);
       }
-      if (Array.isArray(state.deletedIds.funds) && state.deletedIds.funds.length > 0) {
-        await client.query("DELETE FROM organization_funds WHERE id = ANY($1)", [state.deletedIds.funds]);
+      if (Array.isArray(d.activities) && d.activities.length > 0) {
+        d.activities.forEach((id) => deletedActivityIds.add(id));
+        await client.query("DELETE FROM activities WHERE id = ANY($1)", [d.activities]);
+        console.log("[DB DELETE] Batch deleted activities:", d.activities);
+      }
+      const funds = d.funds || d.organizationFunds;
+      if (Array.isArray(funds) && funds.length > 0) {
+        funds.forEach((id) => deletedFundIds.add(id));
+        await client.query("DELETE FROM organization_funds WHERE id = ANY($1)", [funds]);
+        console.log("[DB DELETE] Batch deleted funds:", funds);
+      }
+      const auds = d.auditorReports || d.auditor_reports;
+      if (Array.isArray(auds) && auds.length > 0) {
+        auds.forEach((id) => deletedAuditorIds.add(id));
+        await client.query("DELETE FROM auditor_reports WHERE id = ANY($1)", [auds]);
+      }
+      const dels = d.delegationRequests || d.delegation_requests;
+      if (Array.isArray(dels) && dels.length > 0) {
+        dels.forEach((id) => deletedDelegationIds.add(id));
+        await client.query("DELETE FROM delegation_requests WHERE id = ANY($1)", [dels]);
       }
     }
     if (state.deleteItem && state.deleteItem.entity && state.deleteItem.id) {
       const tableMap = {
+        user: "users",
+        users: "users",
+        officer: "users",
+        officers: "users",
         member: "members",
+        members: "members",
         meeting: "meetings",
+        meetings: "meetings",
         resolution: "resolutions",
+        resolutions: "resolutions",
         transaction: "financial_transactions",
+        transactions: "financial_transactions",
+        financialtransaction: "financial_transactions",
+        financialtransactions: "financial_transactions",
+        financial_transaction: "financial_transactions",
+        financial_transactions: "financial_transactions",
         announcement: "announcements",
+        announcements: "announcements",
         product: "products",
+        products: "products",
         activity: "activities",
-        fund: "organization_funds"
+        activities: "activities",
+        fund: "organization_funds",
+        funds: "organization_funds"
       };
-      const tbl = tableMap[state.deleteItem.entity];
+      const normEntity = state.deleteItem.entity.toLowerCase().replace(/[-_]/g, "");
+      const tbl = tableMap[state.deleteItem.entity] || tableMap[state.deleteItem.entity.toLowerCase()] || tableMap[normEntity];
       if (tbl) {
         await client.query(`DELETE FROM ${tbl} WHERE id = $1`, [state.deleteItem.id]);
+        if (tbl === "users") deletedUserIds.add(state.deleteItem.id);
+        if (tbl === "members") deletedMemberIds.add(state.deleteItem.id);
+        if (tbl === "meetings") deletedMeetingIds.add(state.deleteItem.id);
+        if (tbl === "resolutions") deletedResolutionIds.add(state.deleteItem.id);
+        if (tbl === "financial_transactions") deletedTxIds.add(state.deleteItem.id);
+        if (tbl === "announcements") deletedAnnouncementIds.add(state.deleteItem.id);
+        if (tbl === "products") deletedProductIds.add(state.deleteItem.id);
+        if (tbl === "activities") deletedActivityIds.add(state.deleteItem.id);
+        if (tbl === "organization_funds") deletedFundIds.add(state.deleteItem.id);
+        console.log(`[DB DELETE] Single deleted ${tbl} ID: ${state.deleteItem.id}`);
       }
     }
     if (state.users && Array.isArray(state.users)) {
-      for (const u of state.users) {
+      const activeUsers = state.users.filter((u) => !deletedUserIds.has(u.id));
+      console.log("[DB DEBUG] Saving", activeUsers.length, "users...");
+      for (const u of activeUsers) {
         await client.query(`
           INSERT INTO users (id, username, password, name, role, is_approved, joined_date, farm_location, farm_size, primary_crops, contact_number, status, avatar_url, member_id_number, rsbsa_number, is_rsbsa_registered)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
@@ -679,9 +785,12 @@ async function saveFullStateToPostgres(pool, state) {
           Boolean(u.isRsbsaRegistered)
         ]);
       }
+      console.log("[DB DEBUG] Users saved");
     }
     if (state.members && Array.isArray(state.members)) {
-      for (const m of state.members) {
+      const activeMembers = state.members.filter((m) => !deletedMemberIds.has(m.id));
+      console.log("[DB DEBUG] Saving", activeMembers.length, "members...");
+      for (const m of activeMembers) {
         await client.query(`
           INSERT INTO members (id, name, farm_location, farm_size, primary_crops, contact_number, status, joined_date, member_id_number, rsbsa_number, is_rsbsa_registered, avatar_url, gender, birth_date)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
@@ -716,9 +825,12 @@ async function saveFullStateToPostgres(pool, state) {
           m.birthDate || null
         ]);
       }
+      console.log("[DB DEBUG] Members saved");
     }
-    const txList = state.financialTransactions || state.transactions;
-    if (txList && Array.isArray(txList)) {
+    const rawTxList = state.financialTransactions || state.transactions;
+    if (rawTxList && Array.isArray(rawTxList)) {
+      const txList = rawTxList.filter((tx) => !deletedTxIds.has(tx.id));
+      console.log("[DB DEBUG] Saving", txList.length, "transactions...");
       for (const tx of txList) {
         await client.query(`
           INSERT INTO financial_transactions (id, type, category, amount, date, description, recorded_by, fund_source, audited_status, audited_by, audited_date, audit_notes)
@@ -750,9 +862,12 @@ async function saveFullStateToPostgres(pool, state) {
           tx.auditNotes || null
         ]);
       }
+      console.log("[DB DEBUG] Transactions saved");
     }
     if (state.meetings && Array.isArray(state.meetings)) {
-      for (const mt of state.meetings) {
+      const activeMeetings = state.meetings.filter((mt) => !deletedMeetingIds.has(mt.id));
+      console.log("[DB DEBUG] Saving", activeMeetings.length, "meetings...");
+      for (const mt of activeMeetings) {
         await client.query(`
           INSERT INTO meetings (id, title, date, location, attendance_count, agenda, minutes, officer_in_charge, attendance_record)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -777,8 +892,10 @@ async function saveFullStateToPostgres(pool, state) {
           JSON.stringify(mt.attendanceRecord || {})
         ]);
       }
+      console.log("[DB DEBUG] Meetings saved");
     }
     if (state.hogRaising) {
+      console.log("[DB DEBUG] Saving hog raising state...");
       const grantAmount = typeof state.hogRaising.capitalGrant === "number" ? state.hogRaising.capitalGrant : Number(state.hogRaising.capitalGrant) || 0;
       await client.query(`
         INSERT INTO hog_raising (id, capital_grant, produces, expenses, sales, groups, chore_logs, closed_years)
@@ -802,9 +919,11 @@ async function saveFullStateToPostgres(pool, state) {
         state.hogRaising.closedYears || []
       ]);
       await client.query("DELETE FROM hog_raising WHERE id != 'main_state'");
+      console.log("[DB DEBUG] Hog raising state saved");
     }
     const logList = state.systemLogs || state.logs;
     if (logList && Array.isArray(logList)) {
+      console.log("[DB DEBUG] Saving", logList.length, "system logs...");
       for (const lg of logList) {
         await client.query(`
           INSERT INTO system_logs (id, timestamp, user_name, role, action, details, sync_status, hash, previous_hash)
@@ -830,9 +949,12 @@ async function saveFullStateToPostgres(pool, state) {
           lg.previousHash || null
         ]);
       }
+      console.log("[DB DEBUG] System logs saved");
     }
     if (state.products && Array.isArray(state.products)) {
-      for (const p of state.products) {
+      const activeProducts = state.products.filter((p) => !deletedProductIds.has(p.id));
+      console.log("[DB DEBUG] Saving", activeProducts.length, "products...");
+      for (const p of activeProducts) {
         await client.query(`
           INSERT INTO products (id, name, ceb_name, category, description, unit, price, quantity_available, stock_status, farmer_name, farmer_sitio, farmer_phone, contact_person, image_url, is_published, updated_by, managed_by, date_updated)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
@@ -875,9 +997,12 @@ async function saveFullStateToPostgres(pool, state) {
           p.dateUpdated || null
         ]);
       }
+      console.log("[DB DEBUG] Products saved");
     }
     if (state.resolutions && Array.isArray(state.resolutions)) {
-      for (const r of state.resolutions) {
+      const activeResolutions = state.resolutions.filter((r) => !deletedResolutionIds.has(r.id));
+      console.log("[DB DEBUG] Saving", activeResolutions.length, "resolutions...");
+      for (const r of activeResolutions) {
         await client.query(`
           INSERT INTO resolutions (id, resolution_number, title, description, date_agreed, moved_by, seconded_by, vote_in_favor, vote_against, vote_abstain, status)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -906,9 +1031,12 @@ async function saveFullStateToPostgres(pool, state) {
           r.status
         ]);
       }
+      console.log("[DB DEBUG] Resolutions saved");
     }
     if (state.announcements && Array.isArray(state.announcements)) {
-      for (const a of state.announcements) {
+      const activeAnnouncements = state.announcements.filter((a) => !deletedAnnouncementIds.has(a.id));
+      console.log("[DB DEBUG] Saving", activeAnnouncements.length, "announcements...");
+      for (const a of activeAnnouncements) {
         await client.query(`
           INSERT INTO announcements (id, title, category, content, date_posted, priority, posted_by)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -921,9 +1049,12 @@ async function saveFullStateToPostgres(pool, state) {
             posted_by = EXCLUDED.posted_by;
         `, [a.id, a.title, a.category, a.content, a.datePosted, a.priority, a.postedBy]);
       }
+      console.log("[DB DEBUG] Announcements saved");
     }
     if (state.activities && Array.isArray(state.activities)) {
-      for (const act of state.activities) {
+      const activeActivities = state.activities.filter((act) => !deletedActivityIds.has(act.id));
+      console.log("[DB DEBUG] Saving", activeActivities.length, "activities...");
+      for (const act of activeActivities) {
         await client.query(`
           INSERT INTO activities (id, title, ceb_title, category, scheduled_date, date_scheduled, scheduled_time, time_scheduled, location, description, organizer, status, documented_notes, attendees_count, target_audience, image_url)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
@@ -962,9 +1093,12 @@ async function saveFullStateToPostgres(pool, state) {
           act.imageUrl || null
         ]);
       }
+      console.log("[DB DEBUG] Activities saved");
     }
-    const fundList = state.organizationFunds || state.funds;
-    if (fundList && Array.isArray(fundList)) {
+    const rawFundList = state.organizationFunds || state.funds;
+    if (rawFundList && Array.isArray(rawFundList)) {
+      const fundList = rawFundList.filter((f) => !deletedFundIds.has(f.id));
+      console.log("[DB DEBUG] Saving", fundList.length, "organization funds...");
       for (const f of fundList) {
         await client.query(`
           INSERT INTO organization_funds (id, name, code, allocated_amount, current_balance, description, custodian, last_updated)
@@ -988,8 +1122,10 @@ async function saveFullStateToPostgres(pool, state) {
           f.lastUpdated || (/* @__PURE__ */ new Date()).toISOString().split("T")[0]
         ]);
       }
+      console.log("[DB DEBUG] Organization funds saved");
     }
     if (state.auditorReports && Array.isArray(state.auditorReports)) {
+      console.log("[DB DEBUG] Saving", state.auditorReports.length, "auditor reports...");
       for (const ar of state.auditorReports) {
         await client.query(`
           INSERT INTO auditor_reports (id, report_period, report_type, total_income, total_expenses, net_surplus, findings, recommendations, prepared_by, certified_by, status, date_submitted, date_certified)
@@ -1023,8 +1159,10 @@ async function saveFullStateToPostgres(pool, state) {
           ar.dateCertified || null
         ]);
       }
+      console.log("[DB DEBUG] Auditor reports saved");
     }
     if (state.delegationRequests && Array.isArray(state.delegationRequests)) {
+      console.log("[DB DEBUG] Saving", state.delegationRequests.length, "delegation requests...");
       for (const dr of state.delegationRequests) {
         await client.query(`
           INSERT INTO delegation_requests (id, requested_by, reason, requested_date, effective_start, effective_end, status, reviewed_by, reviewed_date, remarks)
@@ -1052,10 +1190,20 @@ async function saveFullStateToPostgres(pool, state) {
           dr.remarks || null
         ]);
       }
+      console.log("[DB DEBUG] Delegation requests saved");
     }
+    console.log("[DB DEBUG] Committing transaction...");
     await client.query("COMMIT");
+    console.log("[DB DEBUG] Transaction committed successfully");
     return { success: true };
   } catch (err) {
+    console.error("[DB DEBUG] Transaction failed:", {
+      message: err?.message,
+      code: err?.code,
+      detail: err?.detail,
+      hint: err?.hint,
+      where: err?.where
+    });
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -1129,21 +1277,70 @@ async function handler(req, res) {
     }
     const pool = getPool();
     const body = await parseRequestBody(req);
+    console.log("[PUSH DEBUG] Starting push...");
+    console.log("[PUSH DEBUG] Body keys:", Object.keys(body || {}));
+    try {
+      const testConn = await pool.query("SELECT current_user, current_database()");
+      console.log("[PUSH DEBUG] Connected as:", testConn.rows[0]);
+    } catch (connErr) {
+      console.error("[PUSH DEBUG] Connection failed:", connErr.message);
+      throw connErr;
+    }
+    try {
+      const testInsert = await pool.query(
+        `INSERT INTO system_logs (id, timestamp, user_name, role, action, details, sync_status) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7) 
+         RETURNING id`,
+        ["test-" + Date.now(), (/* @__PURE__ */ new Date()).toISOString(), "Test", "System", "Test", "Push test", "synced"]
+      );
+      console.log("[PUSH DEBUG] Test insert successful:", testInsert.rows[0]);
+      await pool.query("DELETE FROM system_logs WHERE id = $1", ["test-" + Date.now()]);
+    } catch (insertErr) {
+      console.error("[PUSH DEBUG] Test insert failed:", {
+        message: insertErr.message,
+        code: insertErr.code,
+        detail: insertErr.detail,
+        hint: insertErr.hint,
+        where: insertErr.where
+      });
+      return sendResponse(res, 200, {
+        success: false,
+        offlineMode: true,
+        message: `Test insert failed: ${insertErr.message}`,
+        error: insertErr.message,
+        detail: insertErr.detail,
+        hint: insertErr.hint
+      });
+    }
+    console.log("[PUSH DEBUG] Calling saveFullStateToPostgres...");
     const savePromise = saveFullStateToPostgres(pool, body);
     const timeoutPromise = new Promise(
-      (_, reject) => setTimeout(() => reject(new Error("Cloud DB push timed out after 30 seconds.")), 30e3)
+      (_, reject) => setTimeout(() => reject(new Error("Cloud DB push timed out after 30 seconds.")), 3e4)
     );
-    await Promise.race([savePromise, timeoutPromise]);
+    const result = await Promise.race([savePromise, timeoutPromise]);
+    console.log("[PUSH DEBUG] Save result:", result);
     return sendResponse(res, 200, {
       success: true,
+      offlineMode: false,
       message: "State successfully synced to PostgreSQL Cloud DB!"
     });
   } catch (error) {
-    console.warn("[Cloud DB Push Warning]:", error?.message || error);
+    console.error("[PUSH DEBUG] Full error:", {
+      message: error?.message,
+      code: error?.code,
+      detail: error?.detail,
+      hint: error?.hint,
+      where: error?.where,
+      stack: error?.stack?.substring(0, 2e3)
+    });
     return sendResponse(res, 200, {
-      success: true,
+      success: false,
       offlineMode: true,
-      message: `Saved locally. Cloud sync pending reconnection: ${error?.message || "Database unavailable"}`
+      message: `Failed to sync: ${error?.message || "Database unavailable"}`,
+      error: error?.message,
+      detail: error?.detail,
+      hint: error?.hint,
+      where: error?.where
     });
   }
 }

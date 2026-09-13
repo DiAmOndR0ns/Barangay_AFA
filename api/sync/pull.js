@@ -211,7 +211,7 @@ var lastUsedConnectionString = null;
 function isDatabaseConfigured() {
   const dbUrl = process.env.DATABASE_URL?.trim().replace(/^["']|["']$/g, "");
   return Boolean(
-    dbUrl && dbUrl !== "" && !dbUrl.includes("[YOUR-PASSWORD]") && !dbUrl.includes("<password>") && !dbUrl.includes("YOUR_PASSWORD") && !dbUrl.includes("your_aiven_connection_string") && !dbUrl.includes("your_supabase_connection_string") && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://"))
+    dbUrl && dbUrl !== "" && !dbUrl.includes("[YOUR-PASSWORD]") && !dbUrl.includes("<password>") && !dbUrl.includes("YOUR_PASSWORD") && !dbUrl.includes("your_supabase_connection_string") && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://"))
   );
 }
 function cleanDatabaseUrl(rawUrl) {
@@ -337,6 +337,7 @@ async function runSchemaMigrations(client) {
     try {
       await client.query(stmt);
     } catch (e) {
+      console.warn("[Schema Migration Warning]:", e?.message || e);
     }
   }
 }
@@ -548,26 +549,35 @@ async function initDatabaseSchema(pool) {
       );
     `);
     await client.query("COMMIT");
+    console.log("[DB DEBUG] Database schema initialized successfully");
   } catch (err) {
     await client.query("ROLLBACK");
+    console.error("[DB DEBUG] Schema initialization failed:", err?.message || err);
     throw err;
   } finally {
     client.release();
   }
 }
+var schemaInitialized = false;
 async function ensureDatabaseSchema(pool) {
+  if (schemaInitialized) return;
   const client = await pool.connect();
   try {
+    console.log("[DB DEBUG] ensureDatabaseSchema: Checking tables...");
     const check = await client.query(`SELECT to_regclass('public.members') as members_table`);
+    console.log("[DB DEBUG] members table exists:", check.rows[0]?.members_table);
     if (!check.rows[0]?.members_table) {
+      console.log("[DB DEBUG] Creating database schema...");
       await initDatabaseSchema(pool);
     } else {
+      console.log("[DB DEBUG] Running schema migrations...");
       await runSchemaMigrations(client);
     }
     const counts = await client.query(`SELECT count(*) as count FROM users`);
     const usersCount = Number(counts.rows[0]?.count || 0);
+    console.log("[DB DEBUG] Current users count:", usersCount);
     if (usersCount === 0) {
-      console.log("[Supabase / PostgreSQL]: No users found. Provisioning the 6 official officer accounts...");
+      console.log("[DB DEBUG] No users found. Provisioning the 6 official officer accounts...");
       for (const u of OFFICIAL_OFFICERS) {
         await client.query(`
           INSERT INTO users (id, username, password, name, role, is_approved, joined_date, status)
@@ -584,9 +594,29 @@ async function ensureDatabaseSchema(pool) {
           "Active"
         ]);
       }
+      console.log("[DB DEBUG] Officer accounts provisioned");
     }
+    try {
+      await client.query(`
+        DELETE FROM products 
+        WHERE name ILIKE '%baboy%' 
+           OR name ILIKE '%hog%' 
+           OR name ILIKE '%tilapia%' 
+           OR ceb_name ILIKE '%baboy%' 
+           OR ceb_name ILIKE '%hog%'
+           OR category = 'Livestock'
+      `);
+    } catch {
+    }
+    schemaInitialized = true;
   } catch (err) {
-    console.warn("[ensureDatabaseSchema warning]:", err?.message || err);
+    console.error("[DB DEBUG] ensureDatabaseSchema failed:", {
+      message: err?.message,
+      code: err?.code,
+      detail: err?.detail,
+      hint: err?.hint
+    });
+    throw err;
   } finally {
     client.release();
   }
@@ -646,7 +676,7 @@ async function fetchAllDataFromPostgres(pool) {
     }
     let hogState = {
       capitalGrant: 0,
-      produces: ["Hog Raising"],
+      produces: ["Hog Raising", "Chairs Rental (Abang sa Lingkoranan)", "Sacks Rental (Abang sa Sako)", "Poultry Raising"],
       expenses: [],
       sales: [],
       groups: [],
@@ -655,9 +685,17 @@ async function fetchAllDataFromPostgres(pool) {
     };
     if (hogRes.rows.length > 0) {
       const row = hogRes.rows[0];
+      const rawProduces = Array.isArray(row.produces) ? row.produces : ["Hog Raising"];
+      const cleanProduces = rawProduces.filter((p) => p !== "Tilapia Breeding" && !p.toLowerCase().includes("tilapia"));
+      if (!cleanProduces.includes("Chairs Rental (Abang sa Lingkoranan)")) {
+        cleanProduces.push("Chairs Rental (Abang sa Lingkoranan)");
+      }
+      if (!cleanProduces.includes("Sacks Rental (Abang sa Sako)")) {
+        cleanProduces.push("Sacks Rental (Abang sa Sako)");
+      }
       hogState = {
         capitalGrant: Number(row.capital_grant || 0),
-        produces: row.produces || ["Hog Raising"],
+        produces: cleanProduces,
         expenses: row.expenses || [],
         sales: row.sales || [],
         groups: row.groups || [],
@@ -869,7 +907,7 @@ async function handler(req, res) {
     const pool = getPool();
     const pullPromise = fetchAllDataFromPostgres(pool);
     const timeoutPromise = new Promise(
-      (_, reject) => setTimeout(() => reject(new Error("Cloud DB query timed out after 30 seconds.")), 30e3)
+      (_, reject) => setTimeout(() => reject(new Error("Cloud DB query timed out after 30 seconds.")), 3e4)
     );
     const data = await Promise.race([pullPromise, timeoutPromise]);
     return sendResponse(res, 200, {
